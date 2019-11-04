@@ -34,7 +34,7 @@ Per utilizzare alcuni gli endpoint presenti è necessario eseguire prima il *log
  
  `--session`: crea una ``named session`` che mantiene i valori di sessione e permette di continuare la navigazione tra i vari endpoint 'prottetti' dopo l'autenticazione
  
- --follow`: segue l'eventuale redirezione se c'è (quella nel location)
+ `--follow`: segue l'eventuale redirezione se c'è (quella nel location)
  
  `-v:` verboso
  
@@ -69,6 +69,7 @@ Permette di ottenere le info utente tramite address
 #### /model
  
  GET  - Permette di ottenere la lista di coreografie presenti 
+
  POST - Permette di aggiungere una nuova coregrafia 
    es. 
    ```
@@ -78,6 +79,7 @@ Permette di ottenere le info utente tramite address
  
  
  DELETE - /model/id -  Permette di eliminare la coregrafia id 
+ 
  GET - /model/id -  Permette di ottenere la coregrafia id 
  
  
