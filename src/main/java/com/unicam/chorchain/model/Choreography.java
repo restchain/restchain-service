@@ -3,15 +3,17 @@ package com.unicam.chorchain.model;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
+@Document
 @Table(name = "model")
 @ToString
-@EqualsAndHashCode(of="id")
+@EqualsAndHashCode(of="_id")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -19,7 +21,8 @@ public class Choreography {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@Type(type = "objectid")
+	private String _id;
 
 	@Column(nullable = false)
 	private String name;
@@ -34,6 +37,10 @@ public class Choreography {
 	@Column(nullable = false)
 	private LocalDateTime created;
 
+	@ElementCollection(fetch=FetchType.EAGER)
+	private List<String> roles;
+	@OneToMany(targetEntity=Instance.class, fetch = FetchType.EAGER)
+	private List<Instance> instances;
 
 //	@OneToMany(targetEntity=Instance.class, fetch = FetchType.EAGER)
 //	private List<Instance> instances;

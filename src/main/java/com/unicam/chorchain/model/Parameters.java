@@ -1,8 +1,15 @@
 package com.unicam.chorchain.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@NoArgsConstructor
+@Setter
+@Getter
 public class Parameters {
 	/*private List<Integer> uintValue;
 	private List<Boolean> boolValue;
@@ -51,34 +58,7 @@ public class Parameters {
 		this.addressValue = addressValue;
 		this.privateKey = privateKey;
 	}*/
-	
-	private Map<String, String> paramsAndValue = new HashMap<String, String>();
-	private String privateKey;
-	
-	
-	public Map<String, String> getParamsAndValue() {
-		return paramsAndValue;
-	}
 
-	public void setParamsAndValue(Map<String, String> paramsAndValue) {
-		this.paramsAndValue = paramsAndValue;
-	}
-	public String getPrivateKey() {
-		return privateKey;
-	}
-	public void setPrivateKey(String privateKey) {
-		this.privateKey = privateKey;
-	}
-
-	public Parameters(Map<String, String> paramsAndValue, String privateKey) {
-		super();
-		this.paramsAndValue = paramsAndValue;
-		this.privateKey = privateKey;
-	}
-
-	public Parameters() {
-		super();
-	}
-	
-	
+    private Map<String, String> paramsAndValue = new HashMap<String, String>();
+    private String privateKey;
 }

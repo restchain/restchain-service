@@ -46,12 +46,12 @@ public class ContractFunctions {
 	public List<ContractObject> allFunctions;
 	public String CONTRACT_ADDRESS = "";
 	private static final String VirtualProsAccount = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
-	
+
 	public static boolean pendingTransaction = false;
-	
-	//public static String projectPath = "/home/virtualpros/ChorChainStorage"; 
+
+	//public static String projectPath = "/home/virtualpros/ChorChainStorage";
 	public static String projectPath = "/Users/francesco/workspace/git/ChorChain/src/main/java/com/unicam/";
-	
+
 	Web3j web3j = Web3j.build(new HttpService("http://192.12.193.47:8545"));
 	Admin adm = Admin.build(new HttpService("http://192.12.193.47:8545"));
 
@@ -73,12 +73,12 @@ public class ContractFunctions {
 		}
 		return cho.finalContract;
 	}
-	
-	
+
+
 	public void compile(String fileName) {
 		try {
 			//System.out.println(getServletContext().getInitParameter("upload.location"));
-		
+
 			 String fin = parseName(fileName, ".sol");
 
 			String solPath = projectPath + File.separator + "resources" + File.separator + fin;
@@ -86,8 +86,8 @@ public class ContractFunctions {
 			String destinationPath = projectPath +  File.separator + "resources";//sostituire compiled a resources
 			//System.out.println("destination path "+destinationPath);
 			String[] comm = { "solc", solPath, "--bin", "--abi", "--overwrite", "-o", destinationPath };
-			
-			
+
+
 			//String comm = "solc " + solPath + "--bin --abi --optimize -o " + destinationPath;
 
 			Runtime rt = Runtime.getRuntime();
@@ -105,8 +105,8 @@ public class ContractFunctions {
 			}
 			bre.close();
 			p.waitFor();
-			  
-			
+
+
 			//System.out.println("abi-bin done");
 
 		} catch (Exception e) {
@@ -156,10 +156,10 @@ public class ContractFunctions {
 			credentials = WalletUtils.loadCredentials("123",
 					projectPath + "/ChorChain/src/com/unicam/resources/UTC--2019-01-16T15-25-24.286179700Z--1adc6ea9d2ddc4dcb45bfc36f01ca8e266026155");
 			//credentials = getCredentialFromPrivateKey("02D671CA1DC73973ED1E8FB53AA73235CC788DA792E41DB4170616EDED86D23D");
-			
+
 			//Credentials credentials1 = WalletUtils.loadCredentials("123", "C:/Users/Alessandro/Desktop/ChorChain/src/com/unicam/resources/UTC--2019-01-25T17-30-24.611307800Z--c3939b1fb6c589fc8636085dd4c52e9b61dab675");
 			//Credentials credentials2 = WalletUtils.loadCredentials("123", "C:/Users/Alessandro/Desktop/ChorChain/src/com/unicam/resources/UTC--2019-01-25T17-28-43.107787100Z--bb98c741fc045cd434ad73080c7c90fa13d78958");
-			
+
 			RemoteCall returnv;
 
 			// controllo l'array contenente i metodi per cercare il deploy
@@ -223,7 +223,7 @@ public class ContractFunctions {
 									return co;
 								}
 							}*/
-						
+
 						}
 					}
 					return null;
@@ -236,7 +236,7 @@ public class ContractFunctions {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 
 	}
@@ -255,15 +255,15 @@ public class ContractFunctions {
 
 		return contentBuilder.toString();
 	}
-	
+
 	public String deploy(String bin) throws Exception {
 		  if(pendingTransaction == true) {
 			  System.out.println("C'� una transazione pendente");
 			  return "ERROR";
 		  }
-		 
+
 		/*System.out.println(solPath);
-		
+
 		String solPath = projectPath + "ChorChain/src/com/unicam/resources/" + parseName(bin, ".sol");
 		String[] comm = {"solc",
 				"--gas",
@@ -279,22 +279,22 @@ public class ContractFunctions {
 		int result = Integer.parseInt(gasEstimation);*/
 		//sostituire resources con compiled
 		String binar = new String ( Files.readAllBytes( Paths.get(projectPath + "/resources/" + parseName(bin, ".bin"))));
-		
-		
+
+
 		  //Unlocking the account
 		  PersonalUnlockAccount personalUnlockAccount = adm.personalUnlockAccount(VirtualProsAccount, "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d").send();
 		  //Getting the nonce
-		  
-		  
+
+
 		  EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
 				  VirtualProsAccount, DefaultBlockParameterName.LATEST).sendAsync().get();
 		  BigInteger nonce = ethGetTransactionCount.getTransactionCount();
 
 		  BigInteger GAS_PRICE = BigInteger.valueOf(13_000_000_000L);
 		  BigInteger GAS_LIMIT = BigInteger.valueOf(6_900_000L);
-		 
+
 		  BigInteger blockGasLimit = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getGasLimit();
-		  
+
 
 		  Transaction transaction = Transaction.createContractTransaction(
 			        VirtualProsAccount,
@@ -303,12 +303,12 @@ public class ContractFunctions {
 	                GAS_LIMIT,
 	                BigInteger.ZERO,
 			        binar);
-		  
+
 		  EthEstimateGas estimation = web3j.ethEstimateGas(transaction).send();
 		  BigInteger amountUsed = estimation.getAmountUsed();
 		  //System.out.println("AMOUNT OF GAS USED: " + amountUsed + "AND current gas block limit(not used): " + blockGasLimit);
-		  
-		  
+
+
 		  Transaction transaction1 = Transaction.createContractTransaction(
 			        VirtualProsAccount,
 				  	nonce,
@@ -323,33 +323,33 @@ public class ContractFunctions {
 		  if(transactionResponse.hasError()) {
 		  System.out.println(transactionResponse.getError().getData());
 		  System.out.println(transactionResponse.getError().getMessage());}
-		  String transactionHash = transactionResponse.getTransactionHash();  
+		  String transactionHash = transactionResponse.getTransactionHash();
 		  System.out.println("Thash: " + transactionHash);
 		  EthGetTransactionReceipt transactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-		 
+
 		  //Optional<TransactionReceipt> receiptOptional = transactionReceipt.getTransactionReceipt();
 		  for (int i = 0; i < 222220; i++) {
 			  //System.out.println("Wait: " + i);
 	            if (!transactionReceipt.getTransactionReceipt().isPresent()) {
 	                //Thread.sleep(5000);
 	                transactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-	      		    
+
 	            } else {
 	                break;
 	            }
 		  }
 		  TransactionReceipt transactionReceiptFinal = transactionReceipt.getTransactionReceipt().get();
 		  //System.out.println(transactionReceiptFinal.getContractAddress());
-		  
+
 		  String contractAddress = transactionReceiptFinal.getContractAddress();
 		  pendingTransaction = false;
 		  //System.out.println(contractAddress);
 		  return contractAddress;
 
 
-		
+
 	}
-	
+
 	private static String getStringFromInputStream(InputStream is) {
 
 		BufferedReader br = null;
@@ -378,7 +378,7 @@ public class ContractFunctions {
 		return sb.toString();
 
 	}
-	
+
 	public void signOffline(Parameters parameters, ContractObject contractDb, String account, String functionName) throws Exception {
 		LinkedHashMap<String, String> hashed = contractDb.getTaskIdAndRole();
 		//System.out.println("size di hashed: " + hashed.size());
@@ -393,7 +393,7 @@ public class ContractFunctions {
 //				break;
 //			}
 //		}
-		
+
 		for(Map.Entry<String, String> params : hashed.entrySet()) {
 			 //System.out.println("valore di b " + b + " e di i " + z);
 			if(b == z) {
@@ -404,9 +404,9 @@ public class ContractFunctions {
 				b++;
 			}
 		 }
-		
+
 		//System.out.println("NOME NUOVO DELLA FUNZIONE: " + functionName);
-		
+
 		BigInteger GAS_PRICE = BigInteger.valueOf(7_600_000_000L);
 		BigInteger GAS_LIMIT = BigInteger.valueOf(6_700_000L);
 
@@ -414,8 +414,8 @@ public class ContractFunctions {
 				  account, DefaultBlockParameterName.LATEST).sendAsync().get();
 		 BigInteger nonce = ethGetTransactionCount.getTransactionCount();
 		 //System.out.println(nonce);
-		 
-		
+
+
 		 List<Type> t = new ArrayList<Type>();
 		 for(Map.Entry<String, String> params : parameters.getParamsAndValue().entrySet()) {
 				if(params.getKey().equals("uint")) {
@@ -430,23 +430,23 @@ public class ContractFunctions {
 					t.add(new Address(params.getValue()));
 				}
 			}
-		
-		 
-		 
+
+
+
 		 Function function = new Function(
-				  functionName, 
-				  t, 
+				  functionName,
+				  t,
 				  Collections.emptyList()
 				  );
-		  
-		  
+
+
 		 String encoded = FunctionEncoder.encode(function);
-		
-		 
+
+
 		 RawTransaction ta = RawTransaction.createTransaction(
-				 nonce, 
+				 nonce,
 				// BigInteger.valueOf(131),
-				 GAS_PRICE, 
+				 GAS_PRICE,
 				 GAS_LIMIT,
 				 //"0xcc8bdb5dd918c9ec86e31b416f627ad0cc5ea22d",
 				 contractDb.getAddress(),
@@ -462,7 +462,7 @@ public class ContractFunctions {
 				  //System.out.println(ethSendTransaction.getError().getMessage());}
 			String transactionHash = ethSendTransaction.getTransactionHash();
 			EthGetTransactionReceipt transactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-			  
+
 			  for (int i = 0; i < 222220; i++) {
 				  //System.out.println("Wait: " + i);
 		            if (!transactionReceipt.getTransactionReceipt().isPresent()) {
@@ -474,7 +474,7 @@ public class ContractFunctions {
 			  TransactionReceipt transactionReceiptFinal = transactionReceipt.getTransactionReceipt().get();
 			  //System.out.println(transactionReceiptFinal.getLogs());
 			  //System.out.println(transactionReceiptFinal.getLogsBloom());
-			
+
 	}
 
 }

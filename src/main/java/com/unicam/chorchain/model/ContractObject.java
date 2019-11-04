@@ -1,6 +1,7 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.LinkedHashMap;
@@ -25,8 +26,8 @@ public class ContractObject {
 	//@ElementCollection(fetch = FetchType.EAGER)
 	//private List<String> tasksID;
 
-//	@ElementCollection(fetch = FetchType.EAGER)
-//	private List<String> tasks;
+	@ElementCollection(fetch = FetchType.EAGER)
+	private List<String> tasks;
 	//@ElementCollection(fetch = FetchType.EAGER)
 	//private List<String> taskRoles;
 

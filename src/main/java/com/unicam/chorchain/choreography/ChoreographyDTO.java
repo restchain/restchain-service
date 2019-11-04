@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 
 @Data
 public class ChoreographyDTO {
-    private Long id;
+    private String _id;
     private String name;
     private String description;
     private LocalDateTime created;
-    private String  address;
+    private String address;
 }
