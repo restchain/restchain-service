@@ -60,7 +60,7 @@ public class UserService implements UserDetailsService {
         if (userById.isPresent()) {
             return mapper.toUserDTO(userById.get());
         } else {
-            log.error("User not found! " + _id);
+            log.error("User not found by id ! " + _id);
             throw new UsernameNotFoundException("User " + _id + " was not found in the database");
         }
     }
@@ -72,7 +72,7 @@ public class UserService implements UserDetailsService {
         if (userByAddress.isPresent()) {
             return mapper.toUserDTO(userByAddress.get());
         } else {
-            log.error("User not found! " + address);
+            log.error("User not found by address ! " + address);
             throw new UsernameNotFoundException("User " + address + " was not found in the database");
         }
     }
