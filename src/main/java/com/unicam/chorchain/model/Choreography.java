@@ -1,0 +1,41 @@
+package com.unicam.chorchain.model;
+
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "model")
+@ToString
+@EqualsAndHashCode(of="id")
+@NoArgsConstructor
+@Getter
+@Setter
+public class Choreography {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@Column(nullable = false)
+	private String name;
+
+	private String description;
+
+//	private String uploadedBy;
+	@ManyToOne(fetch = FetchType.LAZY, optional = true)
+	@JoinColumn(name = "uploaded_by", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
+	private User user;
+	@Column(nullable = false)
+	private LocalDateTime created;
+
+
+//	@OneToMany(targetEntity=Instance.class, fetch = FetchType.EAGER)
+//	private List<Instance> instances;
+
+}
