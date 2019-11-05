@@ -9,4 +9,5 @@ public class InstanceRequest {
     List<String> visibleAt;
     List<String> mandatoryRoles;
     List<String> optionalRoles;
+    String modelId;
 }

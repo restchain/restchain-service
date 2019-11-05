@@ -24,7 +24,7 @@ public class Instance {
     private String _id;
 
     //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
-    private String name;
+    private String choreographyModelName;
     private int actualNumber;
     private int maxNumber;
     @OneToMany(targetEntity = User.class, fetch = FetchType.EAGER)
