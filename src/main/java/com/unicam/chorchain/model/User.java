@@ -1,28 +1,30 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
+import org.bson.types.ObjectId;
+import org.hibernate.annotations.Type;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
 @Table(name = "users")
 @ToString
-@EqualsAndHashCode(of = "id")
+@EqualsAndHashCode(of = "_id")
 @NoArgsConstructor
 @Getter
 @Setter
+@Document
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Type(type = "objectid")
+    public ObjectId _id;
 
-//    @OneToMany(targetEntity = Instance.class, fetch = FetchType.EAGER)
-//    private List<Instance> instances;
+    @OneToMany(targetEntity = Instance.class, fetch = FetchType.EAGER)
+    private List<Instance> instances;
 
 
     @Column(unique = true, nullable = false)

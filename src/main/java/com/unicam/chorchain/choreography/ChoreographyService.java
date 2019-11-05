@@ -67,18 +67,18 @@ public class ChoreographyService {
         return new HashSet<>(participants);
     }
 
-    public ChoreographyDTO read(@Valid Long id) {
-        return mapper.toDTO(findChoreography(id));
+    public ChoreographyDTO read(@Valid String _id) {
+        return mapper.toDTO(findChoreography(_id));
     }
 
-    public Choreography findChoreography(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("Choreography " + id + " was not found in the database",
-                        id)));
+    public Choreography findChoreography(String _id) {
+        return repository.findById(_id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Choreography " + _id + " was not found in the database",
+                        _id)));
     }
 
-    public String delete(@Valid Long id) {
-        repository.delete(findChoreography(id));
-        return "Choreography with id " + id + " has been removed";
+    public String delete(@Valid String _id) {
+        repository.delete(findChoreography(_id));
+        return "Choreography with id " + _id + " has been removed";
     }
 }
