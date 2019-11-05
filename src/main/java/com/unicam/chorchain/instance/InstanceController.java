@@ -1,6 +1,5 @@
 package com.unicam.chorchain.instance;
 
-import com.unicam.chorchain.PagedResources;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -8,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
 @Service
 @RequiredArgsConstructor
@@ -25,5 +26,16 @@ public class InstanceController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity<?> listAllInstanceByModel(@PathVariable("id") String _id) {
+        log.debug("Model id - {}", _id);
+        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(_id));
+    }
 
+    @RequestMapping(value = "{id}", method = DELETE)
+    public String delete(@PathVariable("id") String _id) {
+        InstanceDTO instanceDTO = service.read(_id);
+        log.debug("Model id - {}", _id);
+        return service.delete(instanceDTO.get_id());
+    }
 }
