@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -49,10 +48,8 @@ public class ChoreographyService {
         choreography.setUser(user);
         choreography.setDescription(description);
         choreography.setName(filename);
-        Collection<String> partecipants = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
-        partecipants.forEach(System.out::println);
+        choreography.setRoles(new ArrayList<String>(getChoreographyBpmnPartecipant(filename.concat(".bpmn"))));
         return mapper.toDTO(repository.save(choreography));
-
     }
 
 
