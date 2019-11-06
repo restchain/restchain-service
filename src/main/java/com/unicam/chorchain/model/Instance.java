@@ -1,7 +1,9 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.hibernate.annotations.Type;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
@@ -19,12 +21,13 @@ import java.util.Map;
 public class Instance {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Type(type = "objectid")
-    private String _id;
+    public ObjectId _id;
 
     //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
     private String choreographyModelName;
+    @DBRef
+    private Choreography choreography;
+
     private int actualNumber;
     private int maxNumber;
     @OneToMany(targetEntity = User.class, fetch = FetchType.EAGER)
