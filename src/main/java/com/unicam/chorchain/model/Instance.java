@@ -21,6 +21,8 @@ import java.util.Map;
 public class Instance {
 
     @Id
+    @Type(type = "objectid")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public ObjectId _id;
 
     //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
