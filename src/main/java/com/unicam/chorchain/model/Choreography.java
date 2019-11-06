@@ -35,7 +35,10 @@ public class Choreography {
 	private LocalDateTime created;
 
 
-	@OneToMany(targetEntity=Instance.class, fetch = FetchType.EAGER)
-	private List<Instance> instances;
+//	@OneToMany(targetEntity=Instance.class, fetch = FetchType.LAZY)
+//	private List<Instance> instances;
+
+	@OneToMany(targetEntity= Participant.class, fetch = FetchType.LAZY)
+	private List<Participant> participants;
 
 }

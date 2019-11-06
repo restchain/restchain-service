@@ -3,6 +3,7 @@ package com.unicam.chorchain.choreography;
 import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.Choreography;
 import com.unicam.chorchain.model.User;
+import com.unicam.chorchain.participant.ParticipantRepository;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.user.UserRepository;
 import com.unicam.chorchain.user.UserService;
@@ -22,7 +23,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
+
+//import com.unicam.chorchain.model.Participant;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class ChoreographyService {
     private final UserService userService;
     private final FileSystemStorageService fileSystemStorageService;
     private final ChoreographyMapper mapper;
-
+    private final ParticipantRepository participantRepository;
 
     public PagedResources<ChoreographyDTO> findAll(Pageable pageable) {
         return PagedResources.createResources(repository.findAll(pageable), mapper::toDTO);
@@ -49,10 +51,19 @@ public class ChoreographyService {
         choreography.setUser(user);
         choreography.setDescription(description);
         choreography.setName(filename);
-        Collection<String> partecipants = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
-        partecipants.forEach(System.out::println);
-        return mapper.toDTO(repository.save(choreography));
 
+        //Retrieves participants from the bpmn and add them top the Partecipant table
+        Collection<String> participantNames = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
+        ArrayList<com.unicam.chorchain.model.Participant> participants = new ArrayList<>();
+        participantNames.forEach(
+                (p) -> {
+                    com.unicam.chorchain.model.Participant participant = new com.unicam.chorchain.model.Participant(p);
+                    participantRepository.save(participant);
+                    participants.add(participant);
+                }
+        );
+        choreography.setParticipants(participants);
+        return mapper.toDTO(repository.save(choreography));
     }
 
 

@@ -1,6 +1,8 @@
 package com.unicam.chorchain.choreography;
 
-import com.unicam.chorchain.model.Instance;
+import com.unicam.chorchain.instance.InstanceDTO;
+import com.unicam.chorchain.model.Participant;
+import com.unicam.chorchain.participant.ParticipantDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,5 +15,6 @@ public class ChoreographyDTO {
     private String description;
     private LocalDateTime created;
     private String  address;
-//    private List<InstanceDTO>
+    private List<ParticipantDTO> participants;
+//    private List<InstanceDTO> instances;
 }

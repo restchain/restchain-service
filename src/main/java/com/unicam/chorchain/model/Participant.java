@@ -7,18 +7,21 @@ import javax.persistence.*;
 @Table(name = "role")
 @ToString
 @EqualsAndHashCode(of = "id")
-@NoArgsConstructor
 @Getter
 @Setter
-public class Role {
+@NoArgsConstructor
+public class Participant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @Column(name = "name", nullable = false,unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
+
+    public Participant(String name){
+        this.setName(name);
+    }
 }
 
 
