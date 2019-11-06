@@ -25,7 +25,14 @@ public class InstanceService {
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
         Instance instance = new Instance();
-        instance.setChoreographyModelName(findChoreographyById(instanceRequest.modelId).getName());
+        Choreography choreography = findChoreographyById(instanceRequest.modelId);
+        instance.setChoreographyModelName(choreography.getName());
+        List<Instance> choreographyInstances = choreography.getInstances();
+        choreographyInstances.add(instance);
+        choreography.setInstances(choreographyInstances);
+        choreographyRepository.save(choreography);
+        repository.save(instance);
+
         return mapper.toInstanceDTO(repository.save(instance));
     }
 

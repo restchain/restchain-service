@@ -2,6 +2,7 @@ package com.unicam.chorchain.choreography;
 
 import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.Choreography;
+import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.User;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.user.UserRepository;
@@ -48,6 +49,7 @@ public class ChoreographyService {
         choreography.setUser(user);
         choreography.setDescription(description);
         choreography.setName(filename);
+        choreography.setInstances(new ArrayList<Instance>());
         choreography.setRoles(new ArrayList<String>(getChoreographyBpmnPartecipant(filename.concat(".bpmn"))));
         return mapper.toDTO(repository.save(choreography));
     }
