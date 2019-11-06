@@ -8,7 +8,6 @@ import javax.validation.Valid;
 @RestController
 @RequiredArgsConstructor
 public class UserController {
-    private final UserMapper mapper;
     private final UserService service;
 
     @GetMapping("/users/id/{id}")

@@ -16,5 +16,5 @@ public class ChoreographyDTO {
     private LocalDateTime created;
     private String  address;
     private List<ParticipantDTO> participants;
-//    private List<InstanceDTO> instances;
+    private List<InstanceDTO> instances;
 }

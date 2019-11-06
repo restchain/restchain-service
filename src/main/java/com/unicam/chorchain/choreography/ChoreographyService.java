@@ -44,15 +44,20 @@ public class ChoreographyService {
     }
 
     public ChoreographyDTO create(String filename, String description) {
+
         Choreography choreography = new Choreography();
+
         choreography.setCreated(LocalDateTime.now());
-        User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("User not found!"));
-        choreography.setUser(user);
         choreography.setDescription(description);
         choreography.setName(filename);
 
-        //Retrieves participants from the bpmn and add them top the Partecipant table
+        //Setting user
+        User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        choreography.setUser(user);
+
+
+        //Retrieves participants from the bpmn and add them to the Participant entity
         Collection<String> participantNames = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
         ArrayList<com.unicam.chorchain.model.Participant> participants = new ArrayList<>();
         participantNames.forEach(
@@ -63,6 +68,7 @@ public class ChoreographyService {
                 }
         );
         choreography.setParticipants(participants);
+
         return mapper.toDTO(repository.save(choreography));
     }
 

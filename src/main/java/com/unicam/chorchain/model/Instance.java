@@ -18,6 +18,7 @@ public class Instance {
 	private Long id;
 
 	@ManyToOne
+	@JoinColumn
 	private Choreography choreography;
 
 
@@ -39,23 +40,23 @@ public class Instance {
 
 //	@Getter
 //	@Setter
-//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Role.class)
-//	private List<Role> freeRoles;
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> freeRoles;
 //
 //	@Getter
 //	@Setter
-//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Role.class)
-//	private List<Role> freeRolesOptional;
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> freeRolesOptional;
 //
 //	@Getter
 //	@Setter
-//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Role.class)
-//	private List<Role> mandatoryRoles;
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> mandatoryRoles;
 //
 //	@Getter
 //	@Setter
-//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Role.class)
-//	private List<Role> optionalRoles;
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> optionalRoles;
 
 	private String createdBy;
 
