@@ -1,33 +1,36 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "instance")
 @ToString
-@EqualsAndHashCode(of="id")
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Getter
 @Setter
 public class Instance {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@ManyToOne
-	@JoinColumn
-	private Choreography choreography;
+    @ManyToOne
+    @JoinColumn
+    private Choreography choreography;
 
 
-	//@Pattern(regexp = "^[A-Za-z0-9_-]+$")
-	private String name;
+    //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
+    private String name;
 
-	private int actualNumber;
+    private int actualNumber;
 
-	private int maxNumber;
+    private int maxNumber;
 
 //	@Getter
 //	@Setter
@@ -58,9 +61,15 @@ public class Instance {
 //	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
 //	private List<Participant> optionalRoles;
 
-	private String createdBy;
+    @ManyToMany
+    private List<Participant> optionalRoles;
 
-	private boolean done;
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "created_by", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User user;
+
+    private boolean done;
 
 //	//@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
 //	@Getter

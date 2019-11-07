@@ -6,8 +6,8 @@ import java.util.List;
 
 @Data
 public class InstanceRequest {
-    List<String> visibleAt;
-    List<String> mandatoryRoles;
-    List<String> optionalRoles;
-    Long modelId;
+    private List<String> visibleAt;
+    private List<String> mandatoryRoles;
+    private List<Long> optionalRoles;
+    private Long modelId;
 }

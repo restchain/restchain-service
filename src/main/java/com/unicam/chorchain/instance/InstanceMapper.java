@@ -7,8 +7,12 @@ import org.mapstruct.Mappings;
 
 @Mapper(componentModel = "spring")
 public interface InstanceMapper {
-//    @Mappings({
+    //    @Mappings({
 //            @Mapping(target = "_id", expression = "java( instance._id.toString())"),
+//    })
+//    @Mappings({
+//
+//            @Mapping(target = "address", source = "user.address")
 //    })
     InstanceDTO toInstanceDTO(Instance instance);
 }

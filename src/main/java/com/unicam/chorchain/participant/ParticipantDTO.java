@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class ParticipantDTO {
-    String name;
+    private Long id;
+    private String name;
 }

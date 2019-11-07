@@ -26,11 +26,11 @@ public class Choreography {
 
 	private String description;
 
-//	private String uploadedBy;
 	@ManyToOne(fetch = FetchType.LAZY, optional = true)
 	@JoinColumn(name = "uploaded_by", nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	private User user;
+
 	@Column(nullable = false)
 	private LocalDateTime created;
 

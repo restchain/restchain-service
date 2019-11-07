@@ -63,16 +63,19 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public UserDTO readByAddress(@Valid String address) throws UsernameNotFoundException {
+    public User findUserByAddress(String address) {
+        final Optional<User> userById = repository.findByAddress(address);
 
-        final Optional<User> userByAddress = repository.findByAddress(address);
-
-        if (userByAddress.isPresent()) {
-            return mapper.toUserDTO(userByAddress.get());
+        if (userById.isPresent()) {
+            return userById.get();
         } else {
             System.out.println("User not found! " + address);
             throw new UsernameNotFoundException("User " + address + " was not found in the database");
         }
+    }
+
+    public UserDTO readByAddress(@Valid String address) throws UsernameNotFoundException {
+        return mapper.toUserDTO(findUserByAddress(address));
     }
 
     @Override

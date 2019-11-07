@@ -24,7 +24,6 @@ public class User {
 //    @OneToMany(targetEntity = Instance.class, fetch = FetchType.EAGER)
 //    private List<Instance> instances;
 
-
     @Column(unique = true, nullable = false)
     private String address;
 
