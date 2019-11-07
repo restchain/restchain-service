@@ -62,9 +62,6 @@ public class Instance {
 //	private List<Participant> optionalRoles;
 
     @ManyToMany
-    private List<Participant> optionalRoles;
-
-    @ManyToMany
     private List<Participant> mandatoryParticipants;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
