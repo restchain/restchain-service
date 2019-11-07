@@ -64,6 +64,9 @@ public class Instance {
     @ManyToMany
     private List<Participant> optionalRoles;
 
+    @ManyToMany
+    private List<Participant> mandatoryParticipants;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "created_by", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

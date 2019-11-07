@@ -33,9 +33,16 @@ public class InstanceService {
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
         Instance instance = new Instance();
+
+        //Set Choreography
         Choreography choreography = findChoreographyById(instanceRequest.getModelId());
+        instance.setChoreography(choreography);
+
+        //Set user as created by user
         User user = userService.findUserByAddress(userService.getLoggedUser().getUsername());
         instance.setUser(user);
+
+        //Set list
         List<Participant> optionalRoles = new ArrayList<>();
         instanceRequest.getOptionalRoles().stream().forEach((role) -> {
             optionalRoles.add(participantRepository.findById(role)
@@ -43,7 +50,16 @@ public class InstanceService {
                             role))));
         });
         instance.setOptionalRoles(optionalRoles);
-        instance.setChoreography(choreography);
+
+        //Set mandatory participants list
+        List<Participant> mandatoryParticipants = new ArrayList<>();
+        instanceRequest.getMandatoryParticipants().stream().forEach((role) -> {
+            mandatoryParticipants.add(participantRepository.findById(role)
+                    .orElseThrow(() -> new EntityNotFoundException(String.format("Participant " + role + " was not found in the database",
+                            role))));
+        });
+        instance.setMandatoryParticipants(mandatoryParticipants);
+
         return mapper.toInstanceDTO(repository.save(instance));
     }
 

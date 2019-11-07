@@ -11,4 +11,5 @@ public class InstanceDTO {
     private Long id;
     private UserDTO user;
     private List<Participant> optionalRoles;
+    private List<Participant> mandatoryParticipants;
 }
