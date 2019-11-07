@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,12 +45,15 @@ public class InstanceService {
 
         //Set mandatory participants list
         List<Participant> mandatoryParticipants = new ArrayList<>();
-        instanceRequest.getMandatoryParticipants().stream().forEach((role) -> {
+        instanceRequest.getMandatoryParticipants().forEach((role) -> {
             mandatoryParticipants.add(participantRepository.findById(role)
                     .orElseThrow(() -> new EntityNotFoundException(String.format("Participant " + role + " was not found in the database",
                             role))));
         });
         instance.setMandatoryParticipants(mandatoryParticipants);
+
+        //Set creation time
+        instance.setCreated(LocalDateTime.now());
 
         return mapper.toInstanceDTO(repository.save(instance));
     }

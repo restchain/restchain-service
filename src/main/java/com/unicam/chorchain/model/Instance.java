@@ -5,6 +5,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -68,6 +69,9 @@ public class Instance {
     @JoinColumn(name = "created_by", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @Column(nullable = false)
+    private LocalDateTime created;
 
     private boolean done;
 
