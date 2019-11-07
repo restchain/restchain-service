@@ -1,8 +1,11 @@
 package com.unicam.chorchain.user;
 
+import com.unicam.chorchain.PagedResources;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 
 @RestController
@@ -20,8 +23,13 @@ public class UserController {
         return service.readByAddress(address);
     }
 
+    @GetMapping("/users")
+    public PagedResources<UserDTO> listAll(Pageable pageable) {
+        return service.findAll(pageable);
+    }
+
     //New user
-    @PostMapping(value= "/signin")
+    @PostMapping(value = "/signin")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO create(@Valid @RequestBody UserRequest userReq) {
         return service.create(userReq);

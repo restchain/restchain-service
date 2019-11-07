@@ -1,8 +1,10 @@
 package com.unicam.chorchain.user;
 
+import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +20,7 @@ import javax.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -72,6 +75,10 @@ public class UserService implements UserDetailsService {
             System.out.println("User not found! " + address);
             throw new UsernameNotFoundException("User " + address + " was not found in the database");
         }
+    }
+
+    public PagedResources<UserDTO> findAll(Pageable pageable) {
+        return PagedResources.createResources(repository.findAll(pageable), mapper::toUserDTO);
     }
 
     public UserDTO readByAddress(@Valid String address) throws UsernameNotFoundException {
