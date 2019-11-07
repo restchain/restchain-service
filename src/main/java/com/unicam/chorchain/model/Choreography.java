@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "model")
+@Table(name = "choreography")
 @ToString
 @EqualsAndHashCode(of="id")
 @NoArgsConstructor

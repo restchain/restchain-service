@@ -24,14 +24,15 @@ public class Instance {
     @ManyToOne
     @JoinColumn
     private Choreography choreography;
-
+    @Column(nullable = true)
+    private LocalDateTime created;
 
     //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
-    private String name;
+//    private String name;
 
-    private int actualNumber;
+//    private int actualNumber;
 
-    private int maxNumber;
+//    private int maxNumber;
 
 //	@Getter
 //	@Setter
@@ -62,18 +63,17 @@ public class Instance {
 //	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
 //	private List<Participant> optionalRoles;
 
-    @ManyToMany
-    private List<Participant> mandatoryParticipants;
+    @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL)
+    private List<MandatoryParticipantAddress> mandatoryParticipants;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "created_by", nullable = false)
+//    @JoinColumn(name = "created_by", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
-    @Column(nullable = false)
-    private LocalDateTime created;
 
-    private boolean done;
+
+//    private boolean done;
 
 //	//@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
 //	@Getter

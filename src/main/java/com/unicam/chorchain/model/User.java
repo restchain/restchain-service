@@ -1,12 +1,12 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -33,4 +33,6 @@ public class User {
     @Column(name = "password", length = 128, nullable = false)
     private String password;
 
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private List<MandatoryParticipantAddress> mandatoryParticipantAddressSet;
 }

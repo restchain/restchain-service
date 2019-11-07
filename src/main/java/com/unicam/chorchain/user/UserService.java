@@ -107,4 +107,16 @@ public class UserService implements UserDetailsService {
 
         return userDetails;
     }
+
+    public User findUserById(Long id) {
+        final Optional<User> userById = repository.findById(id);
+
+        if (userById.isPresent()) {
+            return userById.get();
+        } else {
+            System.out.println("User not found! " + id);
+            throw new UsernameNotFoundException("Id " + id + " was not found in the database");
+        }
+    }
+
 }

@@ -38,4 +38,11 @@ public class InstanceController {
         log.debug("Model id - {}", id);
         return service.delete(instanceDTO.getId());
     }
+
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> instanceSubscription(@RequestBody InstanceSubscribeRequest instanceSubscribeRequest){
+        service.instanceSubscription(instanceSubscribeRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }
