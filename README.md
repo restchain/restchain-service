@@ -17,6 +17,15 @@ Per testare gli endpoint in fase di sviluppo si consiglia l'utilizzo di ``httpie
 
 
 
+Istruzioni per creare un utente su mysql;
+
+```
+create database chorchain;
+create user 'chorchain'@'%' identified by 'chorchain'; -- Creates the user
+grant all on chorchain.* to 'chorchain'@'%'; 
+```
+
+
 ## Endpoints
 
 Per utilizzare alcuni gli endpoint presenti è necessario eseguire prima il *login* perchè prottetti da permessi di sicurezza. Il login se fatto da linea di comando va fatto con il parametro `--form` con associata un sessione (`--session nome_sessione`) richiamabile successivamente per garantire la connessione.
