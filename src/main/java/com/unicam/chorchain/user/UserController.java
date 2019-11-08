@@ -14,12 +14,12 @@ public class UserController {
     private final UserService service;
 
     @GetMapping("/users/id/{id}")
-    public UserDTO readById(@PathVariable("id") String _id) {
-        return service.read(_id);
+    public UserDTO read(@PathVariable("id") Long id) {
+        return service.read(id);
     }
 
     @GetMapping("/users/{address}")
-    public UserDTO readByAddress(@PathVariable("address") String address) {
+    public UserDTO read(@PathVariable("address") String address) {
         return service.readByAddress(address);
     }
 

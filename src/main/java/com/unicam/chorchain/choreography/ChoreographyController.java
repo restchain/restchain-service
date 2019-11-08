@@ -56,15 +56,15 @@ public class ChoreographyController {
     }
 
     @GetMapping("{id}")
-    public ChoreographyDTO read(@PathVariable("id") String _id) {
-        return choreographyService.read(_id);
+    public ChoreographyDTO read(@PathVariable("id") Long id) {
+        return choreographyService.read(id);
     }
 
     @RequestMapping(value = "{id}", method = DELETE)
-    public String delete(@PathVariable("id") String _id) {
-        ChoreographyDTO choreographyDTO = choreographyService.read(_id);
+    public String delete(@PathVariable("id") Long id) {
+        ChoreographyDTO choreographyDTO = choreographyService.read(id);
         fileSystemStorageService.delete(choreographyDTO.getName() + ".bpmn");
-        return choreographyService.delete(_id);
+        return choreographyService.delete(id);
     }
 
     @GetMapping("/{id}/instance")
