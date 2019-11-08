@@ -21,16 +21,16 @@ public class InstanceController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody InstanceRequest instanceRequest) {
-        log.debug("{}", instanceRequest);
+        log.debug("Create instance {}", instanceRequest);
         service.create(instanceRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<?> listAllInstanceByModel(@PathVariable("id") Long id) {
-        log.debug("Model id - {}", id);
-        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(id));
-    }
+//    @GetMapping("{id}")
+//    public ResponseEntity<?> listAllInstanceByModel(@PathVariable("id") Long id) {
+//        log.debug("Model id - {}", id);
+//        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(id));
+//    }
 
     @RequestMapping(value = "{id}", method = DELETE)
     public String delete(@PathVariable("id") Long id) {

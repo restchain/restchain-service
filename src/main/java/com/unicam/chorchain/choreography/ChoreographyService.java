@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 //import com.unicam.chorchain.model.Participant;
 
@@ -54,12 +55,12 @@ public class ChoreographyService {
         //Setting user
         User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found!"));
-        choreography.setUser(user);
+        choreography.setUploadedBy(user);
 
 
         //Retrieves participants from the bpmn and add them to the Participant entity
         Collection<String> participantNames = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
-        ArrayList<com.unicam.chorchain.model.Participant> participants = new ArrayList<>();
+        Set<com.unicam.chorchain.model.Participant> participants = choreography.getParticipants();
         participantNames.forEach(
                 (p) -> {
                     com.unicam.chorchain.model.Participant participant = new com.unicam.chorchain.model.Participant(p);

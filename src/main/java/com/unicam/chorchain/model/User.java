@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
 @ToString
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
@@ -33,5 +32,10 @@ public class User {
     private String password;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    private Set<ParticipantUser> participantUsers = new HashSet<>();
+//    private Set<InstanceParticipantUser> participantUsers = new HashSet<>();
+    @OneToMany(mappedBy = "uploadedBy")
+    private Set<Choreography> choreographiesUploaded = new HashSet<>(0);
+
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Instance> instancesCreatedBy = new HashSet<>(0);
 }

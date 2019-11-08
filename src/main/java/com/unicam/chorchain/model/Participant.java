@@ -4,7 +4,6 @@ import lombok.*;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "participant")
 @ToString
 @EqualsAndHashCode(of = "id")
 @Getter
@@ -18,6 +17,9 @@ public class Participant {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToOne
+    private Choreography choreography;
 
     public Participant(String name){
         this.setName(name);

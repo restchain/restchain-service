@@ -1,15 +1,13 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "choreography")
 @ToString
 @EqualsAndHashCode(of="id")
 @NoArgsConstructor
@@ -26,19 +24,18 @@ public class Choreography {
 
 	private String description;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = true)
-	@JoinColumn(name = "uploaded_by", nullable = false)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	private User user;
+	@ManyToOne(optional = false)
+	private User uploadedBy;
 
 	@Column(nullable = false)
 	private LocalDateTime created;
 
 
-	@OneToMany(mappedBy = "choreography", cascade = CascadeType.ALL)
-	private List<Instance> instances;
+	@OneToMany(mappedBy = "choreography") //Direttamente agganciata
+	//TODO - aggiungi set(0)
+	private Set<Instance> instances = new HashSet<>(0);
 
-	@OneToMany(targetEntity= Participant.class, fetch = FetchType.LAZY)
-	private List<Participant> participants;
+	@OneToMany(mappedBy = "choreography")
+	private Set<Participant> participants = new HashSet<>(0);
 
 }

@@ -1,8 +1,7 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -10,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "instance")
 @ToString
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
@@ -23,9 +21,9 @@ public class Instance {
     private Long id;
 
     @ManyToOne
-    @JoinColumn
     private Choreography choreography;
-    @Column(nullable = true)
+
+    @CreatedDate
     private LocalDateTime created;
 
     //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
@@ -64,15 +62,11 @@ public class Instance {
 //	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
 //	private List<Participant> optionalRoles;
 
-    @OneToMany(mappedBy = "participant")
-    private Set<ParticipantUser> mandatoryParticipants = new HashSet<>();
+    @OneToMany(mappedBy = "instance")
+    private Set<InstanceParticipantUser> mandatoryParticipants = new HashSet<>(0);
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-//    @JoinColumn(name = "created_by", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private User user;
-
-
+    @ManyToOne(optional = false)
+    private User createdBy;
 
 //    private boolean done;
 
