@@ -1,6 +1,7 @@
 package com.unicam.chorchain.choreography;
 
 import com.unicam.chorchain.PagedResources;
+import com.unicam.chorchain.instance.InstanceService;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.StorageFileAlreadyExistsException;
 import com.unicam.chorchain.storage.StorageFileNotFoundException;
@@ -24,6 +25,8 @@ public class ChoreographyController {
 
     private final FileSystemStorageService fileSystemStorageService;
     private final ChoreographyService choreographyService;
+    private final InstanceService instanceService;
+
 //    @GetMapping
 //    public ResponseEntity<?> listUploadedFiles() throws IOException {
 //        return ResponseEntity.status(HttpStatus.FOUND).body(fileSystemStorageService.loadAll()
@@ -54,7 +57,6 @@ public class ChoreographyController {
 
     @GetMapping("{id}")
     public ChoreographyDTO read(@PathVariable("id") Long id) {
-
         return choreographyService.read(id);
     }
 
@@ -64,6 +66,15 @@ public class ChoreographyController {
         fileSystemStorageService.delete(choreographyDTO.getName() + ".bpmn");
         return choreographyService.delete(id);
     }
+
+    @GetMapping("/{id}/instance")
+    public ResponseEntity<?> instancesByModel(@PathVariable("id") Long modelId) {
+        return ResponseEntity.status(HttpStatus.OK).body(instanceService.findAllByModelId(modelId));
+    }
+
+
+
+
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<?> handleStorageFileNotFound(NotFoundException exc) {
