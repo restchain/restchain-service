@@ -21,21 +21,28 @@ public class InstanceController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody InstanceRequest instanceRequest) {
-        log.debug("{}", instanceRequest);
+        log.debug("Create instance {}", instanceRequest);
         service.create(instanceRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<?> listAllInstanceByModel(@PathVariable("id") String _id) {
-        log.debug("Model id - {}", _id);
-        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(_id));
-    }
+//    @GetMapping("{id}")
+//    public ResponseEntity<?> listAllInstanceByModel(@PathVariable("id") Long id) {
+//        log.debug("Model id - {}", id);
+//        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(id));
+//    }
 
     @RequestMapping(value = "{id}", method = DELETE)
-    public String delete(@PathVariable("id") String _id) {
-        InstanceDTO instanceDTO = service.read(_id);
-        log.debug("Model id - {}", _id);
-        return service.delete(instanceDTO.get_id());
+    public String delete(@PathVariable("id") Long id) {
+        InstanceDTO instanceDTO = service.read(id);
+        log.debug("Model id - {}", id);
+        return service.delete(instanceDTO.getId());
     }
+
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> instanceSubscription(@RequestBody InstanceSubscribeRequest instanceSubscribeRequest){
+        service.instanceSubscription(instanceSubscribeRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }

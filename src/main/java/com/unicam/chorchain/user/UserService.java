@@ -1,9 +1,11 @@
 package com.unicam.chorchain.user;
 
+import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +20,7 @@ import javax.persistence.EntityExistsException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -65,16 +68,23 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public UserDTO readByAddress(@Valid String address) throws UsernameNotFoundException {
+    public User findUserByAddress(String address) {
+        final Optional<User> userById = repository.findByAddress(address);
 
-        final Optional<User> userByAddress = repository.findByAddress(address);
-
-        if (userByAddress.isPresent()) {
-            return mapper.toUserDTO(userByAddress.get());
+        if (userById.isPresent()) {
+            return userById.get();
         } else {
             log.error("User not found by address ! " + address);
             throw new UsernameNotFoundException("User " + address + " was not found in the database");
         }
+    }
+
+    public PagedResources<UserDTO> findAll(Pageable pageable) {
+        return PagedResources.createResources(repository.findAll(pageable), mapper::toUserDTO);
+    }
+
+    public UserDTO readByAddress(@Valid String address) throws UsernameNotFoundException {
+        return mapper.toUserDTO(findUserByAddress(address));
     }
 
     @Override
@@ -99,4 +109,16 @@ public class UserService implements UserDetailsService {
 
         return userDetails;
     }
+
+    public User findUserById(Long id) {
+        final Optional<User> userById = repository.findById(id);
+
+        if (userById.isPresent()) {
+            return userById.get();
+        } else {
+            System.out.println("User not found! " + id);
+            throw new UsernameNotFoundException("Id " + id + " was not found in the database");
+        }
+    }
+
 }

@@ -8,6 +8,10 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring",uses = InstanceMapper.class)
 public interface ChoreographyMapper {
-    @Mapping(target = "address",source = "user.address") //Prende dal CHoreogrphy la proprietà user.adress invece di tutto user
+    @Mapping(target = "uploadedBy", source = "uploadedBy.address")
+    @Mapping(target = "uploaded", source = "created")
+    //Prende dal choreography la proprietà user.adress invece di tutto user
+//    @Mapping(target = "participantSize", expression = "java(choreography.getParticipants().size())")
+//    @Mapping(target = "instanceSize", expression = "java(choreography.getInstances().size())")
     ChoreographyDTO toDTO(Choreography choreography);
 }

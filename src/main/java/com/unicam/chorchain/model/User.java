@@ -1,31 +1,26 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.bson.types.ObjectId;
-import org.hibernate.annotations.Type;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-@Table(name = "users")
+@Entity
 @ToString
-@EqualsAndHashCode(of = "_id")
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Getter
 @Setter
-@Document
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Type(type = "objectid")
-    public ObjectId _id;
+    private Long id;
 
-    @OneToMany(targetEntity = Instance.class, fetch = FetchType.EAGER)
-    private List<Instance> instances;
-
+//    @OneToMany(targetEntity = Instance.class, fetch = FetchType.EAGER)
+//    private List<Instance> instances;
 
     @Column(unique = true, nullable = false)
     private String address;
@@ -36,4 +31,14 @@ public class User {
     @Column(name = "password", length = 128, nullable = false)
     private String password;
 
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private Set<InstanceParticipantUser> participantUsers = new HashSet<>();
+    @OneToMany(mappedBy = "uploadedBy")
+    private Set<Choreography> choreographiesUploaded = new HashSet<>(0);
+
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Instance> instancesCreatedBy = new HashSet<>(0);
+
+    @OneToMany(mappedBy = "user")
+    private Set<InstanceParticipantUser> participantsAssociated = new HashSet<>(0);
 }

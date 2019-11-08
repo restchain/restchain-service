@@ -1,54 +1,98 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
-import org.bson.types.ObjectId;
-import org.hibernate.annotations.Type;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-@Document
-@Table(name = "instance")
+@Entity
 @ToString
-@EqualsAndHashCode(of = "_id")
-@NoArgsConstructor
+@EqualsAndHashCode(of = "id")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @Setter
 public class Instance {
 
     @Id
-    @Type(type = "objectid")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public ObjectId _id;
+    private Long id;
 
-    //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
-    private String choreographyModelName;
-    @DBRef
+    @ManyToOne
     private Choreography choreography;
 
-    private int actualNumber;
-    private int maxNumber;
-    @OneToMany(targetEntity = User.class, fetch = FetchType.EAGER)
-    @MapKeyColumn(name = "role")
-    private Map<String, User> participants = new HashMap<String, User>();
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> freeRoles;
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> freeRolesOptional;
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> mandatoryRoles;
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> optionalRoles;
-    private String createdBy;
-    private boolean done;
-    //@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> visibleAt;
-    @OneToOne
-    @JoinColumn(name = "deployedContract_id")
-    private ContractObject deployedContract;
-}
+    @CreatedDate
+    private LocalDateTime created;
+
+    //@Pattern(regexp = "^[A-Za-z0-9_-]+$")
+//    private String name;
+
+//    private int actualNumber;
+
+//    private int maxNumber;
+
+//	@Getter
+//	@Setter
+//	@JsonIgnore
+//	@ToString.Exclude
+//	//TODO capire perchè
+//	@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
+//	@MapKeyColumn(name="role")
+//	private Map<String, User> participants = new HashMap<String, User>();
+
+//	@Getter
+//	@Setter
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> freeRoles;
+//
+//	@Getter
+//	@Setter
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> freeRolesOptional;
+//
+//	@Getter
+//	@Setter
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> mandatoryRoles;
+//
+//	@Getter
+//	@Setter
+//	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
+//	private List<Participant> optionalRoles;
+
+    @OneToMany(mappedBy = "instance")
+    private Set<InstanceParticipantUser> mandatoryParticipants = new HashSet<>(0);
+
+    @ManyToOne(optional = false)
+    private User createdBy;
+
+    public Instance(Choreography choreography, LocalDateTime created, User createdBy) {
+        this.choreography = choreography;
+        this.created = created;
+        this.createdBy = createdBy;
+    }
+
+
+    @Transient
+    public boolean isDone() {
+        return getMandatoryParticipants().stream()
+                .allMatch((m) -> m.getUser() != null);
+    }
+};
+
+
+//    private boolean done;
+
+//	//@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
+//	@Getter
+//	@Setter
+//	@ElementCollection(fetch= FetchType.EAGER)
+//	private List<String> visibleAt;
+
+//	@Getter
+//	@Setter
+//	@OneToOne
+//    @JoinColumn( name = "deployedContract_id" )
+//	private ContractObject deployedContract;

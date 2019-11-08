@@ -2,8 +2,8 @@ package com.unicam.chorchain.choreography;
 
 import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.Choreography;
-import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.User;
+import com.unicam.chorchain.participant.ParticipantRepository;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.user.UserRepository;
 import com.unicam.chorchain.user.UserService;
@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+//import com.unicam.chorchain.model.Participant;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,22 +37,36 @@ public class ChoreographyService {
     private final UserService userService;
     private final FileSystemStorageService fileSystemStorageService;
     private final ChoreographyMapper mapper;
-
+    private final ParticipantRepository participantRepository;
 
     public PagedResources<ChoreographyDTO> findAll(Pageable pageable) {
         return PagedResources.createResources(repository.findAll(pageable), mapper::toDTO);
     }
 
     public ChoreographyDTO create(String filename, String description) {
+
         Choreography choreography = new Choreography();
+
         choreography.setCreated(LocalDateTime.now());
-        User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("User not found!"));
-        choreography.setUser(user);
         choreography.setDescription(description);
         choreography.setName(filename);
-        choreography.setInstances(new ArrayList<Instance>());
-        choreography.setRoles(new ArrayList<String>(getChoreographyBpmnPartecipant(filename.concat(".bpmn"))));
+
+        //Setting uploaded_by user
+        User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        choreography.setUploadedBy(user);
+
+
+        //Retrieves participants from the bpmn and add them to the Participant entity
+        Collection<String> participantNames = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
+        participantNames.forEach(
+                (p) -> {
+                    com.unicam.chorchain.model.Participant participant = new com.unicam.chorchain.model.Participant(p,
+                            choreography);
+                    participantRepository.save(participant);
+                }
+        );
+
         return mapper.toDTO(repository.save(choreography));
     }
 
@@ -66,18 +82,18 @@ public class ChoreographyService {
         return new HashSet<>(participants);
     }
 
-    public ChoreographyDTO read(@Valid String _id) {
-        return mapper.toDTO(findChoreography(_id));
+    public ChoreographyDTO read(@Valid Long id) {
+        return mapper.toDTO(findChoreography(id));
     }
 
-    public Choreography findChoreography(String _id) {
-        return repository.findById(_id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("Choreography " + _id + " was not found in the database",
-                        _id)));
+    public Choreography findChoreography(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Choreography " + id + " was not found in the database",
+                        id)));
     }
 
-    public String delete(@Valid String _id) {
-        repository.delete(findChoreography(_id));
-        return "Choreography with id " + _id + " has been removed";
+    public String delete(@Valid Long id) {
+        repository.delete(findChoreography(id));
+        return "Choreography with id " + id + " has been removed";
     }
 }
