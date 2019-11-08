@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class InstanceSubscribeRequest {
     private String address;
-    private Long mandatoryParticipantAddressId;
+    private Long instanceParticipantUserId;
 }

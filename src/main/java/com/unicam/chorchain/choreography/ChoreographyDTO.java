@@ -13,8 +13,8 @@ public class ChoreographyDTO {
     private Long id;
     private String name;
     private String description;
-    private LocalDateTime created;
-    private String  address;
+    private LocalDateTime uploaded;
+    private String  uploadedBy;
     private List<ParticipantDTO> participants;
 //    private int participantSize;
     private List<InstanceDTO> instances;

@@ -6,7 +6,8 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ChoreographyMapper {
-    @Mapping(target = "address", source = "uploadedBy.address")
+    @Mapping(target = "uploadedBy", source = "uploadedBy.address")
+    @Mapping(target = "uploaded", source = "created")
     //Prende dal choreography la proprietà user.adress invece di tutto user
 //    @Mapping(target = "participantSize", expression = "java(choreography.getParticipants().size())")
 //    @Mapping(target = "instanceSize", expression = "java(choreography.getInstances().size())")

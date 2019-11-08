@@ -1,6 +1,7 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
+
 import javax.persistence.*;
 
 @Entity
@@ -8,7 +9,7 @@ import javax.persistence.*;
 @EqualsAndHashCode(of = "id")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE) //Rende privato il costruttore senza argomenti
 public class Participant {
 
     @Id
@@ -21,8 +22,10 @@ public class Participant {
     @ManyToOne
     private Choreography choreography;
 
-    public Participant(String name){
+
+    public Participant(String name, Choreography choreography) {
         this.setName(name);
+        this.setChoreography(choreography);
     }
 }
 

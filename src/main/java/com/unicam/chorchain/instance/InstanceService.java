@@ -14,7 +14,6 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,18 +30,13 @@ public class InstanceService {
     private final InstanceParticipantUserRepository instanceParticipantUserRepository;
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
-        Instance instance = new Instance();
-
-        //Set creation time
-        instance.setCreated(LocalDateTime.now());
 
         //Set Choreography
         Choreography choreography = findChoreographyById(instanceRequest.getModelId());
-        instance.setChoreography(choreography);
-
         //Set user as created by user
         User user = userService.findUserByAddress(userService.getLoggedUser().getUsername());
-        instance.setCreatedBy(user);
+
+        Instance instance = new Instance(choreography, LocalDateTime.now(), user);
 
         //Set mandatory participants list
         instanceRequest.getMandatoryParticipants().forEach((role) -> {
@@ -50,14 +44,13 @@ public class InstanceService {
             Participant p = participantRepository.findById(role)
                     .orElseThrow(() -> new EntityNotFoundException(String.format("Participant " + role + " was not found in the database",
                             role)));
-            log.debug("Participant {}",p.toString());
 
-            InstanceParticipantUser instanceParticipantUser = new InstanceParticipantUser(instance,p);
-            instanceParticipantUser.setParticipant(p);
+            InstanceParticipantUser instanceParticipantUser = new InstanceParticipantUser(instance, p);
 
             instanceParticipantUserRepository.save(instanceParticipantUser);
 
         });
+
 
         return mapper.toInstanceDTO(repository.save(instance));
     }
@@ -84,7 +77,7 @@ public class InstanceService {
                         id)));
     }
 
-    public InstanceParticipantUser findMandatoryParticipantById(Long id) {
+    public InstanceParticipantUser findInstanceParticipantUserById(Long id) {
         return instanceParticipantUserRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("MandatoryParticipant " + id + " was not found in the database",
                         id)));
@@ -101,17 +94,14 @@ public class InstanceService {
 
     public void instanceSubscription(InstanceSubscribeRequest instanceSubscribeRequest) {
 
-//        Instance instanceToSubscribe = findInstanceById(instanceId);
-
-
         log.debug("instanceSubscribeRequest {}", instanceSubscribeRequest);
 
-//        log.debug("instanceSubscribeRequest {}", instanceId);
         InstanceParticipantUser instanceParticipantUser =
-                    findMandatoryParticipantById(instanceSubscribeRequest.getMandatoryParticipantAddressId());
+                findInstanceParticipantUserById(instanceSubscribeRequest.getInstanceParticipantUserId());
 
         if (instanceParticipantUser.getUser() == null) {
-            log.info("Associating an user to this mandatoryParticipant {}", instanceParticipantUser.getParticipant().getName());
+            log.info("Associating an user to this mandatoryParticipant {}",
+                    instanceParticipantUser.getParticipant().getName());
             User user = userService.findUserByAddress(instanceSubscribeRequest.getAddress());
             instanceParticipantUser.setUser(user);
         } else {

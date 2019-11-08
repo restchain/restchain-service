@@ -11,7 +11,7 @@ import java.util.Set;
 @Entity
 @ToString
 @EqualsAndHashCode(of = "id")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 @Setter
 public class Instance {
@@ -68,6 +68,21 @@ public class Instance {
     @ManyToOne(optional = false)
     private User createdBy;
 
+    public Instance(Choreography choreography, LocalDateTime created, User createdBy) {
+        this.choreography = choreography;
+        this.created = created;
+        this.createdBy = createdBy;
+    }
+
+
+    @Transient
+    public boolean isDone() {
+        return getMandatoryParticipants().stream()
+                .allMatch((m) -> m.getUser() != null);
+    }
+};
+
+
 //    private boolean done;
 
 //	//@OneToMany(targetEntity=User.class, fetch = FetchType.EAGER)
@@ -81,4 +96,3 @@ public class Instance {
 //	@OneToOne
 //    @JoinColumn( name = "deployedContract_id" )
 //	private ContractObject deployedContract;
-}

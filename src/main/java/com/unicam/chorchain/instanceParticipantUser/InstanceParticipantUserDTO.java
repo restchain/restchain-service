@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class InstanceParticipantUserDTO {
     private Long id;
-    private Long instanceId;
+//    private Long instanceId;
     private ParticipantDTO participant;
     private UserDTO user;
 }

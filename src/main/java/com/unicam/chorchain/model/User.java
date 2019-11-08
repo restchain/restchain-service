@@ -38,4 +38,7 @@ public class User {
 
     @OneToMany(mappedBy = "createdBy")
     private Set<Instance> instancesCreatedBy = new HashSet<>(0);
+
+    @OneToMany(mappedBy = "user")
+    private Set<InstanceParticipantUser> participantsAssociated = new HashSet<>(0);
 }

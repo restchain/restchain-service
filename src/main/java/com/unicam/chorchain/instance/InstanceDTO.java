@@ -13,4 +13,5 @@ public class InstanceDTO {
     private UserDTO createdBy;
     private List<InstanceParticipantUserDTO> mandatoryParticipants;
     private LocalDateTime created;
+    private boolean done;
 }
