@@ -1,7 +1,7 @@
 package com.unicam.chorchain.instance;
 
 import com.unicam.chorchain.choreography.ChoreographyRepository;
-import com.unicam.chorchain.mandatoryParticipantAddress.MandatoryParticipantAddressReposistory;
+import com.unicam.chorchain.participantUser.ParticipantUserRepository;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
 import com.unicam.chorchain.user.UserService;
@@ -13,8 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ public class InstanceService {
     private final InstanceMapper mapper;
     private final UserService userService;
     private final ParticipantRepository participantRepository;
-    private final MandatoryParticipantAddressReposistory mandatoryParticipantAddressReposistory;
+    private final ParticipantUserRepository participantUserRepository;
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
         Instance instance = new Instance();
@@ -45,14 +46,14 @@ public class InstanceService {
         instance.setUser(user);
 
         //Set mandatory participants list
-        List<MandatoryParticipantAddress> mandatoryParticipants = new ArrayList<>();
+        Set<ParticipantUser> mandatoryParticipants = new HashSet<>();
         instanceRequest.getMandatoryParticipants().forEach((role) -> {
             Participant p = participantRepository.findById(role)
                     .orElseThrow(() -> new EntityNotFoundException(String.format("Participant " + role + " was not found in the database",
                             role)));
-            MandatoryParticipantAddress mandatoryParticipantAddress = new MandatoryParticipantAddress();
-            mandatoryParticipantAddress.setParticipant(p);
-            mandatoryParticipants.add(mandatoryParticipantAddress);
+            ParticipantUser participantUser = new ParticipantUser();
+            participantUser.setParticipant(p);
+            mandatoryParticipants.add(participantUser);
         });
         instance.setMandatoryParticipants(mandatoryParticipants);
 
@@ -82,8 +83,8 @@ public class InstanceService {
                         id)));
     }
 
-    public MandatoryParticipantAddress findMandatoryParticipantById(Long id) {
-        return mandatoryParticipantAddressReposistory.findById(id)
+    public ParticipantUser findMandatoryParticipantById(Long id) {
+        return participantUserRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("MandatoryParticipant " + id + " was not found in the database",
                         id)));
     }
@@ -105,16 +106,16 @@ public class InstanceService {
         log.debug("instanceSubscribeRequest {}", instanceSubscribeRequest);
 
 //        log.debug("instanceSubscribeRequest {}", instanceId);
-        MandatoryParticipantAddress mandatoryParticipantAddress =
+        ParticipantUser participantUser =
                     findMandatoryParticipantById(instanceSubscribeRequest.getMandatoryParticipantAddressId());
 
-        if (mandatoryParticipantAddress.getUser() == null) {
-            log.info("Associating an user to this mandatoryParticipant {}",mandatoryParticipantAddress.getParticipant().getName());
+        if (participantUser.getUser() == null) {
+            log.info("Associating an user to this mandatoryParticipant {}", participantUser.getParticipant().getName());
             User user = userService.findUserByAddress(instanceSubscribeRequest.getAddress());
-            mandatoryParticipantAddress.setUser(user);
+            participantUser.setUser(user);
         } else {
             //TODO notify that an user associated already exist
-            log.info("An user is already associated {}", mandatoryParticipantAddress.getUser().getAddress());
+            log.info("An user is already associated {}", participantUser.getUser().getAddress());
         }
 
 //        int instanceMaxNumber = instanceToSubscribe.getChoreography().getInstances().size();
@@ -124,15 +125,15 @@ public class InstanceService {
 
 
 //            instanceToSubscribe.setActualNumber(instanceActualNumber+1);
-//            List<MandatoryParticipantAddress> freeRoles = instanceToSubscribe.getMandatoryParticipants();
-//            Predicate<MandatoryParticipantAddress> userNotSet = participantAddress -> participantAddress.getParticipant().getId() == null;
-//            List<MandatoryParticipantAddress> s = freeRoles.stream().filter(userNotSet).collect(Collectors.toList());
+//            List<ParticipantUser> freeRoles = instanceToSubscribe.getMandatoryParticipants();
+//            Predicate<ParticipantUser> userNotSet = participantAddress -> participantAddress.getParticipant().getId() == null;
+//            List<ParticipantUser> s = freeRoles.stream().filter(userNotSet).collect(Collectors.toList());
 //            freeRoles.remove(instanceSubscribeRequest.getRole());
 //            Map<String, User> subscribers = instanceToSubscribe.getParticipants();
 //            User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
 //                    .orElseThrow(() -> new EntityNotFoundException("User not found!"));
 //            subscribers.put(instanceSubscribeRequest.getRole(), user);
-        mandatoryParticipantAddressReposistory.save(mandatoryParticipantAddress);
+        participantUserRepository.save(participantUser);
         //List<Instance> userInstances = user.getInstances();
         //userInstances.add(instanceToSubscribe);
         //userRepository.save(user);

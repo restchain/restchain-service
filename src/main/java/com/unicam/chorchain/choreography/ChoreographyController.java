@@ -54,6 +54,7 @@ public class ChoreographyController {
 
     @GetMapping("{id}")
     public ChoreographyDTO read(@PathVariable("id") Long id) {
+
         return choreographyService.read(id);
     }
 

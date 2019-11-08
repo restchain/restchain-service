@@ -4,7 +4,7 @@ import lombok.*;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "role")
+@Table(name = "participant")
 @ToString
 @EqualsAndHashCode(of = "id")
 @Getter

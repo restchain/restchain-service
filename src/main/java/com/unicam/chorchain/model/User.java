@@ -5,7 +5,6 @@ import lombok.*;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -34,5 +33,5 @@ public class User {
     private String password;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    private List<MandatoryParticipantAddress> mandatoryParticipantAddressSet;
+//    private Set<ParticipantUser> participantUsers = new HashSet<>();
 }

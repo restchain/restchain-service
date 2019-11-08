@@ -8,13 +8,13 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "mandatory_participants")
+@Table(name = "participant_user")
 @ToString
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Getter
 @Setter
-public class MandatoryParticipantAddress  {
+public class ParticipantUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,9 +24,7 @@ public class MandatoryParticipantAddress  {
     private Participant participant;
 
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-//    @JoinColumn(name = "created_by", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(nullable = true)
+    @ManyToOne
+    @JoinColumn
     private User user;
 }

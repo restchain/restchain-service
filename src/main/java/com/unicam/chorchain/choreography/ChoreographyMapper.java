@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 public interface ChoreographyMapper {
     @Mapping(target = "address", source = "user.address")
     //Prende dal choreography la proprietà user.adress invece di tutto user
-    @Mapping(target = "participants", source = "participants")
-    @Mapping(target = "instances", source = "instances")
+//    @Mapping(target = "participantSize", expression = "java(choreography.getParticipants().size())")
+//    @Mapping(target = "instanceSize", expression = "java(choreography.getInstances().size())")
     ChoreographyDTO toDTO(Choreography choreography);
 }

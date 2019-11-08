@@ -6,7 +6,8 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "instance")
@@ -63,8 +64,8 @@ public class Instance {
 //	@ElementCollection(fetch = FetchType.EAGER,targetClass = Participant.class)
 //	private List<Participant> optionalRoles;
 
-    @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL)
-    private List<MandatoryParticipantAddress> mandatoryParticipants;
+    @OneToMany(mappedBy = "participant")
+    private Set<ParticipantUser> mandatoryParticipants = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
 //    @JoinColumn(name = "created_by", nullable = false)
