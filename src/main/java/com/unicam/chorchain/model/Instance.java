@@ -7,6 +7,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @ToString
@@ -79,6 +80,12 @@ public class Instance {
     public boolean isDone() {
         return getMandatoryParticipants().stream()
                 .allMatch((m) -> m.getUser() != null);
+    }
+
+    @Transient
+    public int getPending() {
+        return (int) getMandatoryParticipants().stream()
+                .filter((m) -> m.getUser() == null).count();
     }
 };
 
