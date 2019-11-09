@@ -83,7 +83,7 @@ public class Instance {
     }
 
     @Transient
-    public int getPending() {
+    public int getPendingParticipants() {
         return (int) getMandatoryParticipants().stream()
                 .filter((m) -> m.getUser() == null).count();
     }

@@ -14,5 +14,5 @@ public class InstanceDTO {
     private List<InstanceParticipantUserDTO> mandatoryParticipants;
     private LocalDateTime created;
     private boolean done;
-    private int pending;
+    private int pendingParticipants;
 }
