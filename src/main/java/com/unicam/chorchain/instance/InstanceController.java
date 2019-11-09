@@ -45,4 +45,10 @@ public class InstanceController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/selfSubscribe")
+    public ResponseEntity<?> instanceSelfSubscription(@RequestBody InstanceSubscribeRequest instanceSubscribeRequest){
+        service.selfSubscription(instanceSubscribeRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }
