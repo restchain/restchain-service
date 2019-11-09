@@ -109,26 +109,14 @@ public class InstanceService {
             log.info("An user is already associated {}", instanceParticipantUser.getUser().getAddress());
         }
 
-//        int instanceMaxNumber = instanceToSubscribe.getChoreography().getInstances().size();
-//        int instanceActualNumber = instanceToSubscribe.getMandatoryParticipants().size();
-//
-//        if ((instanceActualNumber + 1) <= instanceMaxNumber) {
-
-
-//            instanceToSubscribe.setActualNumber(instanceActualNumber+1);
-//            List<InstanceParticipantUser> freeRoles = instanceToSubscribe.getMandatoryParticipants();
-//            Predicate<InstanceParticipantUser> userNotSet = participantAddress -> participantAddress.getParticipant().getId() == null;
-//            List<InstanceParticipantUser> s = freeRoles.stream().filter(userNotSet).collect(Collectors.toList());
-//            freeRoles.remove(instanceSubscribeRequest.getRole());
-//            Map<String, User> subscribers = instanceToSubscribe.getParticipants();
-//            User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
-//                    .orElseThrow(() -> new EntityNotFoundException("User not found!"));
-//            subscribers.put(instanceSubscribeRequest.getRole(), user);
         instanceParticipantUserRepository.save(instanceParticipantUser);
-        //List<Instance> userInstances = user.getInstances();
-        //userInstances.add(instanceToSubscribe);
-        //userRepository.save(user);
-//        return mapper.toInstanceDTO(instanceToSubscribe);
+    }
+
+    public void selfSubscription(InstanceSubscribeRequest instanceSubscribeRequest) {
+        InstanceSubscribeRequest req = new InstanceSubscribeRequest();
+        req.setAddress(userService.getLoggedUser().getUsername());
+        req.setInstanceParticipantUserId(instanceSubscribeRequest.getInstanceParticipantUserId());
+        instanceSubscription(req);
     }
 
 }
