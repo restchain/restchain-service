@@ -3,15 +3,12 @@ package com.unicam.chorchain.translator;
 import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.storage.FileSystemStorageService;
+import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.*;
@@ -31,6 +28,7 @@ import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -49,28 +47,41 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SmartContractService {
 
+    //    private String projectPath = "/Users/francesco/workspace/git/ChorChain/src/main/java/com/unicam/";
     @Value("${solidity.dir}")
-//    private String projectPath = "/Users/francesco/workspace/git/ChorChain/src/main/java/com/unicam/";
     private String projectPath;
+    @Value("${solidity.account.virtualpros}")
+    private String VirtualProsAccount;
+    @Value("${solidity.password.virtualpros}")
+    private String PassVirtualProsAccount;
+//    @Value("${solidity.node.host}")
+//    private String host;
+//    @Value("${solidity.node.port}")
+//    private String port;
+    @Value("${solidity.node.url}")
+    private String url;
 
-    private final FileSystemStorageService fileSystemStorageService;
+//    @Getter
+//    @Setter
+    private final FileSystemStorageSolidityService fileSystemStorageService;
 
-    //private String address;
-    //private String privateKey;
-    //private String fileName;
     private List<String> participants;
     public List<String> tasks;
     public List<ContractObject> allFunctions;
     public String CONTRACT_ADDRESS = "";
-    private static final String VirtualProsAccount = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
+    //    private static final String VirtualProsAccount = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
+
 
     public static boolean pendingTransaction = false;
+    private Web3j web3j;
+    private Admin adm;
 
-    //public static String projectPath = "/home/virtualpros/ChorChainStorage";
 
-
-    Web3j web3j = Web3j.build(new HttpService("http://192.12.193.47:8545"));
-    Admin adm = Admin.build(new HttpService("http://192.12.193.47:8545"));
+    @PostConstruct
+    public void init() {
+        web3j = Web3j.build(new HttpService(url));
+        adm = Admin.build(new HttpService(url));
+    }
 
 
 //    public ContractObject createSolidity(String fileName, Map<String, User> participants, List<String> freeRoles,
@@ -94,6 +105,8 @@ public class SmartContractService {
     public ContractObject createSolidity(Instance instance, Path modelPath) {
 
         log.debug("Create solidity... instance {}", instance.getId(), instance.getChoreography().getName());
+
+
         Choreography choreography = instance.getChoreography();
         Set<Participant> setOfMandatoryParticipants = instance.getMandatoryParticipants()
                 .stream()
@@ -110,18 +123,17 @@ public class SmartContractService {
                 .map((p) -> p.getName())
                 .collect(Collectors.toList());
 
-        ChoreographyBpmn cho = new ChoreographyBpmn();
+        ChoreographyBpmn choreographyBpmn = new ChoreographyBpmn();
 //        File f = new File(projectPath + File.separator + "bpmn" + File.separator + fileName);
 
 
         HashMap<String, User> myParticipants = new HashMap();
 
         instance.getMandatoryParticipants()
-                .stream()
                 .forEach((i) -> myParticipants.put(i.getParticipant().getName(), i.getUser()));
 
         try {
-            cho.start(modelPath.toFile(),
+            choreographyBpmn.start(modelPath.toFile(),
                     myParticipants,
                     setStringOptionalParticipants,
                     setStringMandatoryParticipants);
@@ -129,14 +141,17 @@ public class SmartContractService {
             UploadFile uploadFile = new UploadFile();
             uploadFile.setName(choreography.getName());
             uploadFile.setExtension(".sol");
-            uploadFile.setData(cho.choreographyFile);
-            fileSystemStorageService.store(uploadFile);
+            uploadFile.setData(choreographyBpmn.choreographyFile);
+
+
+            fileSystemStorageService.storeSolidity(uploadFile, projectPath);
 
         } catch (Exception e) {
             tasks = null;
             e.printStackTrace();
         }
-        return cho.finalContract;
+
+        return choreographyBpmn.finalContract;
     }
 
 
@@ -323,7 +338,7 @@ public class SmartContractService {
 
     public String deploy(String bin) throws Exception {
         if (pendingTransaction == true) {
-            System.out.println("C'� una transazione pendente");
+            log.error("Sembra ci sia una transazione pendente");
             return "ERROR";
         }
 
@@ -343,12 +358,12 @@ public class SmartContractService {
 		System.out.println("GAS ESTIMATION: "+ gasEstimation);
 		int result = Integer.parseInt(gasEstimation);*/
         //sostituire resources con compiled
-        String binar = new String(Files.readAllBytes(Paths.get(projectPath + parseName(bin, ".bin"))));
+        String binar = new String(Files.readAllBytes(Paths.get(projectPath + File.separator + parseName(bin, ".bin"))));
 
 
         //Unlocking the account
         PersonalUnlockAccount personalUnlockAccount = adm.personalUnlockAccount(VirtualProsAccount,
-                "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d").send();
+                PassVirtualProsAccount).send();
         //Getting the nonce
 
 
@@ -374,8 +389,8 @@ public class SmartContractService {
                 binar);
 
         EthEstimateGas estimation = web3j.ethEstimateGas(transaction).send();
-        BigInteger amountUsed = estimation.getAmountUsed();
-        //System.out.println("AMOUNT OF GAS USED: " + amountUsed + "AND current gas block limit(not used): " + blockGasLimit);
+//        BigInteger amountUsed = estimation.getAmountUsed();
+//        log.debug("AMOUNT OF GAS USED: " + amountUsed + "AND current gas block limit(not used): " + blockGasLimit);
 
 
         Transaction transaction1 = Transaction.createContractTransaction(
@@ -399,7 +414,7 @@ public class SmartContractService {
 
         //Optional<TransactionReceipt> receiptOptional = transactionReceipt.getTransactionReceipt();
         for (int i = 0; i < 222220; i++) {
-            //System.out.println("Wait: " + i);
+//            log.debug("Wait: " + i);
             if (!transactionReceipt.getTransactionReceipt().isPresent()) {
                 //Thread.sleep(5000);
                 transactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
@@ -413,7 +428,7 @@ public class SmartContractService {
 
         String contractAddress = transactionReceiptFinal.getContractAddress();
         pendingTransaction = false;
-        //System.out.println(contractAddress);
+        log.debug(contractAddress);
         return contractAddress;
 
 

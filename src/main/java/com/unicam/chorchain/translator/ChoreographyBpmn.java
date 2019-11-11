@@ -2,6 +2,7 @@ package com.unicam.chorchain.translator;
 
 import com.unicam.chorchain.model.ContractObject;
 import com.unicam.chorchain.model.User;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -19,8 +20,10 @@ import java.io.IOException;
 import java.util.*;
 
 @Slf4j
+@Getter
 public class ChoreographyBpmn {
 
+    public static String choreographyFile;
     public static int startint;
     private static BpmnModelInstance modelInstance;
     public static ArrayList<String> participantsWithoutDuplicates;
@@ -32,7 +35,6 @@ public class ChoreographyBpmn {
     public static Integer parallelCounter;
     public static Integer eventBasedCounter;
     public static Integer endEventCounter;
-    public static String choreographyFile;
     public ArrayList<DomElement> participantsTask;
     public ArrayList<DomElement> msgTask;
     public ArrayList<SequenceFlow> taskIncoming, taskOutgoing;
@@ -56,24 +58,30 @@ public class ChoreographyBpmn {
     public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
                          List<String> mandatoryRoles) throws Exception {
         try {
-            ChoreographyBpmn choreography = new ChoreographyBpmn();
-            choreography.readFile(bpmnFile);
-            choreography.getParticipants();
-            choreography.FlowNodeSearch(optionalRoles, mandatoryRoles);
-            choreographyFile = choreography.initial(bpmnFile.getName(), participants, optionalRoles, mandatoryRoles)
+
+            ChoreographyBpmn choreographyBpmn = new ChoreographyBpmn();
+
+            choreographyBpmn.readFile(bpmnFile);
+            choreographyBpmn.getParticipants();
+            choreographyBpmn.FlowNodeSearch(optionalRoles, mandatoryRoles);
+
+            choreographyFile = choreographyBpmn.initial(bpmnFile.getName(), participants, optionalRoles, mandatoryRoles)
                     + choreographyFile;
-            choreographyFile += choreography.lastFunctions();
+
+            choreographyFile += choreographyBpmn.lastFunctions();
 //            finalContract = new ContractObject(null, tasks, null, null, gatewayGuards, taskIdAndRole);
+
             finalContract = new ContractObject();
 //            choreography.save(bpmnFile.getName());
+
             log.debug("Contract creation done");
             log.debug("Ruolii:" + Arrays.toString(roleFortask.toArray()));
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-
     }
 
     public void mergeMap(String id, String role) {

@@ -5,6 +5,7 @@ import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepos
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
 import com.unicam.chorchain.storage.FileSystemStorageService;
+import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import com.unicam.chorchain.translator.SmartContractService;
 import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -126,9 +127,20 @@ public class InstanceService {
     public void deploy(InstanceDeployRequest instanceDeployRequest) {
 
         Instance instance = findInstanceById(instanceDeployRequest.getId());
-        ContractObject cObj = smartContractService.createSolidity(instance,
-                fileSystemStorageService.load(instance.getChoreography().getName().concat(".bpmn")));
 
+        log.debug("Generating solidity file ...");
+        ContractObject cObj = smartContractService.createSolidity(instance,
+                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+        log.debug("Compiling solidity file ...");
         smartContractService.compile(instance.getChoreography().getName());
+        log.debug("Deploying solidity file ...");
+        String cAddress = null;
+        try {
+            cAddress = smartContractService.deploy(instance.getChoreography().getName());
+        } catch (Exception e) {
+            log.error(e.toString());
+        }
+        log.debug("Deployed solidity {}", cAddress);
+
     }
 }
