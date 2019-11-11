@@ -46,10 +46,13 @@ public class ChoreographyBpmn {
     private static String startEventAdd;
     private static List<String> roleFortask;
     private static LinkedHashMap<String, String> taskIdAndRole;
-    // static String projectPath = System.getProperty("user.dir")+ "/workspace";
 
-//    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
-//                         List<String> mandatoryRoles) throws Exception {
+    /*   Metodo per avviare la traduzione bpmn-> Solidity, input:
+            - bpmnFile : il file da tradurre
+            - participants: i partecipanti(mandatory) sottoscritti all'istanza con tanto di ruolo
+            - optional/mandatory roles: liste contenenti le stringhe rappresentati i possibili partecipanti
+                dell'istanza
+     */
 public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
                      List<String> mandatoryRoles) throws Exception {
         try {
@@ -104,6 +107,9 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         taskIdAndRole = new LinkedHashMap<String, String>();
     }
 
+    //Metodo per riprendere il modello dal file bpmn e metterlo in un oggetto java
+    // Con il getModelElements... si usa la libreria FlowNode di camunda per prendere tutti
+    //gli elementi(task, gateway ecc...) del modello.
     public void readFile(File bpFile) throws IOException {
         //System.out.println("You chose to open this file: " + bpFile.getName());
         modelInstance = Bpmn.readModelFromFile(bpFile);
@@ -318,6 +324,13 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return sid.replace("-", "_");
     }
 
+    /*  Metodo che processa ogni sequenceFlow del modello analizzando i target o source del flow
+        e creando man mano la stringa rappresentante il contratto solidity.
+        Per ogni elemento trovato come target del flow viene controllato se è un:
+            -gateway(crea stringa solidity corrispondente)
+            - task, prende i partecipanti coinvolti e i relativi messaggi, controllando poi
+              se si tratta di un task one or two way. Crea infine la stringa solidity
+     */
     public void FlowNodeSearch(List<String> optionalRoles, List<String> mandatoryRoles) {
         // check for all SequenceFlow elements in the BPMN model
         for (SequenceFlow flow : modelInstance.getModelElementsByType(SequenceFlow.class)) {
@@ -629,7 +642,8 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
         }
     }
-
+    //Metodo per l'inserimento del modifier nella signature del metodo solidity riferito al messaggio del task
+    // il modifier può essere per controllare se un metodo deve essere eseguito da un ruolo opzionale o mandatory
     public String getRole(String part, List<String> optionalRoles, List<String> mandatoryRoles) {
         String res = "";
         for (int i = 0; i < mandatoryRoles.size(); i++) {
@@ -648,7 +662,9 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
         return res;
     }
+    /*  Metodo per recuperare il messaggio di richiesta e di risposta da un task
 
+     */
     public void getRequestAndResponse(ChoreographyTask task) {
         // if there is only the response
         Participant participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
