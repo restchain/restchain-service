@@ -230,6 +230,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return descr;
     }
 
+    //Metodo per la scrittura del solidity su un file fisico
     private static void fileAll(String fileName) throws IOException, Exception {
         FileWriter wChor = new FileWriter(new File(ContractFunctions.projectPath + File.separator + "resources"
                 + File.separator + ContractFunctions.parseName(fileName, ".sol")));
@@ -241,12 +242,14 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
     }
 
+    //Metodo per recuperare il nome della variabile senza i tipi solidity
     private static String typeParse(String toParse) {
         String n = toParse.replace("string", "").replace("uint", "").replace("bool", "");
         // String[] tokens = n.split(" ");
         return n;
     }
 
+    //Metodo per aggiungere la keyword "memory" alle stringhe in solidity
     private static String addMemory(String toParse) {
         // System.out.println(toParse);
         String n = toParse.replace("string ", "string memory ");
@@ -254,6 +257,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return n;
     }
 
+    //Metodo per aggiungere la/le variabile/i passate dai messaggi all'arrya currentMemory che tiene traccia dello stato del processo
     private static String addToMemory(String msg) {
 
         String add = "";
@@ -270,6 +274,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return add;
     }
 
+    //Metodo per la cerazione di una funzione solidity che trasferisca ether ad un altro account
     private static String createTransaction(String msg) {
         String ret = "";
         String n = msg.replace("address", "").replace("payable", "");
@@ -662,7 +667,10 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
         return res;
     }
-    /*  Metodo per recuperare il messaggio di richiesta e di risposta da un task
+    /*  Metodo per recuperare il messaggio di richiesta e di risposta da un task, analizza il task
+        dipendentemente se ha solo la richiesta, solo la risposta o tutte e due.
+        Per ogni messaggio trovato inserisce dentro gli array corrispondenti: l'id del messaggio,
+        il ruolo che deve inviarlo e il messagio in sè
 
      */
     public void getRequestAndResponse(ChoreographyTask task) {

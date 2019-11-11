@@ -75,6 +75,8 @@ public class ContractFunctions {
 	}
 
 
+	//Richiama il comando solc (compilatore solidity) dal terminale facendogli compilare il file .sol
+	//salvando i file in outpu (.bin, .abi) nella directory resources
 	public void compile(String fileName) {
 		try {
 			//System.out.println(getServletContext().getInitParameter("upload.location"));
@@ -115,6 +117,7 @@ public class ContractFunctions {
 		}
 	}
 
+	//METODO CHE NON SERVE PIù
 	public void wrapper(String fileName) {
 		String path = projectPath + File.separator + "resources" + File.separator;
 		String p = Paths.get("").toAbsolutePath().normalize().toString();
@@ -129,6 +132,7 @@ public class ContractFunctions {
 		//System.out.println("Java contract done");
 	}
 
+	//Crea le credenziali per poter operare su transazioni partendo dalla chiave privata
 	public Credentials getCredentialFromPrivateKey(String privateKey) throws IOException, CipherException {
 		// return WalletUtils.loadCredentials("andrea",
 		// "src/main/resources/UTC--2018-12-06T16-44-54.114315504Z--19a3f868355394b5423106fb31f201da646139af");
@@ -142,6 +146,7 @@ public class ContractFunctions {
 		return newName;
 	}
 
+	//METODO CHE NON SERVE PIù
 	public String reflection(String toExec, String role) {
 		String finalName = "";
 		//System.out.println("sobo dentro al metodo");
@@ -256,6 +261,8 @@ public class ContractFunctions {
 		return contentBuilder.toString();
 	}
 
+	//Crea una transazione per il deploy del cotnratto emettendola sulla blockchain, prende in input il file .bin
+	//del solidity compilato
 	public String deploy(String bin) throws Exception {
 		  if(pendingTransaction == true) {
 			  System.out.println("C'� una transazione pendente");
@@ -379,6 +386,8 @@ public class ContractFunctions {
 
 	}
 
+	//Metodo esposto dal controller per richiamare da chiamata rest un operazione del cotnratto senza passare
+	//per l'interfaccia grafica, crea la transzione firmandola con le credenziali dell'utente e poi la deploya.
 	public void signOffline(Parameters parameters, ContractObject contractDb, String account, String functionName) throws Exception {
 		LinkedHashMap<String, String> hashed = contractDb.getTaskIdAndRole();
 		//System.out.println("size di hashed: " + hashed.size());
