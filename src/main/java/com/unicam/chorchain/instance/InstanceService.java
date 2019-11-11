@@ -4,6 +4,8 @@ import com.unicam.chorchain.choreography.ChoreographyRepository;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
+import com.unicam.chorchain.storage.FileSystemStorageService;
+import com.unicam.chorchain.translator.SmartContractService;
 import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,8 @@ public class InstanceService {
     private final UserService userService;
     private final ParticipantRepository participantRepository;
     private final InstanceParticipantUserRepository instanceParticipantUserRepository;
+    private final FileSystemStorageService fileSystemStorageService;
+    private final SmartContractService smartContractService;
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
 
@@ -119,4 +123,12 @@ public class InstanceService {
         instanceSubscription(req);
     }
 
+    public void deploy(InstanceDeployRequest instanceDeployRequest) {
+
+        Instance instance = findInstanceById(instanceDeployRequest.getId());
+        ContractObject cObj = smartContractService.createSolidity(instance,
+                fileSystemStorageService.load(instance.getChoreography().getName().concat(".bpmn")));
+
+        smartContractService.compile(instance.getChoreography().getName());
+    }
 }

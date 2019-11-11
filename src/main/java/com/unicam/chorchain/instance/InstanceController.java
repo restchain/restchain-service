@@ -51,4 +51,10 @@ public class InstanceController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/deploy")
+    public ResponseEntity<?> instanceDeploy(@RequestBody InstanceDeployRequest instanceDeployRequest){
+        service.deploy(instanceDeployRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }

@@ -2,6 +2,7 @@ package com.unicam.chorchain.translator;
 
 import com.unicam.chorchain.model.ContractObject;
 import com.unicam.chorchain.model.User;
+import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.impl.instance.EndEventImpl;
@@ -13,13 +14,13 @@ import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 public class ChoreographyBpmn {
+
     public static int startint;
     private static BpmnModelInstance modelInstance;
     public static ArrayList<String> participantsWithoutDuplicates;
@@ -46,12 +47,14 @@ public class ChoreographyBpmn {
     private static String startEventAdd;
     private static List<String> roleFortask;
     private static LinkedHashMap<String, String> taskIdAndRole;
+
+
     // static String projectPath = System.getProperty("user.dir")+ "/workspace";
 
-//    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
+    //    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
 //                         List<String> mandatoryRoles) throws Exception {
-public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
-                     List<String> mandatoryRoles) throws Exception {
+    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
+                         List<String> mandatoryRoles) throws Exception {
         try {
             ChoreographyBpmn choreography = new ChoreographyBpmn();
             choreography.readFile(bpmnFile);
@@ -62,9 +65,9 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
             choreographyFile += choreography.lastFunctions();
 //            finalContract = new ContractObject(null, tasks, null, null, gatewayGuards, taskIdAndRole);
             finalContract = new ContractObject();
-            choreography.fileAll(bpmnFile.getName());
-            //System.out.println("Contract creation done");
-            // System.out.println("Ruolii:" + Arrays.toString(roleFortask.toArray()));
+//            choreography.save(bpmnFile.getName());
+            log.debug("Contract creation done");
+            log.debug("Ruolii:" + Arrays.toString(roleFortask.toArray()));
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +124,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
     private static String initial(String filename, Map<String, User> participants, List<String> optionalRoles,
                                   List<String> mandatoryRoles) {
         String intro = "pragma solidity ^0.5.3; \n" + "	pragma experimental ABIEncoderV2;\n" + "	contract "
-                + ContractFunctions.parseName(filename, "") + "{\n" + "		uint counter;\r\n"
+                + SmartContractService.parseName(filename, "") + "{\n" + "		uint counter;\r\n"
                 + "	event stateChanged(uint);  \n" + "	mapping (string=>uint) position;\n"
                 + "\n	enum State {DISABLED, ENABLED, DONE} State s; \n" + "	mapping(string => string) operator; \n"
                 + "	struct Element{\n	string ID;\n	State status;\n}\n" + "	struct StateMemory{\n	";
@@ -224,16 +227,24 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return descr;
     }
 
-    private static void fileAll(String fileName) throws IOException, Exception {
-        FileWriter wChor = new FileWriter(new File(ContractFunctions.projectPath + File.separator + "resources"
-                + File.separator + ContractFunctions.parseName(fileName, ".sol")));
-        BufferedWriter bChor = new BufferedWriter(wChor);
-        bChor.write(choreographyFile);
-        bChor.flush();
-        bChor.close();
-        //System.out.println("Solidity contract created.");
 
-    }
+    //ToDO remove?? Handled externally
+//    private static void save(String fileName) throws IOException, Exception {
+//        Path rootLocation = Paths.get(projectPath);
+//        try {
+//            Files.createDirectories(rootLocation);
+//        } catch (IOException e) {
+//            throw new StorageException("Could not initialize storage", e);
+//        }
+//        FileWriter wChor = new FileWriter(new File(projectPath
+//                + File.separator + SmartContractHelpersService.parseName(fileName, ".sol")));
+//        log.debug("File to save {} ", wChor);
+//        BufferedWriter bChor = new BufferedWriter(wChor);
+//        bChor.write(choreographyFile);
+//        bChor.flush();
+//        bChor.close();
+//        System.out.println("Solidity contract created.");
+//    }
 
     private static String typeParse(String toParse) {
         String n = toParse.replace("string", "").replace("uint", "").replace("bool", "");
@@ -560,7 +571,8 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                             descr += "function " + parseSid(getNextId(node, false)) + addMemory(getPrameters(request))
                                     + " public payable " + pName + ") {\n";
                             descr += "	require(elements[position[\"" + getNextId(node, false)
-                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, false) + "\");\n"
+                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node,
+                                    false) + "\");\n"
                                     + createTransaction(request) + "\n" + eventBlock + "}\n";
                         } else {
                             taskNull = false;
@@ -569,7 +581,8 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                                     + " public " + pName + "){\n";
                             descr += "	require(elements[position[\"" + getNextId(node, false)
                                     + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, false)
-                                    + "\");\n" + "	enable(\"" + getNextId(node, true) + "\");\n" + addToMemory(request)
+                                    + "\");\n" + "	enable(\"" + getNextId(node, true) + "\");\n" + addToMemory(
+                                    request)
                                     + eventBlock + "}\n";
                             addGlobal(request);
                         }
@@ -586,7 +599,8 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                             descr += "function " + parseSid(getNextId(node, true)) + addMemory(getPrameters(response))
                                     + " public payable " + pName + ") {\n";
                             descr += "	require(elements[position[\"" + getNextId(node, true)
-                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, true) + "\");\n"
+                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node,
+                                    true) + "\");\n"
                                     + createTransaction(response) + "\n" + eventBlock;
                         } else {
                             taskNull = false;
@@ -791,6 +805,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         //System.out.println("GET ID RETURNS: " + id);
         return id;
     }
+
     //
     private boolean checkTaskPresence(String sid) {
         // System.out.println(sid);
