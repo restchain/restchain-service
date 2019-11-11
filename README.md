@@ -44,7 +44,7 @@ password : test
 **comandi utilizzati spesso**
 
 http  POST :8085/signin address=aa password=aa
-http --form --session a POST :8085/login address=0x56AE0160ab7dD91850FebBA7cDb63B86c5c8857F password=aa
+http --form --session a POST :8085/login address=0x535CCa8697F29DaC037a734D6984eeD7EA943A85 password=test
 
 http --session a POST :8085/model description="aaa" data=@bpmn/OnlinePurchase.bpmn name="test" extension="bpmn"
 http --session a :8085/model/1

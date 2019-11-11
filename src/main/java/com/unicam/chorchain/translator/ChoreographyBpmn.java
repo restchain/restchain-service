@@ -1,7 +1,8 @@
 package com.unicam.chorchain.translator;
 
-import com.unicam.chorchain.model.ContractObject;
+import com.unicam.chorchain.model.SmartContract;
 import com.unicam.chorchain.model.User;
+import com.unicam.chorchain.smartContract.SmartContractService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
@@ -44,7 +45,7 @@ public class ChoreographyBpmn {
     public static ArrayList<String> gatewayGuards;
     public static ArrayList<String> toBlock;
     public static List<String> tasks;
-    public static ContractObject finalContract;
+    public static SmartContract finalContract;
     public static List<String> elementsID;
     private static String startEventAdd;
     private static List<String> roleFortask;
@@ -69,9 +70,9 @@ public class ChoreographyBpmn {
                     + choreographyFile;
 
             choreographyFile += choreographyBpmn.lastFunctions();
-//            finalContract = new ContractObject(null, tasks, null, null, gatewayGuards, taskIdAndRole);
+//            finalContract = new SmartContract(null, tasks, null, null, gatewayGuards, taskIdAndRole);
 
-            finalContract = new ContractObject();
+            finalContract = new SmartContract();
 //            choreography.save(bpmnFile.getName());
 
             log.debug("Contract creation done");

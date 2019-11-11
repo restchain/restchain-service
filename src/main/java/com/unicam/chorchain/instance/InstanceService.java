@@ -5,8 +5,7 @@ import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepos
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
 import com.unicam.chorchain.storage.FileSystemStorageService;
-import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
-import com.unicam.chorchain.translator.SmartContractService;
+import com.unicam.chorchain.smartContract.SmartContractService;
 import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -129,7 +128,7 @@ public class InstanceService {
         Instance instance = findInstanceById(instanceDeployRequest.getId());
 
         log.debug("Generating solidity file ...");
-        ContractObject cObj = smartContractService.createSolidity(instance,
+        SmartContract cObj = smartContractService.createSolidity(instance,
                 fileSystemStorageService.load(instance.getChoreography().getFilename()));
         log.debug("Compiling solidity file ...");
         smartContractService.compile(instance.getChoreography().getName());

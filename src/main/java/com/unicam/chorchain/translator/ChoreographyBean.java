@@ -1,6 +1,6 @@
 package com.unicam.chorchain.translator;
 
-import com.unicam.chorchain.model.ContractObject;
+import com.unicam.chorchain.model.SmartContract;
 import lombok.Data;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
@@ -41,7 +41,7 @@ public class ChoreographyBean {
     public ArrayList<String> gatewayGuards = new ArrayList<String>();
     public ArrayList<String> toBlock = new ArrayList<String>();
     public List<String> tasks = new ArrayList<String>();
-    public ContractObject finalContract;
+    public SmartContract finalContract;
     private LinkedHashMap<String, String> taskIdAndRole = new LinkedHashMap<String, String>();
     public Collection<FlowNode> allNodes;
 }

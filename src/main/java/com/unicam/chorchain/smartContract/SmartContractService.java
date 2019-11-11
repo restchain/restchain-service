@@ -1,12 +1,10 @@
-package com.unicam.chorchain.translator;
+package com.unicam.chorchain.smartContract;
 
 import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.model.*;
-import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
-import lombok.Getter;
+import com.unicam.chorchain.translator.ChoreographyBpmn;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -47,62 +45,31 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SmartContractService {
 
-    //    private String projectPath = "/Users/francesco/workspace/git/ChorChain/src/main/java/com/unicam/";
     @Value("${solidity.dir}")
     private String projectPath;
     @Value("${solidity.account.virtualpros}")
     private String VirtualProsAccount;
     @Value("${solidity.password.virtualpros}")
     private String PassVirtualProsAccount;
-//    @Value("${solidity.node.host}")
-//    private String host;
-//    @Value("${solidity.node.port}")
-//    private String port;
     @Value("${solidity.node.url}")
-    private String url;
+    private String blcokChainUrl;
 
-//    @Getter
-//    @Setter
     private final FileSystemStorageSolidityService fileSystemStorageService;
 
-    private List<String> participants;
-    public List<String> tasks;
-    public List<ContractObject> allFunctions;
-    public String CONTRACT_ADDRESS = "";
-    //    private static final String VirtualProsAccount = "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1";
-
-
-    public static boolean pendingTransaction = false;
+    private List<String> tasks;
+    private String CONTRACT_ADDRESS = "";
     private Web3j web3j;
     private Admin adm;
 
+    private static boolean pendingTransaction = false;
 
     @PostConstruct
     public void init() {
-        web3j = Web3j.build(new HttpService(url));
-        adm = Admin.build(new HttpService(url));
+        web3j = Web3j.build(new HttpService(blcokChainUrl));
+        adm = Admin.build(new HttpService(blcokChainUrl));
     }
 
-
-//    public ContractObject createSolidity(String fileName, Map<String, User> participants, List<String> freeRoles,
-//                                         List<String> mandatoryRoles) {
-//        ChoreographyBpmn cho = new ChoreographyBpmn();
-//        File f = new File(projectPath + File.separator + "bpmn" + File.separator + fileName);
-//        try {
-//            //System.out.println(f.getAbsolutePath());
-//            cho.start(f, participants, freeRoles, mandatoryRoles);
-//            //allFunctions = cho.allFunctions;
-//
-//            //Thread.sleep(15000);
-//            // System.out.print(cho.tasks);
-//        } catch (Exception e) {
-//            tasks = null;
-//            e.printStackTrace();
-//        }
-//        return cho.finalContract;
-//    }
-
-    public ContractObject createSolidity(Instance instance, Path modelPath) {
+    public SmartContract createSolidity(Instance instance, Path modelPath) {
 
         log.debug("Create solidity... instance {}", instance.getId(), instance.getChoreography().getName());
 
@@ -300,7 +267,7 @@ public class SmartContractService {
                             //System.out.println(fi.get(e));
                             finalName = (String) fi.get(e);
                             return finalName;
-							/*for (ContractObject co : allFunctions) {
+							/*for (SmartContract co : allFunctions) {
 								if(co.getName() == finalName) {
 									return co;
 								}
@@ -463,7 +430,7 @@ public class SmartContractService {
 
     }
 
-    public void signOffline(Parameters parameters, ContractObject contractDb, String account,
+    public void signOffline(Parameters parameters, SmartContract contractDb, String account,
                             String functionName) throws Exception {
         LinkedHashMap<String, String> hashed = contractDb.getTaskIdAndRole();
         //System.out.println("size di hashed: " + hashed.size());
