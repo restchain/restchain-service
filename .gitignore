@@ -35,4 +35,4 @@ build/
 
 ### Upload dir ###
 upload-dir/
-src/main/resource/application-*.*
+src/main/resources/application-*.*
