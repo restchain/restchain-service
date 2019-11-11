@@ -5,7 +5,7 @@
   <message id="sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b" name="confirmation(bool accepted, bool reiterate)" />
   <message id="sid-abba267c-92e3-4944-a98a-d317e035c861" name="withdraw(string motivation)" />
   <message id="sid-e385b492-6b2b-475b-a8dd-8fc09513393b" name="shipInfo(string shipAddress)" />
-  <message id="sid-b9828a39-b70d-4470-b5d2-61cda9b2bc64" name="payment(uint amount)" />
+  <message id="sid-b9828a39-b70d-4470-b5d2-61cda9b2bc64" name="payment(address payable to)" />
   <message id="sid-2F272EDB-9940-467E-AADC-2B485679AF43" name="shipment(string shipInfo)">
     <extensionElements>
       <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff" />
