@@ -4,7 +4,13 @@ import lombok.Data;
 
 @Data
 public class UploadFile {
-    String data;
-    String filename;
-    String description;
+    private String data;
+    private String name;
+    private String description;
+    private String extension;
+
+    public String getFilename(){
+        return this.name.concat(this.extension);
+    }
 }
+

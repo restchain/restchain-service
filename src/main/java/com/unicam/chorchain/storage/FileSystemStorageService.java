@@ -30,7 +30,6 @@ public class FileSystemStorageService {
 
     public void store(UploadFile file) {
         String filename = StringUtils.cleanPath(file.getFilename());
-        filename = filename.concat(".bpmn");
         try {
             if (file.getFilename().isEmpty()) {
                 throw new StorageException("Failed to store empty file " + filename);

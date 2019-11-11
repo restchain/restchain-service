@@ -22,6 +22,9 @@ public class Choreography {
 	@Column(nullable = false)
 	private String name;
 
+	@Column(nullable = false)
+	private String filename;
+
 	private String description;
 
 	@ManyToOne(optional = false)

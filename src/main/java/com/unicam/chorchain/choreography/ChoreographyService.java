@@ -43,13 +43,14 @@ public class ChoreographyService {
         return PagedResources.createResources(repository.findAll(pageable), mapper::toDTO);
     }
 
-    public ChoreographyDTO create(String filename, String description) {
+    public ChoreographyDTO create(String name, String description, String filename) {
 
         Choreography choreography = new Choreography();
 
         choreography.setCreated(LocalDateTime.now());
         choreography.setDescription(description);
-        choreography.setName(filename);
+        choreography.setName(name);
+        choreography.setFilename(filename);
 
         //Setting uploaded_by user
         User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
@@ -58,7 +59,7 @@ public class ChoreographyService {
 
 
         //Retrieves participants from the bpmn and add them to the Participant entity
-        Collection<String> participantNames = getChoreographyBpmnPartecipant(filename.concat(".bpmn"));
+        Collection<String> participantNames = getChoreographyBpmnPartecipant(filename);
         participantNames.forEach(
                 (p) -> {
                     com.unicam.chorchain.model.Participant participant = new com.unicam.chorchain.model.Participant(p,

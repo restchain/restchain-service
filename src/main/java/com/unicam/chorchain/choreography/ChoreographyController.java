@@ -45,8 +45,9 @@ public class ChoreographyController {
     @PostMapping
     public ResponseEntity<?> handleFileUpload(@RequestBody UploadFile uploadFile) {
         log.info("{}", uploadFile);
+        uploadFile.setExtension(".bpmn");
         fileSystemStorageService.store(uploadFile);
-        choreographyService.create(uploadFile.getFilename(), uploadFile.getDescription());
+        choreographyService.create(uploadFile.getName(), uploadFile.getDescription(),uploadFile.getFilename());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -71,7 +72,6 @@ public class ChoreographyController {
     public ResponseEntity<?> instancesByModel(@PathVariable("id") Long modelId) {
         return ResponseEntity.status(HttpStatus.OK).body(instanceService.findAllByModelId(modelId));
     }
-
 
 
 
