@@ -1,5 +1,6 @@
 package com.unicam.chorchain.instance;
 
+import com.unicam.chorchain.SolidityGen;
 import com.unicam.chorchain.choreography.ChoreographyRepository;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
@@ -139,7 +140,12 @@ public class InstanceService {
         } catch (Exception e) {
             log.error(e.toString());
         }
+
         log.debug("Deployed solidity {}", cAddress);
+
+
+        SolidityGen p = new SolidityGen();
+        log.debug(p.genSimpleProcess());
 
     }
 }
