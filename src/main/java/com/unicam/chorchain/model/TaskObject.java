@@ -1,3 +1,8 @@
+/*
+Rappresenta un messaggio (cioè la busta del task REQ o RESP)
+Serve nel FE per creare le form e capire se processare o meno
+*  */
+
 //package com.unicam.chorchain.model;
 //
 //import java.util.List;

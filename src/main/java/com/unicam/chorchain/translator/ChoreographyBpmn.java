@@ -20,6 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+
+
+/*  nel Task il messaggio sopra si chiama REQUESTS e quello sotto RESPONSE */
+
 @Slf4j
 @Getter
 public class ChoreographyBpmn {
@@ -39,18 +43,18 @@ public class ChoreographyBpmn {
     public ArrayList<DomElement> participantsTask;
     public ArrayList<DomElement> msgTask;
     public ArrayList<SequenceFlow> taskIncoming, taskOutgoing;
-    public static ArrayList<String> nodeSet;
+    public static ArrayList<String> nodeSet;                    //contiene gli id dei vari oggetti processati fino a quel moemnto, se è qui è già stato processato
     public static String request;
     public static String response;
     public static ArrayList<String> gatewayGuards;
     public static ArrayList<String> toBlock;
     public static List<String> tasks;
     public static SmartContract finalContract;
-    public static List<String> elementsID;
+    public static List<String> elementsID;                      //contiene gli id dei vari oggetti processati fino a quel moemnto, prende gli id elementi che vengono messo in solidity
     private static String startEventAdd;
-    private static List<String> roleFortask;
-    private static LinkedHashMap<String, String> taskIdAndRole;
-
+    private static List<String> roleFortask;                    //contiene tutti i tipi di ruoli visti
+    private static LinkedHashMap<String, String> taskIdAndRole;    //Prende gli ID di tutti gli elementi e associa un ruolo (internal,private,public), se GAtawey sarà internal
+    /* qui ci sarà l'id del messaggio (message) e il partecipante che lo deve inviare */
 
     // static String projectPath = System.getProperty("user.dir")+ "/workspace";
 
@@ -87,8 +91,6 @@ public class ChoreographyBpmn {
 
     public void mergeMap(String id, String role) {
         taskIdAndRole.put(id, role);
-
-
     }
 
     public ChoreographyBpmn() {
@@ -119,7 +121,7 @@ public class ChoreographyBpmn {
     public void readFile(File bpFile) throws IOException {
         //System.out.println("You chose to open this file: " + bpFile.getName());
         modelInstance = Bpmn.readModelFromFile(bpFile);
-        allNodes = modelInstance.getModelElementsByType(FlowNode.class);
+        allNodes = modelInstance.getModelElementsByType(FlowNode.class); //Tutti gli elementi totali - i task
     }
 
     public void getParticipants() {
@@ -252,7 +254,7 @@ public class ChoreographyBpmn {
 //        bChor.write(choreographyFile);
 //        bChor.flush();
 //        bChor.close();
-//        System.out.println("Solidity contract created.");
+//        System.out.println("Contract contract created.");
 //    }
 
     private static String typeParse(String toParse) {
@@ -334,32 +336,55 @@ public class ChoreographyBpmn {
         return res;
     }
 
+
+    //Estrae l'id dell'elemento lo scrivo con _
     private static String parseSid(String sid) {
         return sid.replace("-", "_");
     }
 
+
     public void FlowNodeSearch(List<String> optionalRoles, List<String> mandatoryRoles) {
-        // check for all SequenceFlow elements in the BPMN model
+
+
+        // check for all SequenceFlow elements in the BPMN model (mi metto sui connettori - considero che sono ordinati, ma funziona ugale)
         for (SequenceFlow flow : modelInstance.getModelElementsByType(SequenceFlow.class)) {
+
+
             // node to be processed, created by the target reference of the sequence flow
+            //Prendo la cosa che punta la freccia tramite targetRef e lo metto in node
             ModelElementInstance node = modelInstance.getModelElementById(flow.getAttributeValue("targetRef"));
+
 
             // node containing the source of the flow, useful to get the start element
             ModelElementInstance start = modelInstance.getModelElementById(flow.getAttributeValue("sourceRef"));
+
+
             if (start instanceof StartEvent) {
+
                 // checking and processing all the outgoing nodes
+                //Prendo le frecce che escono dallo start (SequenceFlow.getOutgoing)
                 for (SequenceFlow outgoing : ((StartEvent) start).getOutgoing()) {
+
                     ModelElementInstance nextNode = modelInstance
                             .getModelElementById(outgoing.getAttributeValue("targetRef"));
 
+                    //Formatto il nome dell'event per standrdizzarlo come vogliamo
                     start.setAttributeValue("name", "startEvent_" + startCounter);
                     startCounter++;
+
                     nodeSet.add(start.getAttributeValue("id"));
+
+                    //aggiunge in taskIDRole - Prende l'id dello Start e ci mette internal
                     mergeMap(start.getAttributeValue("id"), "internal");
+
+                    //fa stessa cosa di nodeSEt
                     elementsID.add(start.getAttributeValue("id"));
                     roleFortask.add("internal");
+
+                    //Aggiungo il nome dell'elemento che ho appena processato che verrà inserito nel db
                     tasks.add(start.getAttributeValue("name"));
 
+                    //Aggiungo l'id dello start
                     startEventAdd = start.getAttributeValue("id");
                     //
 
@@ -503,6 +528,9 @@ public class ChoreographyBpmn {
                         + "	require(elements[position[\"" + node.getAttributeValue("id")
                         + "\"]].status==State.ENABLED);\n" + "	done(\"" + node.getAttributeValue("id") + "\");  }\n\n";
                 choreographyFile += descr;
+
+
+                // IF per beccara il task, se non è niente ma è solo un ModelElementInstanceImpl è un task
             } else if (node instanceof ModelElementInstanceImpl && !(node instanceof EndEvent)
                     && !(node instanceof ParallelGateway) && !(node instanceof ExclusiveGateway)
                     && !(node instanceof EventBasedGateway) && (checkTaskPresence(getNextId(node, false)) == false)) {
@@ -529,6 +557,8 @@ public class ChoreographyBpmn {
                 String call = "";
                 String eventBlock = "";
 
+
+                //vedo se cè  un event perchè poi se vado sul ramo devo disabilitare l'altro
                 if (start instanceof EventBasedGateway) {
                     for (SequenceFlow block : ((EventBasedGateway) start).getOutgoing()) {
                         ModelElementInstance nextElement = modelInstance
@@ -539,12 +569,19 @@ public class ChoreographyBpmn {
                     }
                 }
                 // if there isn't a response the function created is void
-
-                // da cambiare se funziona, levare 'if-else
+                //se OneWay cè solo un messaggio
                 if (task.getType() == ChoreographyTask.TaskType.ONEWAY) {
                     //System.out.println("Task � 1 way");
                     taskNull = false;
                     String pName = getRole(participantName, optionalRoles, mandatoryRoles);
+
+
+                    /*
+                        se cè una funzione payment nel modello vuol  dire che vuoi inviare eth ad un altro account che
+                        inserisci in input e la funzione deve essere formatta in modo standard
+
+                        payment(addres to)
+                     */
 
                     if (request.contains("payment")) {
                         //System.out.println("nome richiesta: " + request);
@@ -627,8 +664,13 @@ public class ChoreographyBpmn {
                 }
                 choreographyFile += descr;
                 descr = "";
+
+
                 // checking the outgoing elements from the task
                 //System.out.println("TASK NULL � : " + taskNull);
+
+
+                //Attiva l'elemento successivo
                 if (taskNull == false) {
 
                     for (SequenceFlow out : task.getOutgoing()) {
@@ -672,6 +714,8 @@ public class ChoreographyBpmn {
         return res;
     }
 
+
+    //Prende REQ and RESP del task in pratica i due messaggi
     public void getRequestAndResponse(ChoreographyTask task) {
         // if there is only the response
         Participant participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
@@ -759,13 +803,21 @@ public class ChoreographyBpmn {
 
     // return the next node id, useful to retrieve the first message id in case of
     // Choreography task
+
+
+    //Passi un elemento e prende l'id di quello succesivo, se è task lo prende della req o della resp (a seconda del boolean)
+    // se non è task prende l'id di quello successivo
     private static String getNextId(ModelElementInstance nextNode, boolean msg) {
         String id = "";
         // System.out.println(nextNode.getClass());
+
+        //Se è task
         if (nextNode instanceof ModelElementInstanceImpl && !(nextNode instanceof EndEvent)
                 && !(nextNode instanceof ParallelGateway) && !(nextNode instanceof ExclusiveGateway)
                 && !(nextNode instanceof EventBasedGateway) && !(nextNode instanceof StartEvent)) {
             ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode, modelInstance);
+
+            //Se msg è T o F e c'è richiesta
             if (task.getRequest() != null && msg == false) {
                 //System.out.println("SONO DENTRO GETrEQUEST != NULL");
                 MessageFlow requestMessageFlowRef = task.getRequest();
@@ -808,6 +860,9 @@ public class ChoreographyBpmn {
              * responseMessageFlowRef = task.getResponse(); id =
              * responseMessageFlowRef.getId(); }
              */
+
+            // Se non sono un task prendo l'id attuale
+
         } else {
             id = nextNode.getAttributeValue("id");
         }
