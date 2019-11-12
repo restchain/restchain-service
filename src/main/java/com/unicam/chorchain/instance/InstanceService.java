@@ -144,8 +144,6 @@ public class InstanceService {
         log.debug("Deployed solidity {}", cAddress);
 
 
-        SolidityGen p = new SolidityGen();
-        log.debug(p.genSimpleProcess());
 
     }
 }
