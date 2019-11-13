@@ -1,31 +1,135 @@
 package com.unicam.chorchain;
 
+import com.sun.tools.javadoc.Start;
 import com.unicam.chorchain.solidity.Enum;
 import com.unicam.chorchain.solidity.*;
 import com.unicam.chorchain.solidity.Event;
 import com.unicam.chorchain.storage.StorageFileNotFoundException;
+import com.unicam.chorchain.translator.ChoreographyTask;
+import javafx.beans.binding.ObjectExpression;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.pqc.crypto.gmss.util.GMSSRandom;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.impl.BpmnModelInstanceImpl;
+import org.camunda.bpm.model.bpmn.impl.instance.ExclusiveGatewayImpl;
 import org.camunda.bpm.model.bpmn.instance.Process;
 import org.camunda.bpm.model.bpmn.instance.*;
+import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import org.camunda.bpm.model.xml.type.ModelElementType;
 import org.junit.Test;
+import org.mapstruct.ap.internal.model.common.ModelElement;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.web3j.abi.datatypes.Int;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public class SolidityGen {
+
+    private Set<String> visited = new HashSet<>();
+
+    private String getId(Object node, BpmnModelInstance modelInstance) {
+        String nodeId;
+        if (node instanceof ModelElementInstanceImpl) {
+            ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node, modelInstance);
+            nodeId = task.getId();
+        } else if (node instanceof BpmnModelInstanceImpl) {
+            log.debug("");
+            nodeId = "";
+        } else {
+            nodeId = ((BaseElement) node).getId();
+        }
+        return nodeId;
+    }
+
+    private String getType(Object node) {
+        String typeName;
+        if (node instanceof ModelElementInstanceImpl) {
+            typeName = ((ModelElementInstanceImpl) node).getElementType().getTypeName();
+        } else {
+            typeName = ((BaseElement) node).getElementType().getTypeName();
+        }
+        return typeName;
+    }
+
+    void traverse(Object node, BpmnModelInstance modelInstance) {
+//        log.debug(node.getClass().toString());
+//        log.debug("id: {} - type: {}", getId(node, modelInstance), getType(node));
+
+        if (!visited.contains(getId(node, modelInstance))) {
+            log.debug("id: {} - type: {} - n°:{}", getId(node, modelInstance), getType(node), visited.size() + 1);
+            visited.add(getId(node, modelInstance));
+
+            if (node instanceof StartEvent) {
+
+                StartEvent s = ((StartEvent) node);
+                s.getIncoming().forEach(n -> traverse(n, modelInstance));
+                s.getOutgoing().forEach(n -> traverse(n, modelInstance));
+
+            } else if (node instanceof EndEvent) {
+
+                EndEvent s = ((EndEvent) node);
+                s.getIncoming().forEach(n -> traverse(n, modelInstance));
+                s.getOutgoing().forEach(n -> traverse(n, modelInstance));
+
+            } else if (node instanceof ExclusiveGateway) {
+
+                ExclusiveGateway f = ((ExclusiveGatewayImpl) node);
+                f.getOutgoing().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+                f.getIncoming().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+
+            } else if (node instanceof EventBasedGateway) {
+
+                EventBasedGateway f = ((EventBasedGateway) node);
+                f.getOutgoing().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+                f.getIncoming().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+
+            } else if (node instanceof ParallelGateway) {
+
+                ParallelGateway f = ((ParallelGateway) node);
+                f.getOutgoing().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+                f.getIncoming().forEach(n -> traverse(modelInstance.getModelElementById(n.getId()), modelInstance));
+
+            } else if (node instanceof SequenceFlow) {
+
+                SequenceFlow s = ((SequenceFlow) node);
+                String targetId = s.getAttributeValue("targetRef");
+                String sourceId = s.getAttributeValue("sourceRef");
+                traverse(modelInstance.getModelElementById(targetId), modelInstance);
+                traverse(modelInstance.getModelElementById(sourceId), modelInstance);
+
+            } else if (node instanceof FlowNode) {
+
+                FlowNode f = ((FlowNode) node);
+                f.getOutgoing().forEach(n -> traverse(n.getId(), modelInstance));
+                f.getIncoming().forEach(n -> traverse(n.getId(), modelInstance));
+
+            } else if (node instanceof ModelElementInstanceImpl) {
+
+                ModelElementInstanceImpl n = ((ModelElementInstanceImpl) node);
+                ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node, modelInstance);
+                log.debug("type {}", task.getType());
+                task.getOutgoing().forEach(t -> {
+//                    log.debug("outgoing id: {} - type: {}", t.getId(), getType(t));
+                    traverse(modelInstance.getModelElementById(t.getId()), modelInstance);
+                });
+                task.getIncoming().forEach(t -> {
+//                    log.debug("incoming: {} - type: {}", t.getId(), getType(t));
+                    traverse(modelInstance.getModelElementById(t.getId()), modelInstance);
+                });
+
+            } else {
+                log.debug("unknow type");
+            }
+        }
+    }
 
     public String genSimpleProcess(File file) {
 
@@ -34,6 +138,21 @@ public class SolidityGen {
         //Get all nodes {Start,End, ExGateway, EventBasedGateway,ParralleGateway...}
         Collection<FlowNode> allNodes = modelInstance.getModelElementsByType(FlowNode.class);
         Collection<Task> allTasks = modelInstance.getModelElementsByType(Task.class);
+
+
+        //Traversing BPMN model, starting from START event
+        StartEvent aa = (StartEvent) modelInstance.getModelElementById("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A");
+        traverse(modelInstance.getModelElementById("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A"), modelInstance);
+//
+//        SequenceFlow sequenceFlow = (SequenceFlow) modelInstance.getModelElementById("sid-6BFD2DBA-69AD-4793-AEF9-7250E705C43D");
+//
+//// get the source and target element
+//        FlowNode source = sequenceFlow.getSource();
+//        FlowNode target = sequenceFlow.getTarget();
+//
+//
+//// get all outgoing sequence flows of the source
+//        Collection<SequenceFlow> outgoing = source.getOutgoing();
 
 
         // find all elements of the type task
@@ -104,11 +223,11 @@ public class SolidityGen {
 
         Event event1 = Event.builder()
                 .name("FailedOffer")
-                .parameter("uint","time")
-                .parameter("address","sender")
-                .parameter("uint","amount")
-                .parameter("bytes32","lot")
-                .parameter("string","reason")
+                .parameter("uint", "time")
+                .parameter("address", "sender")
+                .parameter("uint", "amount")
+                .parameter("bytes32", "lot")
+                .parameter("string", "reason")
                 .build();
 
         Contract sol = Contract.builder()
@@ -209,6 +328,34 @@ public class SolidityGen {
         Collections.addAll(result, m);
         return result;
     }
+
+//    // A function used by DFS
+//    void DFSUtil(int v,boolean visited[])
+//    {
+//        // Mark the current node as visited and print it
+//        visited[v] = true;
+//        System.out.print(v+" ");
+//
+//        // Recur for all the vertices adjacent to this vertex
+//        Iterator<Integer> i = adj[v].listIterator();
+//        while (i.hasNext())
+//        {
+//            int n = i.next();
+//            if (!visited[n])
+//                DFSUtil(n, visited);
+//        }
+//    }
+//
+//    // The function to do DFS traversal. It uses recursive DFSUtil()
+//    void DFS(int v)
+//    {
+//        // Mark all the vertices as not visited(set as
+//        // false by default in java)
+//        boolean visited[] = new boolean[V];
+//
+//        // Call the recursive helper function to print DFS traversal
+//        DFSUtil(v, visited);
+//    }
 
 
     @Test
