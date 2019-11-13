@@ -16,25 +16,23 @@ import java.util.ArrayList;
 @Setter
 public class ChoreographyTask {
 
-    private ModelElementInstanceImpl task;
+    private ModelElementInstance task;
     private ArrayList<SequenceFlow> incoming, outgoing;
     private Participant participantRef = null;
     private MessageFlow request = null, response = null;
     private Participant initialParticipant;
     private String id, name;
-    private BpmnModelInstance model;
     private TaskType type;
 
     public enum TaskType {
         ONEWAY, TWOWAY
     }
 
-    public ChoreographyTask(ModelElementInstanceImpl task, BpmnModelInstance modelInstance) {
-        this.model = modelInstance;
+    public ChoreographyTask(ModelElementInstance task) {
         this.task = task;
         this.incoming = new ArrayList<SequenceFlow>();
         this.outgoing = new ArrayList<SequenceFlow>();
-        this.initialParticipant = model.getModelElementById(task.getAttributeValue("initiatingParticipantRef"));
+        this.initialParticipant = task.getModelInstance().getModelElementById(task.getAttributeValue("initiatingParticipantRef"));
         this.id = task.getAttributeValue("id");
         this.name = task.getAttributeValue("name");
         init();
@@ -45,20 +43,20 @@ public class ChoreographyTask {
             String type = childElement.getLocalName();
             switch (type) {
                 case "incoming":
-                    incoming.add((SequenceFlow) model.getModelElementById(childElement.getTextContent()));
+                    incoming.add((SequenceFlow) task.getModelInstance().getModelElementById(childElement.getTextContent()));
                     break;
                 case "outgoing":
-                    outgoing.add((SequenceFlow) model.getModelElementById(childElement.getTextContent()));
+                    outgoing.add((SequenceFlow) task.getModelInstance().getModelElementById(childElement.getTextContent()));
                     break;
                 case "participantRef":
-                    Participant p = model.getModelElementById(childElement.getTextContent());
+                    Participant p = task.getModelInstance().getModelElementById(childElement.getTextContent());
                     if (!p.equals(initialParticipant)) {
                         participantRef = p;
                     }
                     break;
                 case "messageFlowRef":
                     //System.out.println(task.getAttributeValue("id"));
-                    MessageFlow m = model.getModelElementById(childElement.getTextContent());
+                    MessageFlow m = task.getModelInstance().getModelElementById(childElement.getTextContent());
                     //System.out.println("CHILD TEXT CONTENT: " + childElement.getTextContent());
 
                     //System.out.println("MESSAGE FLOW �: " + m.getId() + "con nome: " + m.getName() + "con messaggio: " + m.getMessage().getId());

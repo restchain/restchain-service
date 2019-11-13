@@ -544,7 +544,7 @@ public class ChoreographyBpmn {
                 String descr = "";
                 Participant participant = null;
                 String participantName = "";
-                ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node, modelInstance);
+                ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node);
                 getRequestAndResponse(task);
 
                 participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
@@ -815,7 +815,7 @@ public class ChoreographyBpmn {
         if (nextNode instanceof ModelElementInstanceImpl && !(nextNode instanceof EndEvent)
                 && !(nextNode instanceof ParallelGateway) && !(nextNode instanceof ExclusiveGateway)
                 && !(nextNode instanceof EventBasedGateway) && !(nextNode instanceof StartEvent)) {
-            ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode, modelInstance);
+            ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode);
 
             //Se msg è T o F e c'è richiesta
             if (task.getRequest() != null && msg == false) {
