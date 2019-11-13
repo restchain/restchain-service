@@ -14,7 +14,7 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
     private final ChoreographyTask choreographyTask;
 
     ModelElementInstanceAdapter(ModelElementInstance value) {
-        log.debug(value.getClass().toString());
+        log.debug(value.getClass().getSimpleName());
         this.value = value;
         choreographyTask = new ChoreographyTask(value);
     }
@@ -22,6 +22,11 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
     @Override
     public String getId() {
         return choreographyTask.getId();
+    }
+
+    @Override
+    public String classSimpleName() {
+        return value.getClass().getSimpleName();
     }
 
     @Override
@@ -39,7 +44,10 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
     }
 
     @Override
-    public void accept(Visitor visitor) {
-         visitor.visit(this);
+    public String accept(Visitor visitor) {
+        if (classSimpleName().equals("StartEventImpl")) {
+            return visitor.visitStartEvent(this);
+        }
+        return "";
     }
 }

@@ -1,5 +1,5 @@
 package com.unicam.chorchain.codeGenerator;
 
 public interface Visitable {
-    void accept(Visitor visitor);
+    String accept(Visitor visitor);
 }

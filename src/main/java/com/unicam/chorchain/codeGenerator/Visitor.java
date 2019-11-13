@@ -1,5 +1,8 @@
 package com.unicam.chorchain.codeGenerator;
 
 interface Visitor {
-    void visit(TreeNode mode);
+    String visitStartEvent(TreeNode mode);
+    String visitModelElementIstance(TreeNode mode);
+    String visitExclusiveGateway(TreeNode mode);
+    String visit(TreeNode node);
 }

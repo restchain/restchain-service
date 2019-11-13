@@ -14,6 +14,6 @@ public class Test {
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(file);
         ModelElementInstance start = modelInstance.getModelElementById("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A");
         sg.traverse(Factories.nodeFactory.create(start));
-        sg.eleab();
+        sg.eleab( modelInstance);
     }
 }
