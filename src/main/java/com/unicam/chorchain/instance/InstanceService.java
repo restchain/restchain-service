@@ -1,6 +1,5 @@
 package com.unicam.chorchain.instance;
 
-import com.unicam.chorchain.SolidityGen;
 import com.unicam.chorchain.choreography.ChoreographyRepository;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
