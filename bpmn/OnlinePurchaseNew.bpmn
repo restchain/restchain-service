@@ -15,6 +15,8 @@
     </extensionElements>
   </message>
   <message id="sid-06caa7c5-fba5-4524-8d4d-2f24b1d51468" name="invoice(string invoiceInfo)" />
+
+
   <choreography id="sid-10d75e6a-118c-4362-8cb5-c938ac381b47" isClosed="false">
     <participant id="sid-DB4E4EC9-6F4F-4131-82EE-7D47AEC6F3A1" name="Buyer">
       <extensionElements>
