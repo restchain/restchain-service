@@ -22,7 +22,7 @@ public class FlowNodeAdapter implements TreeNode, Visitable {
     }
 
     @Override
-    public String classSimpleName() {
+    public String getClassSimpleName() {
         return value.getClass().getSimpleName();
     }
 

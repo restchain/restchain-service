@@ -25,7 +25,7 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
     }
 
     @Override
-    public String classSimpleName() {
+    public String getClassSimpleName() {
         return value.getClass().getSimpleName();
     }
 
@@ -45,9 +45,6 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
 
     @Override
     public String accept(Visitor visitor) {
-        if (classSimpleName().equals("StartEventImpl")) {
-            return visitor.visitStartEvent(this);
-        }
-        return "";
+        return visitor.visit(this);
     }
 }

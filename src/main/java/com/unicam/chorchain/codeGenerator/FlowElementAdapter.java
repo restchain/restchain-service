@@ -23,7 +23,7 @@ public class FlowElementAdapter implements TreeNode, Visitable {
     }
 
     @Override
-    public String classSimpleName() {
+    public String getClassSimpleName() {
         return value.getClass().getSimpleName();
     }
 
@@ -48,10 +48,8 @@ public class FlowElementAdapter implements TreeNode, Visitable {
 
     @Override
     public String accept(Visitor visitor) {
-        if (classSimpleName()=="EventBasedGatewayImpl"){
-            return  visitor.visit(this);
-        }
-        return "";
+        return visitor.visit(this);
+
 
     }
 }

@@ -27,6 +27,10 @@ public class Contract {
     Collection<Enum> enumElements;
     private @Singular
     Collection<Event> events;
+    private
+    Collection<Function> functions;
+    private
+    Collection<String> customStringsBody;
 
 //    public void addStruct(Struct s1) {
 //        structs.add(s1);
@@ -75,6 +79,17 @@ public class Contract {
             out.append("//Events\n");
             events.forEach((s) -> out.append(s.toString()).append("\n"));
         }
+
+        if (functions != null) {
+            out.append("//Functions\n");
+            functions.forEach((s) -> out.append(s.toString()).append("\n"));
+        }
+
+        if (customStringsBody != null) {
+            out.append("//CustomStringsBody\n");
+            customStringsBody.forEach((s) -> out.append(s).append("\n"));
+        }
+
 
         out.append("\n\n");
         out.append("}");

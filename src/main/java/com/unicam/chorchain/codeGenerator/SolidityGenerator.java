@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class SolidityGenerator {
@@ -90,6 +91,7 @@ public class SolidityGenerator {
                 .parameter("string", "reason")
                 .build();
 
+
         Contract sol = Contract.builder()
                 .pragmaVersion("5.4.3")
                 .fileName("primaProva")
@@ -99,12 +101,12 @@ public class SolidityGenerator {
                 .mapping(map2)
                 .enumElement(solEnum)
                 .constructorBody("owner = msg.sender;")
+                .customStringsBody(items.stream().map(v -> v.accept(codeGenVisitor)).collect(Collectors.toList()))
                 .event(event1)
                 .build();
 
         bf.append(sol.toString());
 
-        items.forEach(v -> bf.append(v.accept(codeGenVisitor)));
         log.debug(bf.toString());
     }
 

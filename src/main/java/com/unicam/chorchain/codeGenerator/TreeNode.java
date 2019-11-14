@@ -5,7 +5,7 @@ import java.util.List;
 public interface TreeNode extends Visitable {
     String getId();
 
-    String classSimpleName();
+    String getClassSimpleName();
 
     List<TreeNode> getIncoming();
 
