@@ -45,6 +45,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********StartEvent *****");
         return Function
                 .builder()
+                .functionComment("StarEvent "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -52,9 +53,10 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private String visitEndEvent(TreeNode node) {
-        log.debug("********StartEvent *****");
+        log.debug("********EndEvent *****");
         return Function
                 .builder()
+                .functionComment("EndEvent: "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -62,9 +64,10 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private String visitEventBasedGateway(TreeNode node) {
-        log.debug("********StartEvent *****");
+        log.debug("********EventBasedGateway *****");
         return Function
                 .builder()
+                .functionComment("EventBasedGateway: "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -72,9 +75,10 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private String visitModelElementInstance(TreeNode node) {
-        log.debug("********StartEvent *****");
+        log.debug("********ModelElement *****");
         return Function
                 .builder()
+                .functionComment("Task: "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -82,9 +86,10 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private String visitParallelGateway(TreeNode node) {
-        log.debug("********StartEvent *****");
+        log.debug("********ParallelGateway *****");
         return Function
                 .builder()
+                .functionComment("ParallelGateway: "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -92,9 +97,10 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private String visitExclusiveGateway(TreeNode node) {
-        log.debug("********StartEvent *****");
+        log.debug("********ExclusiveGateway: *****");
         return Function
                 .builder()
+                .functionComment("ExclusiveGateway"+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -105,6 +111,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********SequenceFlow *****");
         return Function
                 .builder()
+                .functionComment("SequenceFlow: "+ node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
