@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Singular;
 
 import java.util.List;
+import java.util.Map;
 
 
 @Builder
@@ -15,6 +16,8 @@ public class Function {
     private String target;
     @Singular
     private List<String> enables;
+    @Singular
+    private Map<String, Boolean> taskEnableActive_s;
 
     public String toString() {
         StringBuffer out = new StringBuffer();
@@ -25,6 +28,18 @@ public class Function {
         out.append("\tdone(").append(sourceId).append("\");\n");
         if (enables != null) {
             enables.forEach(d -> out.append("\tenable(").append(d).append("\");\n"));
+        }
+        if (taskEnableActive_s != null) {
+            taskEnableActive_s.forEach(
+                    (k, v) -> {
+                        out.append("\tenable(").append(k).append("\");\n");
+                        if (v) {
+                            out.append("\t").append(k.replace("-","_")).append("()").append("\n");
+                        }
+                    }
+            );
+
+
         }
         out.append("}\n");
         return out.toString();

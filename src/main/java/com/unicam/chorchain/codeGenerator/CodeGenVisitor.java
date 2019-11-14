@@ -4,9 +4,6 @@ import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.translator.ChoreographyTask;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.model.bpmn.instance.EndEvent;
-import org.camunda.bpm.model.bpmn.instance.Gateway;
-import org.mapstruct.ap.internal.model.common.ModelElement;
 
 import java.util.stream.Collectors;
 
@@ -113,6 +110,8 @@ public class CodeGenVisitor implements Visitor {
                     .functionComment("Task - message ")
                     .name(task.getRequestMessage().getMessage().getId())
                     .sourceId(task.getRequestMessage().getMessage().getId())
+//                    .enable(task.getNextTaskElement().getTargetId())
+                    .taskEnableActive_(task.getNextTaskElement().getTargetId(),task.getNextTaskElement().isGatewayOrEndEvent())
                     .build());
             sb.append("\n\n");
 
@@ -134,7 +133,7 @@ public class CodeGenVisitor implements Visitor {
         sb.append(Function
                 .builder()
                 .functionComment("Task(" + node.getName() + "): " + node.getId())
-                .name(node.getId())
+//                .name(task.getNextTaskElement().getTargetId())
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PUBLIC)
                 .build().toString()
