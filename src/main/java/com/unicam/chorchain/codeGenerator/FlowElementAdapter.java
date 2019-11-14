@@ -49,7 +49,5 @@ public class FlowElementAdapter implements TreeNode, Visitable {
     @Override
     public String accept(Visitor visitor) {
         return visitor.visit(this);
-
-
     }
 }
