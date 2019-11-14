@@ -23,6 +23,11 @@ public class FlowElementAdapter implements TreeNode, Visitable {
     }
 
     @Override
+    public String getName() {
+        return value.getName()!=null?value.getName().replace("\n"," "):"";
+    }
+
+    @Override
     public String getClassSimpleName() {
         return value.getClass().getSimpleName();
     }

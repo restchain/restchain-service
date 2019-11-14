@@ -108,6 +108,7 @@
             <signavio:signavioLabel bold="" fill="" fontFamily="" fontSize="18.0" italic="" ref="text_name"/>
          </extensionElements>
       </participant>
+
       <messageFlow id="sid-831b9d6a-8701-40b8-969f-8d91d150ef84" messageRef="sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c" sourceRef="sid-DB4E4EC9-6F4F-4131-82EE-7D47AEC6F3A1" targetRef="sid-3565D5AD-E1ED-40FF-BA79-C07D7B90ECC6"/>
       <messageFlow id="sid-38f44cf7-be8c-4ddc-a7a2-8ae0d499156d" messageRef="sid-624ca53e-cc27-4a74-97be-055cb19cae54" sourceRef="sid-63B7AD7E-BDAB-481E-9E1D-2166DC04FCBE" targetRef="sid-7398C183-3CCA-4009-A441-777050688BEE"/>
       <messageFlow id="sid-e48ad568-4f71-4766-8f32-9c79eb449897" messageRef="sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b" sourceRef="sid-7398C183-3CCA-4009-A441-777050688BEE" targetRef="sid-63B7AD7E-BDAB-481E-9E1D-2166DC04FCBE"/>
@@ -116,6 +117,8 @@
       <messageFlow id="sid-f2d378c9-368e-439b-898f-6b82a704ff78" messageRef="sid-b9828a39-b70d-4470-b5d2-61cda9b2bc64" sourceRef="sid-C6439E6C-CCC1-4FF9-BE79-470F1FBA575A" targetRef="sid-CBABAF79-32C8-4048-BE7F-EB3DE713484E"/>
       <messageFlow id="sid-2811d8f1-1ad8-44a4-b4d8-19beedb5aee8" messageRef="sid-2F272EDB-9940-467E-AADC-2B485679AF43" sourceRef="sid-CC340F07-0D43-486B-9886-D0669757857B" targetRef="sid-70E05379-8F11-42EF-8970-8293AA4B9291"/>
       <messageFlow id="sid-5d10fdff-c6a9-4e20-8cd8-49cd6bb2c04a" messageRef="sid-06caa7c5-fba5-4524-8d4d-2f24b1d51468" sourceRef="sid-9E1C6D94-03E8-42FB-B075-B8E6CB5D6D7F" targetRef="sid-C2A26037-7393-473D-A41B-0FE6CCC592F7"/>
+
+
       <startEvent id="sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A" name="">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>
@@ -123,6 +126,7 @@
          </extensionElements>
          <outgoing>sid-6BFD2DBA-69AD-4793-AEF9-7250E705C43D</outgoing>
       </startEvent>
+
       <choreographyTask id="sid-7D873213-2244-48EB-B043-2D234DC60BFE" initiatingParticipantRef="sid-DB4E4EC9-6F4F-4131-82EE-7D47AEC6F3A1" loopType="None" name="Select&#10;Product">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>
@@ -135,6 +139,8 @@
          <participantRef>sid-3565D5AD-E1ED-40FF-BA79-C07D7B90ECC6</participantRef>
          <messageFlowRef>sid-831b9d6a-8701-40b8-969f-8d91d150ef84</messageFlowRef>
       </choreographyTask>
+
+
       <exclusiveGateway gatewayDirection="Converging" id="sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04" name="">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>
@@ -144,6 +150,8 @@
          <incoming>sid-41D580FD-2D3C-42DC-96D2-EB1021EF1306</incoming>
          <outgoing>sid-8090FED0-B02A-4B2A-A8D9-E3459096F64F</outgoing>
       </exclusiveGateway>
+
+
       <choreographyTask id="sid-568A1539-A6F2-40B1-83FC-3502C87561C4" initiatingParticipantRef="sid-63B7AD7E-BDAB-481E-9E1D-2166DC04FCBE" loopType="None" name="Make&#10;Offer">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>

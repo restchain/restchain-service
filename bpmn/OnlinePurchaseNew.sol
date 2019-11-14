@@ -89,13 +89,14 @@ contract resttt {
 
     }
 
-
+    //Start event
     function sid_0EC70E7E_A42A_4C9E_B120_16B25BDACE7A() private {
         require(elements[position["sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A"]].status == State.ENABLED);
         done("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A");
         enable("sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c");
     }
 
+    //Message
     function sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c(string memory product) public checkOpt(optionalList[0]) {
         require(elements[position["sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c"]].status == State.ENABLED);
         done("sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c");
@@ -105,6 +106,7 @@ contract resttt {
         sid_C240C6E9_F55F_46A5_B1F6_5FC4A0F30B04();
     }
 
+    //Exclusive Gateway
     function sid_C240C6E9_F55F_46A5_B1F6_5FC4A0F30B04() private {
         require(elements[position["sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04"]].status == State.ENABLED);
         done("sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04");

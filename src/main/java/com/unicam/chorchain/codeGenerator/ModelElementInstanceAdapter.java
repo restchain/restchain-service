@@ -25,6 +25,12 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
     }
 
     @Override
+    public String getName() {
+
+        return choreographyTask.getName()!=null?choreographyTask.getName().replace("\n"," "):"";
+    }
+
+    @Override
     public String getClassSimpleName() {
         return value.getClass().getSimpleName();
     }

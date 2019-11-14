@@ -45,7 +45,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********StartEvent *****");
         return Function
                 .builder()
-                .functionComment("StarEvent "+ node.getId())
+                .functionComment("StarEvent(" + node.getName() + ") " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -56,7 +56,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********EndEvent *****");
         return Function
                 .builder()
-                .functionComment("EndEvent: "+ node.getId())
+                .functionComment("EndEvent(" + node.getName() + "): " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -67,7 +67,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********EventBasedGateway *****");
         return Function
                 .builder()
-                .functionComment("EventBasedGateway: "+ node.getId())
+                .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -78,7 +78,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ModelElement *****");
         return Function
                 .builder()
-                .functionComment("Task: "+ node.getId())
+                .functionComment("Task(" + node.getName() + "): " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -89,7 +89,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ParallelGateway *****");
         return Function
                 .builder()
-                .functionComment("ParallelGateway: "+ node.getId())
+                .functionComment("ParallelGateway(" + node.getName() + "): " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -100,7 +100,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ExclusiveGateway: *****");
         return Function
                 .builder()
-                .functionComment("ExclusiveGateway"+ node.getId())
+                .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -111,7 +111,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********SequenceFlow *****");
         return Function
                 .builder()
-                .functionComment("SequenceFlow: "+ node.getId())
+                .functionComment("SequenceFlow(" + node.getName() + "): " + node.getId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)

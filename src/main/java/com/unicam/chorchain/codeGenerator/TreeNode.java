@@ -4,6 +4,7 @@ import java.util.List;
 
 public interface TreeNode extends Visitable {
     String getId();
+    String getName();
 
     String getClassSimpleName();
 
