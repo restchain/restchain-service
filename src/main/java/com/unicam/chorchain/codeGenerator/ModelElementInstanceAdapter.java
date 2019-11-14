@@ -3,6 +3,7 @@ package com.unicam.chorchain.codeGenerator;
 import com.unicam.chorchain.translator.ChoreographyTask;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.List;
@@ -18,6 +19,11 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
         log.debug(value.getClass().getSimpleName());
         this.value = value;
         choreographyTask = new ChoreographyTask(value);
+    }
+
+    @Override
+    public ModelElementInstance getNode() {
+        return this.value;
     }
 
     @Override
