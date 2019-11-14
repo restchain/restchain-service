@@ -2,6 +2,7 @@ package com.unicam.chorchain.codeGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.FlowNode;
+import org.camunda.bpm.model.xml.ModelInstance;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,7 +31,13 @@ public class FlowNodeAdapter implements TreeNode, Visitable {
     public String getName() {
         return value.getName()!=null?value.getName().replace("\n"," "):"";
     }
-;
+
+    @Override
+    public ModelInstance getModelInstane() {
+        return this.value.getModelInstance();
+    }
+
+    ;
     @Override
     public String getClassSimpleName() {
         return value.getClass().getSimpleName();

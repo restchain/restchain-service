@@ -2,6 +2,7 @@ package com.unicam.chorchain.codeGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.FlowElement;
+import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class FlowElementAdapter implements TreeNode, Visitable {
 
     @Override
     public String getId() {
-        return value.getId().replace("-","_");
+        return value.getId().replace("-", "_");
     }
 
     @Override
@@ -29,7 +30,12 @@ public class FlowElementAdapter implements TreeNode, Visitable {
 
     @Override
     public String getName() {
-        return value.getName()!=null?value.getName().replace("\n"," "):"";
+        return value.getName() != null ? value.getName().replace("\n", " ") : "";
+    }
+
+    @Override
+    public ModelInstance getModelInstane() {
+        return this.value.getModelInstance();
     }
 
     @Override
