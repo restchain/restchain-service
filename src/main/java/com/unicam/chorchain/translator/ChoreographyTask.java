@@ -26,7 +26,7 @@ public class ChoreographyTask {
     private String id, name;
     private TaskType type;
     private ModelInstance modelInstance;
-    private NextChoreographyTaskElement nextChoreographyTaskElement;
+    private NextTaskElement nextTaskElement;
 
 
     public enum TaskType {
@@ -95,13 +95,14 @@ public class ChoreographyTask {
             }
         }
 
-        NextChoreographyTaskElement nextElement = new NextChoreographyTaskElement();
 
-        nextElement.setElement(task.getModelInstance()
-                .getModelElementById(getOutgoing().get(0).getId()));
-        ModelElement i = task.getModelInstance()
-                .getModelElementById(getOutgoing().get(0).getId());
-        nextElement.setGatwayOrEnd(nextElement.getElement() instanceof Gateway || nextElement.getElement() instanceof EndEvent);
+
+        if (getOutgoing().size()>0){
+            SequenceFlow nextSeqFlow = task.getModelInstance().getModelElementById(getOutgoing().get(0).getId());
+            NextTaskElement nextElement = new NextTaskElement(nextSeqFlow);
+
+            setNextTaskElement(nextElement);
+        }
 
         if (responseMessage != null) {
             type = TaskType.TWOWAY;
