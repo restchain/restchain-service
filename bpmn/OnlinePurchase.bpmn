@@ -219,6 +219,7 @@
          <outgoing>sid-1118CB7A-2EC0-47DD-9515-439BB93021DB</outgoing>
          <outgoing>sid-7E6D84AD-449F-4DCB-982C-3F831DAB6940</outgoing>
       </eventBasedGateway>
+
       <parallelGateway gatewayDirection="Diverging" id="sid-0663CB4E-D3BF-4E12-8D81-D68E9318355F" name="">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>
@@ -228,6 +229,8 @@
          <outgoing>sid-2942A703-9C60-46CA-8C19-BC4839F9BFBB</outgoing>
          <outgoing>sid-B5BC1661-2F62-4616-8C20-CEAF156F4B8B</outgoing>
       </parallelGateway>
+
+
       <endEvent id="sid-859C73C7-F0DD-45ED-AA88-E0DEA0340C91" name="">
          <extensionElements>
             <signavio:signavioMetaData metaKey="bgcolor" metaValue="#ffffff"/>

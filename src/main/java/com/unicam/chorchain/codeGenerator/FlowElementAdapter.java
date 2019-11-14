@@ -19,6 +19,11 @@ public class FlowElementAdapter implements TreeNode, Visitable {
 
     @Override
     public String getId() {
+        return value.getId().replace("-","_");
+    }
+
+    @Override
+    public String getOrigId() {
         return value.getId();
     }
 

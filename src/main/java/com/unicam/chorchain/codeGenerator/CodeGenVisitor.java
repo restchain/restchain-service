@@ -4,6 +4,9 @@ import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 @Slf4j
 public class CodeGenVisitor implements Visitor {
 
@@ -45,7 +48,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********StartEvent *****");
         return Function
                 .builder()
-                .functionComment("StarEvent(" + node.getName() + ") " + node.getId())
+                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -56,7 +59,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********EndEvent *****");
         return Function
                 .builder()
-                .functionComment("EndEvent(" + node.getName() + "): " + node.getId())
+                .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -67,7 +70,8 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********EventBasedGateway *****");
         return Function
                 .builder()
-                .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getId())
+                .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
+                .enables(node.getOutgoing().stream().map(e->e.getId()).collect(Collectors.toList()))
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -89,8 +93,9 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ParallelGateway *****");
         return Function
                 .builder()
-                .functionComment("ParallelGateway(" + node.getName() + "): " + node.getId())
+                .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
+                .enables(node.getOutgoing().stream().map(e->e.getId()).collect(Collectors.toList()))
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
                 .build().toString();
@@ -100,7 +105,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ExclusiveGateway: *****");
         return Function
                 .builder()
-                .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getId())
+                .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)
@@ -111,7 +116,7 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********SequenceFlow *****");
         return Function
                 .builder()
-                .functionComment("SequenceFlow(" + node.getName() + "): " + node.getId())
+                .functionComment("SequenceFlow(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
                 .source(node.getId())
                 .visibility(Types.visibility.PUBLIC)

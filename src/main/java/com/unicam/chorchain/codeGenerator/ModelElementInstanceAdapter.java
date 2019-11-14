@@ -21,6 +21,11 @@ public class ModelElementInstanceAdapter implements TreeNode, Visitable {
 
     @Override
     public String getId() {
+        return choreographyTask.getId().replace("-","_");
+    }
+
+    @Override
+    public String getOrigId() {
         return choreographyTask.getId();
     }
 

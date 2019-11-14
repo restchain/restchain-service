@@ -89,7 +89,7 @@ contract resttt {
 
     }
 
-    //Start event
+    //StarEvent() sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A
     function sid_0EC70E7E_A42A_4C9E_B120_16B25BDACE7A() private {
         require(elements[position["sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A"]].status == State.ENABLED);
         done("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A");
@@ -106,13 +106,14 @@ contract resttt {
         sid_C240C6E9_F55F_46A5_B1F6_5FC4A0F30B04();
     }
 
-    //Exclusive Gateway
+    //ExclusiveGateway():sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04
     function sid_C240C6E9_F55F_46A5_B1F6_5FC4A0F30B04() private {
         require(elements[position["sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04"]].status == State.ENABLED);
         done("sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04");
         enable("sid-624ca53e-cc27-4a74-97be-055cb19cae54");
     }
 
+    //Message
     function sid_624ca53e_cc27_4a74_97be_055cb19cae54(uint price) public checkMand(roleList[0]) {
         require(elements[position["sid-624ca53e-cc27-4a74-97be-055cb19cae54"]].status == State.ENABLED);
         done("sid-624ca53e-cc27-4a74-97be-055cb19cae54");
@@ -120,6 +121,7 @@ contract resttt {
         currentMemory.price = price;
     }
 
+    //Message
     function sid_72ee2908_7c6b_4b9e_a80b_4734a6b2cb0b(bool accepted, bool reiterate) public checkOpt(optionalList[0]) {
         require(elements[position["sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b"]].status == State.ENABLED);
         done("sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b");
@@ -129,17 +131,21 @@ contract resttt {
         sid_E2CFD2E8_7869_4F28_AC83_296ED8FA7D6E();
     }
 
+    //ExclusiveGateway():sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E
     function sid_E2CFD2E8_7869_4F28_AC83_296ED8FA7D6E() private {
         require(elements[position["sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E"]].status == State.ENABLED);
         done("sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E");
-        if (currentMemory.accepted == true) {enable("sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940");
+        if (currentMemory.accepted == true) {
+            enable("sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940");
             sid_94C810EF_69BE_4D67_91B8_4A34DF4D1940();
         }
-        if (currentMemory.accepted == false) {enable("sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F");
+        if (currentMemory.accepted == false) {
+            enable("sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F");
             sid_80A4BF32_23C1_4585_A70C_26A40D63DA7F();
         }
     }
 
+    //EventBasedGateway(): sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940
     function sid_94C810EF_69BE_4D67_91B8_4A34DF4D1940() private {
         require(elements[position["sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940"]].status == State.ENABLED);
         done("sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940");

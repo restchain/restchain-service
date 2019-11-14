@@ -22,6 +22,11 @@ public class FlowNodeAdapter implements TreeNode, Visitable {
     }
 
     @Override
+    public String getOrigId() {
+        return value.getId();
+    }
+
+    @Override
     public String getName() {
         return value.getName()!=null?value.getName().replace("\n"," "):"";
     }
