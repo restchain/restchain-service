@@ -30,7 +30,8 @@ public class SolidityGenerator {
             visited.add(node.getId());
 
             node.getOutgoing().forEach(this::traverse);
-            node.getIncoming().forEach(this::traverse);
+            //Ci vuole?
+//            node.getIncoming().forEach(this::traverse);
         }
     }
 

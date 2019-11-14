@@ -14,7 +14,7 @@ public interface TreeNode extends Visitable {
 
     String getName();
 
-    ModelInstance getModelInstane();
+    ModelInstance getModelInstance();
 
     String getClassSimpleName();
 

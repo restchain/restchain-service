@@ -39,7 +39,7 @@ public class FlowElementAdapter implements TreeNode, Visitable {
     }
 
     @Override
-    public ModelInstance getModelInstane() {
+    public ModelInstance getModelInstance() {
         return this.value.getModelInstance();
     }
 
