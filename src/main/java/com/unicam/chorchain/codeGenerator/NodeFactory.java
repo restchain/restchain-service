@@ -14,7 +14,4 @@ public class NodeFactory {
         return new ModelElementInstanceAdapter(value);
     }
 
-    public TreeNode create(FlowNode value) {
-        return new FlowNodeAdapter(value);
-    }
 }
