@@ -355,7 +355,7 @@ public class ChoreographyBpmn {
             ModelElementInstance node = modelInstance.getModelElementById(flow.getAttributeValue("targetRef"));
 
 
-            // node containing the source of the flow, useful to get the start element
+            // node containing the sourceId of the flow, useful to get the start element
             ModelElementInstance start = modelInstance.getModelElementById(flow.getAttributeValue("sourceRef"));
 
 
@@ -552,7 +552,7 @@ public class ChoreographyBpmn {
                 participantName = participant.getAttributeValue("name");
 
                 String[] req = response.split(" ");
-                // String res = typeParse(request);
+                // String res = typeParse(requestMessage);
                 String ret = "";
                 String call = "";
                 String eventBlock = "";
@@ -568,7 +568,7 @@ public class ChoreographyBpmn {
                         }
                     }
                 }
-                // if there isn't a response the function created is void
+                // if there isn't a responseMessage the function created is void
                 //se OneWay cè solo un messaggio
                 if (task.getType() == ChoreographyTask.TaskType.ONEWAY) {
                     //System.out.println("Task � 1 way");
@@ -584,7 +584,7 @@ public class ChoreographyBpmn {
                      */
 
                     if (request.contains("payment")) {
-                        //System.out.println("nome richiesta: " + request);
+                        //System.out.println("nome richiesta: " + requestMessage);
                         descr += "function " + parseSid(getNextId(node, false)) + addMemory(getPrameters(request))
                                 + " public payable " + pName + ") {\n";
                         descr += "	require(elements[position[\"" + getNextId(node, false)
@@ -611,7 +611,7 @@ public class ChoreographyBpmn {
                     if (!request.isEmpty()) {
                         //System.out.println("RICHIESTA NON VUOTA");
                         if (request.contains("payment")) {
-                            //System.out.println(request);
+                            //System.out.println(requestMessage);
                             //System.out.println("RICHIESTA CONTIENE PAGAMENTO");
                             taskNull = false;
                             descr += "function " + parseSid(getNextId(node, false)) + addMemory(getPrameters(request))
@@ -639,7 +639,7 @@ public class ChoreographyBpmn {
                     if (!response.isEmpty()) {
                         //System.out.println("RISPOSTA NON VUOTA");
                         if (response.contains("payment")) {
-                            //System.out.println(response);
+                            //System.out.println(responseMessage);
                             //System.out.println("RISPOSTA CONTIENE PAGAMENTO");
                             taskNull = false;
                             descr += "function " + parseSid(getNextId(node, true)) + addMemory(getPrameters(response))
@@ -678,7 +678,7 @@ public class ChoreographyBpmn {
                                 .getModelElementById(out.getAttributeValue("targetRef"));
                         descr += "\tenable(\"" + getNextId(nextElement, false) + "\");\n";
                         if (nextElement instanceof Gateway || nextElement instanceof EndEvent) {
-                            // nextElement = checkType(nextElement);
+                            // nextChoreographyTaskElement = checkType(nextChoreographyTaskElement);
                             // creates the call to the next function
                             descr += parseSid(getNextId(nextElement, false)) + "(); \n";
 
@@ -717,13 +717,14 @@ public class ChoreographyBpmn {
 
     //Prende REQ and RESP del task in pratica i due messaggi
     public void getRequestAndResponse(ChoreographyTask task) {
-        // if there is only the response
+        // if there is only the responseMessage
         Participant participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
         String participantName = participant.getAttributeValue("name");
 
-        if (task.getRequest() == null && task.getResponse() != null) {
-            // System.out.println("task.getRequest() = null: " + task.getRequest());
-            MessageFlow responseMessageFlowRef = task.getResponse();
+        //No Request e SI Response 1way
+        if (task.getRequestMessage() == null && task.getResponseMessage() != null) {
+            // System.out.println("task.getRequestMessage() = null: " + task.getRequestMessage());
+            MessageFlow responseMessageFlowRef = task.getResponseMessage();
             MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
             Message responseMessage = modelInstance
                     .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -737,9 +738,10 @@ public class ChoreographyBpmn {
             }
 
         }
-        // if there is only the request
-        else if (task.getRequest() != null && task.getResponse() == null) {
-            MessageFlow requestMessageFlowRef = task.getRequest();
+        // if there is only the requestMessage
+        //SOLO Request 1Way
+        else if (task.getRequestMessage() != null && task.getResponseMessage() == null) {
+            MessageFlow requestMessageFlowRef = task.getRequestMessage();
             MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
             Message requestMessage = modelInstance
                     .getModelElementById(requestMessageFlow.getAttributeValue("messageRef"));
@@ -753,9 +755,10 @@ public class ChoreographyBpmn {
 
         }
         // if there are both
+        //2way  1req 1res
         else {
-            MessageFlow requestMessageFlowRef = task.getRequest();
-            MessageFlow responseMessageFlowRef = task.getResponse();
+            MessageFlow requestMessageFlowRef = task.getRequestMessage();
+            MessageFlow responseMessageFlowRef = task.getResponseMessage();
             MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
             MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
             Message requestMessage = modelInstance
@@ -818,9 +821,9 @@ public class ChoreographyBpmn {
             ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode);
 
             //Se msg è T o F e c'è richiesta
-            if (task.getRequest() != null && msg == false) {
+            if (task.getRequestMessage() != null && msg == false) {
                 //System.out.println("SONO DENTRO GETrEQUEST != NULL");
-                MessageFlow requestMessageFlowRef = task.getRequest();
+                MessageFlow requestMessageFlowRef = task.getRequestMessage();
                 MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
                 // //System.out.println("MESSAGAE FLOW REF ID:" + requestMessageFlowRef.getId());
                 Message requestMessage = modelInstance
@@ -830,7 +833,7 @@ public class ChoreographyBpmn {
                     id = requestMessage.getAttributeValue("id");
                 } else {
                     //System.out.println("SONO DENTRO LA RISPOSTA PERCH� REQUEST.GETNAME � NULL");
-                    MessageFlow responseMessageFlowRef = task.getResponse();
+                    MessageFlow responseMessageFlowRef = task.getResponseMessage();
                     MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
                     Message responseMessage = modelInstance
                             .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -844,9 +847,9 @@ public class ChoreographyBpmn {
                 // requestMessageFlow.getAttributeValue("messageRef"));
                 // System.out.println(requestMessage.getName());
 
-            } else if (task.getRequest() == null && msg == false || task.getResponse() != null && msg == true) {
+            } else if (task.getRequestMessage() == null && msg == false || task.getResponseMessage() != null && msg == true) {
                 //System.out.println("SONO DENTRO GETREQUEST == NULL");
-                MessageFlow responseMessageFlowRef = task.getResponse();
+                MessageFlow responseMessageFlowRef = task.getResponseMessage();
                 MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
                 Message responseMessage = modelInstance
                         .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -856,8 +859,8 @@ public class ChoreographyBpmn {
 
             }//
             /*
-             * else if(task.getResponse()!= null && msg == true) { MessageFlow
-             * responseMessageFlowRef = task.getResponse(); id =
+             * else if(task.getResponseMessage()!= null && msg == true) { MessageFlow
+             * responseMessageFlowRef = task.getResponseMessage(); id =
              * responseMessageFlowRef.getId(); }
              */
 

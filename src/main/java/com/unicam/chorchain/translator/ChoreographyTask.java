@@ -2,27 +2,32 @@ package com.unicam.chorchain.translator;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.camunda.bpm.model.bpmn.BpmnModelInstance;
-import org.camunda.bpm.model.bpmn.instance.MessageFlow;
-import org.camunda.bpm.model.bpmn.instance.Participant;
-import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
-import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.bpmn.instance.*;
+import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+import org.mapstruct.ap.internal.model.common.ModelElement;
 
 import java.util.ArrayList;
 
+
 @Getter
 @Setter
+@Slf4j
 public class ChoreographyTask {
 
     private ModelElementInstance task;
     private ArrayList<SequenceFlow> incoming, outgoing;
-    private Participant participantRef = null;
-    private MessageFlow request = null, response = null;
+    private Participant participantRef;
+    private MessageFlow messageFlow;
+    private MessageFlow requestMessage, responseMessage;
     private Participant initialParticipant;
     private String id, name;
     private TaskType type;
+    private ModelInstance modelInstance;
+    private NextChoreographyTaskElement nextChoreographyTaskElement;
+
 
     public enum TaskType {
         ONEWAY, TWOWAY
@@ -30,40 +35,55 @@ public class ChoreographyTask {
 
     public ChoreographyTask(ModelElementInstance task) {
         this.task = task;
-        this.incoming = new ArrayList<SequenceFlow>();
-        this.outgoing = new ArrayList<SequenceFlow>();
-        this.initialParticipant = task.getModelInstance().getModelElementById(task.getAttributeValue("initiatingParticipantRef"));
+        this.modelInstance = task.getModelInstance();
+        this.incoming = new ArrayList<>();
+        this.outgoing = new ArrayList<>();
+        this.initialParticipant = task.getModelInstance()
+                .getModelElementById(task.getAttributeValue("initiatingParticipantRef"));
         this.id = task.getAttributeValue("id");
         this.name = task.getAttributeValue("name");
         init();
     }
 
+
     private void init() {
+
         for (DomElement childElement : task.getDomElement().getChildElements()) {
             String type = childElement.getLocalName();
             switch (type) {
                 case "incoming":
-                    incoming.add((SequenceFlow) task.getModelInstance().getModelElementById(childElement.getTextContent()));
+
+                    incoming.add(task.getModelInstance()
+                            .getModelElementById(childElement.getTextContent()));
                     break;
-                case "outgoing":
-                    outgoing.add((SequenceFlow) task.getModelInstance().getModelElementById(childElement.getTextContent()));
+
+                case "outgoing": {
+                    SequenceFlow mi = task.getModelInstance()
+                            .getModelElementById(childElement.getTextContent());
+                    log.debug("* * * * * {} {}", mi.getName(), mi.getId());
+                    outgoing.add(mi);
                     break;
+                }
+
+
                 case "participantRef":
-                    Participant p = task.getModelInstance().getModelElementById(childElement.getTextContent());
+
+                    Participant p = modelInstance.getModelElementById(childElement.getTextContent());
                     if (!p.equals(initialParticipant)) {
                         participantRef = p;
                     }
                     break;
-                case "messageFlowRef":
-                    //System.out.println(task.getAttributeValue("id"));
-                    MessageFlow m = task.getModelInstance().getModelElementById(childElement.getTextContent());
-                    //System.out.println("CHILD TEXT CONTENT: " + childElement.getTextContent());
 
-                    //System.out.println("MESSAGE FLOW �: " + m.getId() + "con nome: " + m.getName() + "con messaggio: " + m.getMessage().getId());
-                    if (m.getSource().getId().equals(initialParticipant.getId())) {
-                        request = m;
+                case "messageFlowRef":
+
+                    MessageFlow messageFlow = task.getModelInstance()
+                            .getModelElementById(childElement.getTextContent());
+                    setMessageFlow(messageFlow);
+
+                    if (messageFlow.getSource().getId().equals(initialParticipant.getId())) {
+                        setRequestMessage(messageFlow);
                     } else {
-                        response = m;
+                        setResponseMessage(messageFlow);
                     }
 
                     break;
@@ -75,10 +95,21 @@ public class ChoreographyTask {
             }
         }
 
-        if (response != null) {
+        NextChoreographyTaskElement nextElement = new NextChoreographyTaskElement();
+
+        nextElement.setElement(task.getModelInstance()
+                .getModelElementById(getOutgoing().get(0).getId()));
+        ModelElement i = task.getModelInstance()
+                .getModelElementById(getOutgoing().get(0).getId());
+        nextElement.setGatwayOrEnd(nextElement.getElement() instanceof Gateway || nextElement.getElement() instanceof EndEvent);
+
+        if (responseMessage != null) {
             type = TaskType.TWOWAY;
         } else {
+
             type = TaskType.ONEWAY;
         }
     }
+
+
 }
