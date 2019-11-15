@@ -9,7 +9,6 @@ public final class Types {
 
     public static class visibility {
         public static final String PUBLIC = "public";
-        public static final String PROTECTED = "protected";
-        public static final String PRIVATE = "protected";
+        public static final String PRIVATE = "private";
     }
 }

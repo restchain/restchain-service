@@ -3,7 +3,6 @@ package com.unicam.chorchain.codeGenerator;
 import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
-import com.unicam.chorchain.translator.ChoreographyTask;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
@@ -20,13 +19,26 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public String visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
-        return Function
-                .builder()
-                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
-                .name(node.getId())
-                .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
-                .build().toString();
+
+        SequenceFlowAdapter e = (SequenceFlowAdapter) node.getOutgoing().get(0);
+
+        String enableId;
+        //Se il next è un TAsk prendi l'ide del messaggio altrimenti in tutti gli altri casi prendi id;
+        if (node.getModelInstance().getModelElementById(e.getId()) instanceof ChoreographyTaskAdapter){
+            ChoreographyTaskAdapter task = node.getModelInstance().getModelElementById(e.getId());
+            enableId = task.getRequestMessage().getId();
+        } else {
+            BpmnModelAdapter a = node.getModelInstance().getModelElementById(e.getId());
+        }
+
+            return Function
+                    .builder()
+                    .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
+                    .name(node.getId())
+                    .sourceId(node.getId())
+                    .enable("")
+                    .visibility(Types.visibility.PRIVATE)
+                    .build().toString();
     }
 
     @Override
@@ -37,7 +49,7 @@ public class CodeGenVisitor implements Visitor {
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
                 .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
+                .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
 
@@ -50,7 +62,7 @@ public class CodeGenVisitor implements Visitor {
                 .name(node.getId())
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
+                .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
 
@@ -62,7 +74,7 @@ public class CodeGenVisitor implements Visitor {
                 .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId())
                 .name(node.getId())
                 .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
+                .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
 
@@ -75,7 +87,7 @@ public class CodeGenVisitor implements Visitor {
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .name(node.getId())
                 .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
+                .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
 
@@ -135,7 +147,7 @@ public class CodeGenVisitor implements Visitor {
                         .functionComment("Task(" + node.getName() + "): " + node.getId())
 //                .name(task.getNextTaskElement().getTargetId())
                         .sourceId(node.getId())
-                        .visibility(Types.visibility.PUBLIC)
+                        .visibility(Types.visibility.PRIVATE)
                         .build().toString()
         );
         return sb.toString();
