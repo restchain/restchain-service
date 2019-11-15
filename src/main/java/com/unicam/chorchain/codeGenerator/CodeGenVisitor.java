@@ -1,5 +1,6 @@
 package com.unicam.chorchain.codeGenerator;
 
+import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.translator.ChoreographyTask;
@@ -10,42 +11,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CodeGenVisitor implements Visitor {
 
-    /*
-    StartEvent
-    EndEvent
-    SequenceFlow
-    ExclusiveGateway
-    EventBasedGateway
-    ParallelGateway
-    ModelElementInstance
-     */
 
     @Override
-    public String visit(TreeNode node) {
-
-        switch (node.getClassSimpleName()) {
-            case "StartEventImpl":
-                return visitStartEvent(node);
-//            case "SequenceFlowImpl":
-//                return visitSequenceFlow(node);
-            case "EndEventImpl":
-                return visitEndEvent(node);
-            case "ExclusiveGatewayImpl":
-                return visitExclusiveGateway(node);
-            case "EventBasedGatewayImpl":
-                return visitEventBasedGateway(node);
-            case "ParallelGatewayImpl":
-                return visitParallelGateway(node);
-            case "ModelElementInstanceImpl":
-                return visitModelElementInstance(node);
-            default:
-//                return (" Visited: " + node.getId() + " " + node.getClass() + " " + node.getClassSimpleName() + "\n");
-                return "";
-        }
+    public String visit(BpmnModelAdapter node) {
+        return "";
     }
 
-
-    private String visitStartEvent(TreeNode node) {
+    @Override
+    public String visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
         return Function
                 .builder()
@@ -56,7 +29,8 @@ public class CodeGenVisitor implements Visitor {
                 .build().toString();
     }
 
-    private String visitEndEvent(TreeNode node) {
+    @Override
+    public String visitEndEvent(EndEventAdapter node) {
         log.debug("********EndEvent *****");
         return Function
                 .builder()
@@ -67,93 +41,21 @@ public class CodeGenVisitor implements Visitor {
                 .build().toString();
     }
 
-    private String visitEventBasedGateway(TreeNode node) {
-        log.debug("********EventBasedGateway *****");
-        return Function
-                .builder()
-                .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
-                .enables(node.getOutgoing().stream().map(TreeNode::getId).collect(Collectors.toList()))
-                .name(node.getId())
-                .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
-                .build().toString();
-    }
-
-    private String visitModelElementInstance(TreeNode node) {
-
-        // checkOpt o checkMand sono modifier, li metti su tutte le funzioni dei messaggi dipendentemente se deve essre eseguita da un ruolo opzionale o mandatory
-
-
-        ChoreographyTask task = new ChoreographyTask(node.getNode());
-
-        if (task.getType().equals(ChoreographyTask.TaskType.TWOWAY)) {
-
-        } else {
-
-        }
-
-
-        log.debug(" ** type: {} - {} - {}    **", task.getType(), node.getName(), node.getId());
-        StringBuffer sb = new StringBuffer();
-
-
-        if (task.getRequestMessage() != null) {
-            log.debug(" \nReq MessageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
-                    task.getRequestMessage().getId(),
-                    task.getRequestMessage().getName(),
-                    task.getRequestMessage().getSource().getId(),
-                    task.getRequestMessage().getTarget().getId(),
-                    task.getRequestMessage().getMessage().getId()
-            );
-
-            sb.append(Function.builder()
-                    .functionComment("Task - message ")
-                    .name(task.getRequestMessage().getMessage().getId())
-                    .sourceId(task.getRequestMessage().getMessage().getId())
-//                    .enable(task.getNextTaskElement().getTargetId())
-                    .taskEnableActive_(task.getNextTaskElement().getTargetId(),task.getNextTaskElement().isGatewayOrEndEvent())
-                    .build());
-            sb.append("\n\n");
-
-        }
-
-        if (task.getResponseMessage() != null) {
-            log.debug(" \nRESP messageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
-                    task.getResponseMessage().getId(),
-                    task.getResponseMessage().getName(),
-                    task.getResponseMessage().getSource().getId(),
-                    task.getResponseMessage().getTarget().getId(),
-                    task.getResponseMessage().getMessage().getId()
-            );
-
-
-        }
-
-        log.debug("********ModelElement *****");
-        sb.append(Function
-                .builder()
-                .functionComment("Task(" + node.getName() + "): " + node.getId())
-//                .name(task.getNextTaskElement().getTargetId())
-                .sourceId(node.getId())
-                .visibility(Types.visibility.PUBLIC)
-                .build().toString()
-        );
-        return sb.toString();
-    }
-
-    private String visitParallelGateway(TreeNode node) {
+    @Override
+    public String visitParallelGateway(ParallelGatewayAdapter node) {
         log.debug("********ParallelGateway *****");
         return Function
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
-                .enables(node.getOutgoing().stream().map(TreeNode::getId).collect(Collectors.toList()))
+                .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PUBLIC)
                 .build().toString();
     }
 
-    private String visitExclusiveGateway(TreeNode node) {
+    @Override
+    public String visitExclusiveGateway(ExclusiveGatewayAdapter node) {
         log.debug("********ExclusiveGateway: *****");
         return Function
                 .builder()
@@ -164,14 +66,78 @@ public class CodeGenVisitor implements Visitor {
                 .build().toString();
     }
 
-    private String visitSequenceFlow(TreeNode node) {
-        log.debug("********SequenceFlow *****");
+    @Override
+    public String visitEventBasedGateway(EventBasedGatewayAdapter node) {
+        log.debug("********EventBasedGateway *****");
         return Function
                 .builder()
-                .functionComment("SequenceFlow(" + node.getName() + "): " + node.getOrigId())
+                .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
+                .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .name(node.getId())
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PUBLIC)
                 .build().toString();
+    }
+
+    @Override
+    public String visitChoreographyTask(ChoreographyTaskAdapter node) {
+        // checkOpt o checkMand sono modifier, li metti su tutte le funzioni dei messaggi dipendentemente se deve essre eseguita da un ruolo opzionale o mandatory
+
+
+        if (node.getType().equals(ChoreographyTaskAdapter.TaskType.TWOWAY)) {
+
+        } else {
+
+        }
+
+        log.debug(" ** type: {} - {} - {}    **", node.getType(), node.getName(), node.getId());
+        StringBuffer sb = new StringBuffer();
+
+
+        if (node.getRequestMessage() != null) {
+            log.debug(" \nReq MessageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
+                    node.getRequestMessage().getId(),
+                    node.getRequestMessage().getName(),
+                    node.getRequestMessage().getSource().getId(),
+                    node.getRequestMessage().getTarget().getId(),
+                    node.getRequestMessage().getMessage().getId()
+            );
+
+//            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) Factories.bpmnModelFactory.create(node.getOutgoingElement());
+            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
+            sb.append(Function.builder()
+                    .functionComment("Task - message ")
+                    .name(node.getRequestMessage().getMessage().getId())
+                    .sourceId(node.getRequestMessage().getMessage().getId())
+//                    .enable(node.getNextTaskElement().getTargetId())
+                    .taskEnableActive_(nextElement.getTargetRefId(),
+                            nextElement.isTargetGatewayOrNot())
+                    .build());
+            sb.append("\n\n");
+
+        }
+
+        if (node.getResponseMessage() != null) {
+            log.debug(" \nRESP messageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
+                    node.getResponseMessage().getId(),
+                    node.getResponseMessage().getName(),
+                    node.getResponseMessage().getSource().getId(),
+                    node.getResponseMessage().getTarget().getId(),
+                    node.getResponseMessage().getMessage().getId()
+            );
+
+
+        }
+
+        log.debug("********ModelElement *****");
+        sb.append(Function
+                        .builder()
+                        .functionComment("Task(" + node.getName() + "): " + node.getId())
+//                .name(task.getNextTaskElement().getTargetId())
+                        .sourceId(node.getId())
+                        .visibility(Types.visibility.PUBLIC)
+                        .build().toString()
+        );
+        return sb.toString();
     }
 }

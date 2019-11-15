@@ -1,13 +1,14 @@
 package com.unicam.chorchain.codeGenerator;
 
-import org.camunda.bpm.model.bpmn.impl.instance.StartEventImpl;
-import org.camunda.bpm.model.bpmn.instance.FlowElement;
-import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import com.unicam.chorchain.codeGenerator.adapter.*;
+import org.camunda.bpm.model.bpmn.instance.*;
 
-interface Visitor {
-//    String visitStartEvent(TreeNode mode);
-//    String visitModelElementIstance(TreeNode mode);
-//    String visitExclusiveGateway(TreeNode mode);
-//    String visit(StartEventImpl startEvent);
-    String visit(TreeNode node);
+public interface Visitor {
+    String visit(BpmnModelAdapter node);
+    String visitStartEvent(StartEventAdapter node);
+    String visitEndEvent(EndEventAdapter node);
+    String visitParallelGateway(ParallelGatewayAdapter node);
+    String visitExclusiveGateway(ExclusiveGatewayAdapter node);
+    String visitEventBasedGateway(EventBasedGatewayAdapter node);
+    String visitChoreographyTask(ChoreographyTaskAdapter node);
 }

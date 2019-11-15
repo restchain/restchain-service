@@ -1,5 +1,6 @@
 package com.unicam.chorchain.codeGenerator;
 
+import com.unicam.chorchain.codeGenerator.adapter.BpmnModelAdapter;
 import com.unicam.chorchain.codeGenerator.solidity.Enum;
 import com.unicam.chorchain.codeGenerator.solidity.*;
 import com.unicam.chorchain.storage.StorageFileNotFoundException;
@@ -21,7 +22,7 @@ public class SolidityGenerator {
     private Set<String> visited = new HashSet<>();
     private List<Visitable> items = new ArrayList<>();
 
-    public void traverse(TreeNode node) {
+    public void traverse(BpmnModelAdapter node) {
 
 
         if (!visited.contains(node.getId())) {
