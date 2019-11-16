@@ -4,6 +4,9 @@ import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.xml.Model;
+import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.stream.Collectors;
 
@@ -20,25 +23,31 @@ public class CodeGenVisitor implements Visitor {
     public String visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
 
-        SequenceFlowAdapter e = (SequenceFlowAdapter) node.getOutgoing().get(0);
+        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) node.getOutgoing().get(0);
+        ModelElementInstance modelElementById = node.getModelInstance()
+                .getModelElementById(sequenceFlow.getTargetRefId());
+        BpmnModelAdapter nextElement = Factories.bpmnModelFactory.create(modelElementById);
+        log.debug("test type {} - {}",
+                modelElementById.getClass().toString(),
+                nextElement.getClass().getSimpleName());
+        String nextElementId;
 
-        String enableId;
-        //Se il next è un TAsk prendi l'ide del messaggio altrimenti in tutti gli altri casi prendi id;
-        if (node.getModelInstance().getModelElementById(e.getId()) instanceof ChoreographyTaskAdapter){
-            ChoreographyTaskAdapter task = node.getModelInstance().getModelElementById(e.getId());
-            enableId = task.getRequestMessage().getId();
+        //Se il next element è di tipo  ChorTask allor prendi l'id  del messaggio di Reeuest
+        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
+        if (nextElement instanceof ChoreographyTaskAdapter) {
+            nextElementId  = ((ChoreographyTaskAdapter) nextElement).getRequestMessage().getMessage().getId();
         } else {
-            BpmnModelAdapter a = node.getModelInstance().getModelElementById(e.getId());
+            nextElementId = nextElement.getId();
         }
 
-            return Function
-                    .builder()
-                    .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
-                    .name(node.getId())
-                    .sourceId(node.getId())
-                    .enable("")
-                    .visibility(Types.visibility.PRIVATE)
-                    .build().toString();
+        return Function
+                .builder()
+                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
+                .name(normalizeId(node.getId()))
+                .sourceId(node.getId())
+                .enable(nextElementId)
+                .visibility(Types.visibility.PRIVATE)
+                .build().toString();
     }
 
     @Override
@@ -151,5 +160,15 @@ public class CodeGenVisitor implements Visitor {
                         .build().toString()
         );
         return sb.toString();
+
+
+    }
+
+    private String normalizeId(String id) {
+        return id.replace("-", "_");
+    }
+
+    private ModelElementInstance loadElement(ModelInstance instance, String id) {
+        return instance.getModelElementById(id);
     }
 }

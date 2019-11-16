@@ -22,7 +22,7 @@ public class StartEventAdapter implements BpmnModelAdapter, Visitable {
 
     @Override
     public String getId() {
-        return value.getId().replace("-", "_");
+        return value.getId();
     }
 
     @Override

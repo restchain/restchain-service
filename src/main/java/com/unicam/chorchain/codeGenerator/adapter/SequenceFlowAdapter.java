@@ -37,7 +37,7 @@ public class SequenceFlowAdapter implements BpmnModelAdapter {
 
     @Override
     public String getId() {
-        return value.getId().replace("-", "_");
+        return value.getId();
     }
 
     @Override
