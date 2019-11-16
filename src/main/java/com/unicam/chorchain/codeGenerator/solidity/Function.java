@@ -17,7 +17,10 @@ public class Function {
     @Singular
     private List<String> enables;
     @Singular
+    private List<String> parameters;
+    @Singular
     private Map<String, Boolean> taskEnableActive_s;
+    private String globalVariabilePrefix;
 
     public String toString() {
         StringBuffer out = new StringBuffer();
@@ -26,6 +29,15 @@ public class Function {
         out.append("(").append(") ").append(visibility).append(" {\n");
         out.append("\trequire(elements[position[\"").append(sourceId).append("\"]].status == State.ENABLED);\n");
         out.append("\tdone(").append(sourceId).append("\");\n");
+        if (parameters != null) {
+            parameters.forEach(d -> out.append("\t")
+                    .append(globalVariabilePrefix)
+                    .append(".")
+                    .append(d)
+                    .append("=")
+                    .append(d)
+                    .append(";\n"));
+        }
         if (enables != null) {
             enables.forEach(d -> out.append("\tenable(").append(d).append("\");\n"));
         }
@@ -34,7 +46,7 @@ public class Function {
                     (k, v) -> {
                         out.append("\tenable(").append(k).append("\");\n");
                         if (v) {
-                            out.append("\t").append(k.replace("-","_")).append("()").append("\n");
+                            out.append("\t").append(k.replace("-", "_")).append("()").append("\n");
                         }
                     }
             );

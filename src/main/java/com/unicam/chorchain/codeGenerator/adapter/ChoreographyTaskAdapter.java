@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
+import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.TWOWAY;
+
 @Slf4j
 public class ChoreographyTaskAdapter implements BpmnModelAdapter {
 
@@ -29,7 +32,7 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
     private Participant initialParticipant;
     private String id, name;
     @Getter
-    private ChoreographyTask.TaskType type;
+    private TaskType type;
     private ModelInstance modelInstance;
 
     public enum TaskType {
@@ -101,10 +104,10 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
 
 
         if (responseMessage != null) {
-            type = ChoreographyTask.TaskType.TWOWAY;
+            type = TWOWAY;
         } else {
 
-            type = ChoreographyTask.TaskType.ONEWAY;
+            type = ONEWAY;
         }
     }
 

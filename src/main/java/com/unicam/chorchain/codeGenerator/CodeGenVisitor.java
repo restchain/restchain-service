@@ -8,7 +8,13 @@ import org.camunda.bpm.model.xml.Model;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
 
 @Slf4j
 public class CodeGenVisitor implements Visitor {
@@ -23,29 +29,13 @@ public class CodeGenVisitor implements Visitor {
     public String visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
 
-        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) node.getOutgoing().get(0);
-        ModelElementInstance modelElementById = node.getModelInstance()
-                .getModelElementById(sequenceFlow.getTargetRefId());
-        BpmnModelAdapter nextElement = Factories.bpmnModelFactory.create(modelElementById);
-        log.debug("test type {} - {}",
-                modelElementById.getClass().toString(),
-                nextElement.getClass().getSimpleName());
-        String nextElementId;
-
-        //Se il next element è di tipo  ChorTask allor prendi l'id  del messaggio di Reeuest
-        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        if (nextElement instanceof ChoreographyTaskAdapter) {
-            nextElementId  = ((ChoreographyTaskAdapter) nextElement).getRequestMessage().getMessage().getId();
-        } else {
-            nextElementId = nextElement.getId();
-        }
 
         return Function
                 .builder()
                 .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
                 .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
-                .enable(nextElementId)
+                .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
@@ -78,11 +68,13 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public String visitExclusiveGateway(ExclusiveGatewayAdapter node) {
         log.debug("********ExclusiveGateway: *****");
+
         return Function
                 .builder()
                 .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId())
-                .name(node.getId())
+                .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
+                .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString();
     }
@@ -103,16 +95,53 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public String visitChoreographyTask(ChoreographyTaskAdapter node) {
         // checkOpt o checkMand sono modifier, li metti su tutte le funzioni dei messaggi dipendentemente se deve essre eseguita da un ruolo opzionale o mandatory
-
-
-        if (node.getType().equals(ChoreographyTaskAdapter.TaskType.TWOWAY)) {
-
-        } else {
-
-        }
+        StringBuffer sb = new StringBuffer();
+        SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
         log.debug(" ** type: {} - {} - {}    **", node.getType(), node.getName(), node.getId());
-        StringBuffer sb = new StringBuffer();
+
+
+        if (node.getType() == ONEWAY) {
+
+            sb.append(Function.builder()
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
+                            .getRequestMessage()
+                            .getMessage()
+                            .getName())
+                    .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .sourceId(node.getRequestMessage().getMessage().getId())
+                    .globalVariabilePrefix("currentMemory")
+                    .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
+//                    .enable(node.getNextTaskElement().getTargetId())
+                    .taskEnableActive_(nextElement.getTargetRefId(),
+                            nextElement.isTargetGatewayOrNot())
+                    .build());
+            sb.append("\n\n");
+
+        } else {
+            //Upper part - requestMessage
+            sb.append(Function.builder()
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
+                    .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .sourceId(node.getRequestMessage().getMessage().getId())
+                    .enable(node.getResponseMessage().getMessage().getId())
+                    .globalVariabilePrefix("currentMemory")
+                    .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .build());
+            sb.append("\n\n");
+
+            //lower part - requestMessage
+            sb.append(Function.builder()
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
+                    .name(normalizeId(node.getResponseMessage().getMessage().getId()))
+                    .sourceId(node.getResponseMessage().getMessage().getId())
+                    .globalVariabilePrefix("currentMemory")
+                    .parameters(getParamsList(node.getResponseMessage().getMessage().getName()))
+                    .taskEnableActive_(nextElement.getTargetRefId(),
+                            nextElement.isTargetGatewayOrNot()).build());
+            sb.append("\n\n");
+
+        }
 
 
         if (node.getRequestMessage() != null) {
@@ -125,16 +154,7 @@ public class CodeGenVisitor implements Visitor {
             );
 
 //            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) Factories.bpmnModelFactory.create(node.getOutgoingElement());
-            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
-            sb.append(Function.builder()
-                    .functionComment("Task - message ")
-                    .name(node.getRequestMessage().getMessage().getId())
-                    .sourceId(node.getRequestMessage().getMessage().getId())
-//                    .enable(node.getNextTaskElement().getTargetId())
-                    .taskEnableActive_(nextElement.getTargetRefId(),
-                            nextElement.isTargetGatewayOrNot())
-                    .build());
-            sb.append("\n\n");
+
 
         }
 
@@ -150,15 +170,15 @@ public class CodeGenVisitor implements Visitor {
 
         }
 
-        log.debug("********ModelElement *****");
-        sb.append(Function
-                        .builder()
-                        .functionComment("Task(" + node.getName() + "): " + node.getId())
-//                .name(task.getNextTaskElement().getTargetId())
-                        .sourceId(node.getId())
-                        .visibility(Types.visibility.PRIVATE)
-                        .build().toString()
-        );
+//        log.debug("********ModelElement *****");
+//        sb.append(Function
+//                        .builder()
+//                        .functionComment("Task(" + node.getName() + "): " + node.getId())
+////                .name(task.getNextTaskElement().getTargetId())
+//                        .sourceId(node.getId())
+//                        .visibility(Types.visibility.PRIVATE)
+//                        .build().toString()
+//        );
         return sb.toString();
 
 
@@ -170,5 +190,31 @@ public class CodeGenVisitor implements Visitor {
 
     private ModelElementInstance loadElement(ModelInstance instance, String id) {
         return instance.getModelElementById(id);
+    }
+
+    private String nextElementId(ModelInstance instance, BpmnModelAdapter startNode) {
+        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) startNode;
+        ModelElementInstance targetElementId = instance
+                .getModelElementById(sequenceFlow.getTargetRefId());
+        BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
+        //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
+        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
+        if (targetElement instanceof ChoreographyTaskAdapter) {
+            return ((ChoreographyTaskAdapter) targetElement).getRequestMessage().getMessage().getId();
+        } else {
+            return targetElement.getId();
+        }
+    }
+
+    private Collection<String> getParamsList(String msg) {
+        String add = "";
+        String n = msg.replace("string", "").replace("uint", "").replace("bool", "").replace(" ", "");
+        String r = n.replace(")", "");
+        String[] t = r.split("\\(");
+        String[] m = t[1].split(",");
+
+        List<String> res = new ArrayList<>();
+        res.addAll(Arrays.asList(m));
+        return res;
     }
 }
