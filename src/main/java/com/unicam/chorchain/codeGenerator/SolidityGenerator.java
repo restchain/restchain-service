@@ -3,6 +3,8 @@ package com.unicam.chorchain.codeGenerator;
 import com.unicam.chorchain.codeGenerator.adapter.BpmnModelAdapter;
 import com.unicam.chorchain.codeGenerator.solidity.Enum;
 import com.unicam.chorchain.codeGenerator.solidity.*;
+import com.unicam.chorchain.model.Choreography;
+import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.storage.StorageFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -19,12 +21,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SolidityGenerator {
 
+
+    //Costruttore con Modello Bpmn
+
     private Set<String> visited = new HashSet<>();
     private List<Visitable> items = new ArrayList<>();
+    private Instance instance;
 
-    public void traverse(BpmnModelAdapter node) {
+    public SolidityGenerator(Instance instance) {
+        this.instance = instance;
+    }
 
-
+    //Traverse all the Bpmn elementAdapters to build the sequenceFlow tree.
+    public void  traverse(BpmnModelAdapter node) {
         if (!visited.contains(node.getId())) {
             log.debug("id: {} - n°:{}", node.getId(), visited.size() + 1);
             items.add(node);
@@ -36,10 +45,11 @@ public class SolidityGenerator {
         }
     }
 
-    public void eleab(BpmnModelInstance modelInstance) {
+    //Using visitors start building the solidity file
+    public void eleab(BpmnModelInstance modelInstance, Instance instance) {
 
-        StringBuffer bf = new StringBuffer();
-        CodeGenVisitor codeGenVisitor = new CodeGenVisitor();
+        StringBuilder bf = new StringBuilder();
+        CodeGenVisitor codeGenVisitor = new CodeGenVisitor(instance);
 
         //*** starts here ***/
 
@@ -53,7 +63,7 @@ public class SolidityGenerator {
         Struct structGlobal = Struct.builder()
                 .variableMap(Types.string, "ID")
                 .variableMap("State", "status")
-                .name("general")
+                .name("Element")
                 .build();
 
         //Generic struct

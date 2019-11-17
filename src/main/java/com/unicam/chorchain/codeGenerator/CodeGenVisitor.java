@@ -4,14 +4,14 @@ import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.IfConstruct;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
+import com.unicam.chorchain.model.Instance;
+import com.unicam.chorchain.model.InstanceParticipantUser;
+import com.unicam.chorchain.model.Participant;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
@@ -19,6 +19,21 @@ import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter
 @Slf4j
 public class CodeGenVisitor implements Visitor {
 
+    private Instance instance;
+    private List<String> mandatoryParticipantsSol;
+    private List<String> optionalParticipantSol;
+
+    public CodeGenVisitor(Instance instance) {
+        this.instance = instance;
+        this.mandatoryParticipantsSol = instance.getMandatoryParticipants()
+                .stream()
+                .filter(p -> p.getUser() != null)
+                .map(p -> p.getParticipant().getName())
+                .collect(Collectors.toList());
+
+        this.optionalParticipantSol = instance.getChoreography().getParticipants().stream().filter((p) ->
+                !mandatoryParticipantsSol.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
+    }
 
     @Override
     public String visit(BpmnModelAdapter node) {
@@ -28,7 +43,6 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public String visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
-
 
         return Function
                 .builder()
@@ -70,12 +84,12 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ExclusiveGateway: *****");
 
 
-        Collection<IfConstruct> ifs = new ArrayList<>(0);
+        Collection<IfConstruct> ifConstructs = new ArrayList<>(0);
         Collection<String> toEnable = new ArrayList<>(0);
 
         if (node.getDirection().equals("Diverging")) {
             node.getOutgoing().stream().forEach(out -> {
-                        ifs.add(IfConstruct.builder()
+                        ifConstructs.add(IfConstruct.builder()
                                 .condition(out.getName())
                                 .enableAndActiveTask(((SequenceFlowAdapter) out).getTargetRefId(), true)
                                 .build());
@@ -93,7 +107,7 @@ public class CodeGenVisitor implements Visitor {
                 .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
-                .ifConstructs(ifs)
+                .ifConstructs(ifConstructs)
                 .enables(toEnable)
                 .build().toString();
     }
@@ -118,7 +132,10 @@ public class CodeGenVisitor implements Visitor {
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
         log.debug(" ** type: {} - {} - {}    **", node.getType(), node.getName(), node.getId());
-
+        log.debug(" ** part: {} - {} - {}    **",
+                node.getParticipantRef().getName(),
+                getParticipantModifier(node.getParticipantRef().getName()),
+                printRoleList());
 
         if (node.getType() == ONEWAY) {
 
@@ -128,10 +145,11 @@ public class CodeGenVisitor implements Visitor {
                             .getMessage()
                             .getName())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .visibility(Types.visibility.PUBLIC)
+                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix("currentMemory")
                     .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
-//                    .enable(node.getNextTaskElement().getTargetId())
                     .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot())
                     .build());
@@ -143,6 +161,7 @@ public class CodeGenVisitor implements Visitor {
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
+                    .visibility(Types.visibility.PUBLIC)
                     .enable(node.getResponseMessage().getMessage().getId())
                     .globalVariabilePrefix("currentMemory")
                     .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
@@ -155,6 +174,7 @@ public class CodeGenVisitor implements Visitor {
                     .name(normalizeId(node.getResponseMessage().getMessage().getId()))
                     .sourceId(node.getResponseMessage().getMessage().getId())
                     .globalVariabilePrefix("currentMemory")
+                    .visibility(Types.visibility.PUBLIC)
                     .parameters(getParamsList(node.getResponseMessage().getMessage().getName()))
                     .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot()).build());
@@ -169,7 +189,7 @@ public class CodeGenVisitor implements Visitor {
                     node.getRequestMessage().getName(),
                     node.getRequestMessage().getSource().getId(),
                     node.getRequestMessage().getTarget().getId(),
-                    node.getRequestMessage().getMessage().getId()
+                    node.getRequestMessage().getMessage().getName()
             );
 
 //            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) Factories.bpmnModelFactory.create(node.getOutgoingElement());
@@ -183,7 +203,7 @@ public class CodeGenVisitor implements Visitor {
                     node.getResponseMessage().getName(),
                     node.getResponseMessage().getSource().getId(),
                     node.getResponseMessage().getTarget().getId(),
-                    node.getResponseMessage().getMessage().getId()
+                    node.getResponseMessage().getMessage().getName()
             );
 
 
@@ -203,14 +223,12 @@ public class CodeGenVisitor implements Visitor {
 
     }
 
+    // Performs a - replacing in _
     private String normalizeId(String id) {
         return id.replace("-", "_");
     }
 
-    private ModelElementInstance loadElement(ModelInstance instance, String id) {
-        return instance.getModelElementById(id);
-    }
-
+    //Returns the next elementId pointed by the passed sequenceFlow
     private String nextElementId(ModelInstance instance, BpmnModelAdapter startNode) {
         SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) startNode;
         ModelElementInstance targetElementId = instance
@@ -225,8 +243,9 @@ public class CodeGenVisitor implements Visitor {
         }
     }
 
+    // returns a List of all params name contained in the passed signature (msg)
     private Collection<String> getParamsList(String msg) {
-        log.debug("singture {}:", msg);
+        log.debug("signature {}:", msg);
         String add = "";
         String n = msg.replace("string", "").replace("uint", "").replace("bool", "").replace(" ", "");
         String r = n.replace(")", "");
@@ -237,4 +256,50 @@ public class CodeGenVisitor implements Visitor {
         res.addAll(Arrays.asList(m));
         return res;
     }
+
+    // returns a modifier function call depending of the participant role
+    private String getParticipantModifier(String participantFromModel) {
+        //If participantFromRole is contained in tha Mandatory list is Mandatory else is Optional
+        if (mandatoryParticipantsSol.contains(participantFromModel)) {
+            return roleModifierFormatter(Types.Mandatory_modifier, participantFromModel);
+
+        } else {
+            return roleModifierFormatter(Types.Optional_modifier, participantFromModel);
+        }
+    }
+
+    // String formatter for  a modifier function call
+    private String roleModifierFormatter(String type, String name) {
+        StringBuffer sb = new StringBuffer();
+        return sb.append(" ")
+                .append(type)
+                .append("(").append(Types.Global_RoleList)
+                .append("[")
+                .append(mandatoryParticipantsSol.indexOf(name))
+                .append("]) ")
+                .toString();
+    }
+
+    // returns a string of the array declarations about participant roles (mandatory or optional)
+    private String printRoleList() {
+        StringBuffer sb = new StringBuffer();
+
+        if (mandatoryParticipantsSol.size() > 0) {
+            sb.append("string [] ").append(Types.Global_RoleList).append(" = ");
+            sb.append("[");
+            mandatoryParticipantsSol.forEach(r -> sb.append("\"").append(r).append("\","));
+            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append("]");
+        }
+
+        if (optionalParticipantSol.size() > 0) {
+            sb.append("string [] ").append(Types.Global_OptionalList).append(" = ");
+            sb.append("[");
+            optionalParticipantSol.forEach(r -> sb.append("\"").append(r).append("\","));
+            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append("]");
+        }
+        return sb.toString();
+    }
+
 }

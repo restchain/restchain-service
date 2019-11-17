@@ -20,7 +20,7 @@ public class Enum {
         StringBuffer out = new StringBuffer();
         out.append("enum ").append(name).append("{");
         if (elements != null) {
-            elements.forEach((var) -> out.append("\t").append(var.trim()).append(";\n"));
+            elements.forEach((var) -> out.append("\t").append(var.trim()).append(",\n"));
         }
         out.append("} \t");
         out.append(name).append(" ").append(variableName).append(";\n");

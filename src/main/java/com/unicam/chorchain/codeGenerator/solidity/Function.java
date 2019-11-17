@@ -14,6 +14,7 @@ public class Function {
     private String visibility;  // ci va o un enum o una classe
     private String sourceId;
     private String target;
+    private String modifier;
     @Singular
     private List<String> enables;
     @Singular
@@ -28,7 +29,11 @@ public class Function {
         StringBuffer out = new StringBuffer();
         out.append("//").append(functionComment).append("\n");
         out.append("function ").append(name);
-        out.append("(").append(") ").append(visibility).append(" {\n");
+        out.append("(").append(") ").append(visibility);
+        if (modifier != null){
+            out.append(modifier);
+        }
+        out.append(" {\n");
         out.append("\trequire(elements[position[\"").append(sourceId).append("\"]].status == State.ENABLED);\n");
         out.append("\tdone(").append(sourceId).append("\");\n");
         if (ifConstructs != null) {

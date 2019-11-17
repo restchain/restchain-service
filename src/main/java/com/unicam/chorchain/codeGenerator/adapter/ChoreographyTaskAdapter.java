@@ -126,6 +126,14 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
         return this.name.replace("\n"," ");
     }
 
+    public Participant getParticipantRef(){
+       return  this.participantRef;
+    }
+
+    public Participant getInitialParticipant(){
+        return  this.initialParticipant;
+    }
+
     @Override
     public ModelInstance getModelInstance() {
         return this.value.getModelInstance();
