@@ -2,9 +2,9 @@ package com.unicam.chorchain.codeGenerator;
 
 import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
+import com.unicam.chorchain.codeGenerator.solidity.IfConstruct;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.model.xml.Model;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
@@ -69,13 +69,32 @@ public class CodeGenVisitor implements Visitor {
     public String visitExclusiveGateway(ExclusiveGatewayAdapter node) {
         log.debug("********ExclusiveGateway: *****");
 
+
+        Collection<IfConstruct> ifs = new ArrayList<>(0);
+        Collection<String> toEnable = new ArrayList<>(0);
+
+        if (node.getDirection().equals("Diverging")) {
+            node.getOutgoing().stream().forEach(out -> {
+                        ifs.add(IfConstruct.builder()
+                                .condition(out.getName())
+                                .enableAndActiveTask(((SequenceFlowAdapter) out).getTargetRefId(), true)
+                                .build());
+                    }
+            );
+        }
+
+        if (node.getDirection().equals("Converging")) {
+            toEnable.add(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)));
+        }
+
         return Function
                 .builder()
-                .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId())
+                .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId() + " Dir: " + node.getDirection())
                 .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
-                .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
                 .visibility(Types.visibility.PRIVATE)
+                .ifConstructs(ifs)
+                .enables(toEnable)
                 .build().toString();
     }
 
@@ -113,7 +132,7 @@ public class CodeGenVisitor implements Visitor {
                     .globalVariabilePrefix("currentMemory")
                     .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
 //                    .enable(node.getNextTaskElement().getTargetId())
-                    .taskEnableActive_(nextElement.getTargetRefId(),
+                    .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot())
                     .build());
             sb.append("\n\n");
@@ -137,7 +156,7 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(node.getResponseMessage().getMessage().getId())
                     .globalVariabilePrefix("currentMemory")
                     .parameters(getParamsList(node.getResponseMessage().getMessage().getName()))
-                    .taskEnableActive_(nextElement.getTargetRefId(),
+                    .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot()).build());
             sb.append("\n\n");
 
@@ -207,6 +226,7 @@ public class CodeGenVisitor implements Visitor {
     }
 
     private Collection<String> getParamsList(String msg) {
+        log.debug("singture {}:", msg);
         String add = "";
         String n = msg.replace("string", "").replace("uint", "").replace("bool", "").replace(" ", "");
         String r = n.replace(")", "");

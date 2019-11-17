@@ -36,6 +36,10 @@ public class ExclusiveGatewayAdapter implements BpmnModelAdapter, Visitable {
         return value.getName() != null ? value.getName().replace("\n", " ") : "";
     }
 
+    public String getDirection(){
+        return value.getGatewayDirection().name();
+    }
+
     @Override
     public ModelInstance getModelInstance() {
         return this.value.getModelInstance();

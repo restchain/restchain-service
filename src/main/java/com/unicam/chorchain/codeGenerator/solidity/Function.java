@@ -19,7 +19,9 @@ public class Function {
     @Singular
     private List<String> parameters;
     @Singular
-    private Map<String, Boolean> taskEnableActive_s;
+    private List<IfConstruct> ifConstructs;
+    @Singular
+    private Map<String, Boolean> enableAndActiveTasks;
     private String globalVariabilePrefix;
 
     public String toString() {
@@ -29,6 +31,9 @@ public class Function {
         out.append("(").append(") ").append(visibility).append(" {\n");
         out.append("\trequire(elements[position[\"").append(sourceId).append("\"]].status == State.ENABLED);\n");
         out.append("\tdone(").append(sourceId).append("\");\n");
+        if (ifConstructs != null) {
+            ifConstructs.forEach(d -> out.append("\t").append(d).append("\n"));
+        }
         if (parameters != null) {
             parameters.forEach(d -> out.append("\t")
                     .append(globalVariabilePrefix)
@@ -41,8 +46,8 @@ public class Function {
         if (enables != null) {
             enables.forEach(d -> out.append("\tenable(").append(d).append("\");\n"));
         }
-        if (taskEnableActive_s != null) {
-            taskEnableActive_s.forEach(
+        if (enableAndActiveTasks != null) {
+            enableAndActiveTasks.forEach(
                     (k, v) -> {
                         out.append("\tenable(").append(k).append("\");\n");
                         if (v) {

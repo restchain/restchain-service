@@ -47,7 +47,8 @@ public class SequenceFlowAdapter implements BpmnModelAdapter {
 
     @Override
     public String getName() {
-        return value.getName() != null ? value.getName().replace("\n", " ") : "";
+        return value.getAttributeValue("name");
+//        return value.getName() != null ? value.getName().replace("\n", " ") : "";
     }
 
     @Override

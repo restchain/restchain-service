@@ -24,7 +24,7 @@ contract resttt {
         string product;
         uint price;
         bool accepted;
-        bool reiterate;
+        bool reitercaeate;
         string motivation;
         string shipAddress;
         string shipInfo;
@@ -113,6 +113,8 @@ contract resttt {
         enable("sid-624ca53e-cc27-4a74-97be-055cb19cae54");
     }
 
+
+    //Task "way"
     //Message
     function sid_624ca53e_cc27_4a74_97be_055cb19cae54(uint price) public checkMand(roleList[0]) {
         require(elements[position["sid-624ca53e-cc27-4a74-97be-055cb19cae54"]].status == State.ENABLED);
