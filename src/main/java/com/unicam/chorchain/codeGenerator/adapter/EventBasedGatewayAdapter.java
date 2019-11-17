@@ -60,7 +60,8 @@ public class EventBasedGatewayAdapter implements BpmnModelAdapter, Visitable {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitEventBasedGateway(this);
+    public void accept(Visitor visitor) {
+
+         visitor.visitEventBasedGateway(this);
     }
 }

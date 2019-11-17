@@ -15,10 +15,13 @@ public class Function {
     private String sourceId;
     private String target;
     private String modifier;
+    private boolean payable;
     @Singular
     private List<String> enables;
     @Singular
     private List<String> parameters;
+    @Singular
+    private List<String> varAssignments;
     @Singular
     private List<IfConstruct> ifConstructs;
     @Singular
@@ -29,8 +32,15 @@ public class Function {
         StringBuffer out = new StringBuffer();
         out.append("//").append(functionComment).append("\n");
         out.append("function ").append(name);
-        out.append("(").append(") ").append(visibility);
-        if (modifier != null){
+        out.append("(");
+        if (parameters != null) {
+            parameters.forEach(d -> out.append(d.trim().replace("string","string memory")));
+        }
+        out.append(") ").append(visibility);
+        if (payable) {
+            out.append(" payable ");
+        }
+        if (modifier != null) {
             out.append(modifier);
         }
         out.append(" {\n");
@@ -39,12 +49,12 @@ public class Function {
         if (ifConstructs != null) {
             ifConstructs.forEach(d -> out.append("\t").append(d).append("\n"));
         }
-        if (parameters != null) {
-            parameters.forEach(d -> out.append("\t")
+        if (varAssignments != null) {
+            varAssignments.forEach(d -> out.append("\t")
                     .append(globalVariabilePrefix)
                     .append(".")
                     .append(d)
-                    .append("=")
+                    .append(" = ")
                     .append(d)
                     .append(";\n"));
         }

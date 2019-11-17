@@ -60,7 +60,7 @@ public class EndEventAdapter implements BpmnModelAdapter, Visitable {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitEndEvent(this);
+    public void accept(Visitor visitor) {
+        visitor.visitEndEvent(this);
     }
 }

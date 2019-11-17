@@ -59,7 +59,7 @@ public class ParallelGatewayAdapter implements BpmnModelAdapter, Visitable {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitParallelGateway(this);
+    public void accept(Visitor visitor) {
+         visitor.visitParallelGateway(this);
     }
 }

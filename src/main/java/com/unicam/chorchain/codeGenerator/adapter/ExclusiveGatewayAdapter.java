@@ -64,7 +64,7 @@ public class ExclusiveGatewayAdapter implements BpmnModelAdapter, Visitable {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitExclusiveGateway(this);
+    public void accept(Visitor visitor) {
+        visitor.visitExclusiveGateway(this);
     }
 }

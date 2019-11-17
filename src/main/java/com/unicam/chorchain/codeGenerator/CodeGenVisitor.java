@@ -5,8 +5,7 @@ import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.IfConstruct;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.model.Instance;
-import com.unicam.chorchain.model.InstanceParticipantUser;
-import com.unicam.chorchain.model.Participant;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -20,10 +19,13 @@ import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter
 public class CodeGenVisitor implements Visitor {
 
     private Instance instance;
+    @Getter
+    private StringBuilder text;
     private List<String> mandatoryParticipantsSol;
     private List<String> optionalParticipantSol;
 
     public CodeGenVisitor(Instance instance) {
+        text = new StringBuilder();
         this.instance = instance;
         this.mandatoryParticipantsSol = instance.getMandatoryParticipants()
                 .stream()
@@ -36,51 +38,49 @@ public class CodeGenVisitor implements Visitor {
     }
 
     @Override
-    public String visit(BpmnModelAdapter node) {
-        return "";
+    public void visit(BpmnModelAdapter node) {
     }
 
     @Override
-    public String visitStartEvent(StartEventAdapter node) {
+    public void visitStartEvent(StartEventAdapter node) {
         log.debug("********StartEvent *****");
-
-        return Function
+        text.append(Function
                 .builder()
                 .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
                 .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
                 .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
                 .visibility(Types.visibility.PRIVATE)
-                .build().toString();
+                .build().toString());
     }
 
     @Override
-    public String visitEndEvent(EndEventAdapter node) {
+    public void visitEndEvent(EndEventAdapter node) {
         log.debug("********EndEvent *****");
-        return Function
+        text.append(Function
                 .builder()
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
-                .build().toString();
+                .build().toString());
     }
 
     @Override
-    public String visitParallelGateway(ParallelGatewayAdapter node) {
+    public void visitParallelGateway(ParallelGatewayAdapter node) {
         log.debug("********ParallelGateway *****");
-        return Function
+        text.append(Function
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
                 .name(node.getId())
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
-                .build().toString();
+                .build().toString());
     }
 
     @Override
-    public String visitExclusiveGateway(ExclusiveGatewayAdapter node) {
+    public void visitExclusiveGateway(ExclusiveGatewayAdapter node) {
         log.debug("********ExclusiveGateway: *****");
 
 
@@ -101,7 +101,7 @@ public class CodeGenVisitor implements Visitor {
             toEnable.add(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)));
         }
 
-        return Function
+        text.append(Function
                 .builder()
                 .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId() + " Dir: " + node.getDirection())
                 .name(normalizeId(node.getId()))
@@ -109,118 +109,80 @@ public class CodeGenVisitor implements Visitor {
                 .visibility(Types.visibility.PRIVATE)
                 .ifConstructs(ifConstructs)
                 .enables(toEnable)
-                .build().toString();
+                .build().toString());
     }
 
     @Override
-    public String visitEventBasedGateway(EventBasedGatewayAdapter node) {
+    public void visitEventBasedGateway(EventBasedGatewayAdapter node) {
         log.debug("********EventBasedGateway *****");
-        return Function
+        text.append(Function
                 .builder()
                 .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .name(node.getId())
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
-                .build().toString();
+                .build().toString());
     }
 
     @Override
-    public String visitChoreographyTask(ChoreographyTaskAdapter node) {
-        // checkOpt o checkMand sono modifier, li metti su tutte le funzioni dei messaggi dipendentemente se deve essre eseguita da un ruolo opzionale o mandatory
-        StringBuffer sb = new StringBuffer();
+    public void visitChoreographyTask(ChoreographyTaskAdapter node) {
+        StringBuilder sb = new StringBuilder();
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
-
-        log.debug(" ** type: {} - {} - {}    **", node.getType(), node.getName(), node.getId());
-        log.debug(" ** part: {} - {} - {}    **",
-                node.getParticipantRef().getName(),
-                getParticipantModifier(node.getParticipantRef().getName()),
-                printRoleList());
 
         if (node.getType() == ONEWAY) {
 
-            sb.append(Function.builder()
+            text.append(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
                             .getRequestMessage()
                             .getMessage()
                             .getName())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
+                    .payable(node.getRequestMessage().getMessage().getName().contains("payment"))
+                    .parameter(getParmeters(node.getRequestMessage().getMessage().getName()))
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
-                    .globalVariabilePrefix("currentMemory")
-                    .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .globalVariabilePrefix(Types.GlobaStateMemory_varName)
+                    .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
                     .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot())
                     .build());
-            sb.append("\n\n");
+            text.append("\n\n");
 
         } else {
             //Upper part - requestMessage
-            sb.append(Function.builder()
+            text.append(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .payable(node.getRequestMessage().getMessage().getName().contains("payment"))
+                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
+
                     .sourceId(node.getRequestMessage().getMessage().getId())
+                    .parameter(getParmeters(node.getRequestMessage().getMessage().getName()))
                     .visibility(Types.visibility.PUBLIC)
                     .enable(node.getResponseMessage().getMessage().getId())
-                    .globalVariabilePrefix("currentMemory")
-                    .parameters(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .globalVariabilePrefix(Types.GlobaStateMemory_varName)
+                    .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
                     .build());
-            sb.append("\n\n");
+            text.append("\n\n");
 
             //lower part - requestMessage
-            sb.append(Function.builder()
+            text.append(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(normalizeId(node.getResponseMessage().getMessage().getId()))
-                    .sourceId(node.getResponseMessage().getMessage().getId())
-                    .globalVariabilePrefix("currentMemory")
+                    .parameter(getParmeters(node.getResponseMessage().getMessage().getName()))
                     .visibility(Types.visibility.PUBLIC)
-                    .parameters(getParamsList(node.getResponseMessage().getMessage().getName()))
+                    .payable(node.getResponseMessage().getMessage().getName().contains("payment"))
+                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
+                    .globalVariabilePrefix(Types.GlobaStateMemory_varName)
+                    .sourceId(node.getResponseMessage().getMessage().getId())
+                    .varAssignments(getParamsList(node.getResponseMessage().getMessage().getName()))
                     .enableAndActiveTask(nextElement.getTargetRefId(),
                             nextElement.isTargetGatewayOrNot()).build());
-            sb.append("\n\n");
+            text.append("\n\n");
 
         }
-
-
-        if (node.getRequestMessage() != null) {
-            log.debug(" \nReq MessageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
-                    node.getRequestMessage().getId(),
-                    node.getRequestMessage().getName(),
-                    node.getRequestMessage().getSource().getId(),
-                    node.getRequestMessage().getTarget().getId(),
-                    node.getRequestMessage().getMessage().getName()
-            );
-
-//            SequenceFlowAdapter nextElement = (SequenceFlowAdapter) Factories.bpmnModelFactory.create(node.getOutgoingElement());
-
-
-        }
-
-        if (node.getResponseMessage() != null) {
-            log.debug(" \nRESP messageFlow\n\tid: {}\n\tname: {}\n\tsource:{}\n\ttarget: {}\n\tmessaggio: {}\n ",
-                    node.getResponseMessage().getId(),
-                    node.getResponseMessage().getName(),
-                    node.getResponseMessage().getSource().getId(),
-                    node.getResponseMessage().getTarget().getId(),
-                    node.getResponseMessage().getMessage().getName()
-            );
-
-
-        }
-
-//        log.debug("********ModelElement *****");
-//        sb.append(Function
-//                        .builder()
-//                        .functionComment("Task(" + node.getName() + "): " + node.getId())
-////                .name(task.getNextTaskElement().getTargetId())
-//                        .sourceId(node.getId())
-//                        .visibility(Types.visibility.PRIVATE)
-//                        .build().toString()
-//        );
-        return sb.toString();
-
-
     }
 
     // Performs a - replacing in _
@@ -300,6 +262,12 @@ public class CodeGenVisitor implements Visitor {
             sb.append("]");
         }
         return sb.toString();
+    }
+
+    // Function for getting all the parameters presents in function signature,
+    private static String getParmeters(String messageName) {
+        String[] parsedMsgName = messageName.split("\\(");
+        return parsedMsgName[1].replace(")", "   ");
     }
 
 }

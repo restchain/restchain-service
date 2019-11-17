@@ -82,7 +82,7 @@ public class SequenceFlowAdapter implements BpmnModelAdapter {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return "";
+    public void accept(Visitor visitor) {
     }
 }
+

@@ -157,8 +157,8 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitChoreographyTask(this);
+    public void accept(Visitor visitor) {
+        visitor.visitChoreographyTask(this);
     }
 
 }

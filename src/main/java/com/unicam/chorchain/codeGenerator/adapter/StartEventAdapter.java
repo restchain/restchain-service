@@ -59,7 +59,7 @@ public class StartEventAdapter implements BpmnModelAdapter, Visitable {
     }
 
     @Override
-    public String accept(Visitor visitor) {
-        return visitor.visitStartEvent(this);
+    public void accept(Visitor visitor) {
+        visitor.visitStartEvent(this);
     }
 }

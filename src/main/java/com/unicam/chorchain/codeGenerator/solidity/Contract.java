@@ -29,8 +29,8 @@ public class Contract {
     Collection<Event> events;
     private
     Collection<Function> functions;
-    private
-    Collection<String> customStringsBody;
+    private @Singular
+    Collection<String> customBodyStrings;
 
 //    public void addStruct(Struct s1) {
 //        structs.add(s1);
@@ -85,9 +85,9 @@ public class Contract {
             functions.forEach((s) -> out.append(s.toString()).append("\n"));
         }
 
-        if (customStringsBody != null) {
+        if (customBodyStrings != null) {
             out.append("//CustomStringsBody\n");
-            customStringsBody.forEach((s) -> out.append(s).append("\n"));
+            customBodyStrings.forEach((s) -> out.append(s).append("\n"));
         }
 
 

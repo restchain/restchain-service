@@ -50,6 +50,8 @@ public class SolidityGenerator {
 
         StringBuilder bf = new StringBuilder();
         CodeGenVisitor codeGenVisitor = new CodeGenVisitor(instance);
+        items.forEach(v -> v.accept(codeGenVisitor));
+        codeGenVisitor.getText();
 
         //*** starts here ***/
 
@@ -105,7 +107,7 @@ public class SolidityGenerator {
 
 
         Contract sol = Contract.builder()
-                .pragmaVersion("5.4.3")
+                .pragmaVersion("^5.4.3")
                 .fileName("primaProva")
                 .struct(structGlobal)
                 .struct(structElement)
@@ -113,7 +115,7 @@ public class SolidityGenerator {
                 .mapping(map2)
                 .enumElement(solEnum)
                 .constructorBody("owner = msg.sender;")
-                .customStringsBody(items.stream().map(v -> v.accept(codeGenVisitor)).collect(Collectors.toList()))
+                .customBodyString(codeGenVisitor.getText().toString())
                 .event(event1)
                 .build();
 
