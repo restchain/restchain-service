@@ -1,11 +1,16 @@
 package com.unicam.chorchain.smartContract;
 
 import com.unicam.chorchain.choreography.UploadFile;
+import com.unicam.chorchain.codeGenerator.Factories;
+import com.unicam.chorchain.codeGenerator.SolidityGenerator;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import com.unicam.chorchain.translator.ChoreographyBpmn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
@@ -119,6 +124,16 @@ public class SmartContractService {
         }
 
         return choreographyBpmn.finalContract;
+    }
+
+
+    public void generateCode(Instance instance, Path modelPath) {
+        SolidityGenerator sg = new SolidityGenerator(instance);
+        BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
+        ModelElementInstance start = modelInstance.getModelElementById("sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A");
+        sg.traverse(Factories.bpmnModelFactory.create(modelInstance.getModelElementById(
+                "sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A")));
+        sg.eleab(modelInstance,instance);
     }
 
 

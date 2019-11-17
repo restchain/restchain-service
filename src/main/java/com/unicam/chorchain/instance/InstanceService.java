@@ -128,20 +128,23 @@ public class InstanceService {
         Instance instance = findInstanceById(instanceDeployRequest.getId());
 
         log.debug("Generating solidity file ...");
-        SmartContract cObj = smartContractService.createSolidity(instance,
+
+
+        smartContractService.generateCode(instance,
                 fileSystemStorageService.load(instance.getChoreography().getFilename()));
-        log.debug("Compiling solidity file ...");
-        smartContractService.compile(instance.getChoreography().getName());
-        log.debug("Deploying solidity file ...");
-        String cAddress = null;
-        try {
-            cAddress = smartContractService.deploy(instance.getChoreography().getName());
-        } catch (Exception e) {
-            log.error(e.toString());
-        }
+//        SmartContract cObj = smartContractService.createSolidity(instance,
+//                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+//        log.debug("Compiling solidity file ...");
+//        smartContractService.compile(instance.getChoreography().getName());
+//        log.debug("Deploying solidity file ...");
+//        String cAddress = null;
+//        try {
+//            cAddress = smartContractService.deploy(instance.getChoreography().getName());
+//        } catch (Exception e) {
+//            log.error(e.toString());
+//        }
 
-        log.debug("Deployed solidity {}", cAddress);
-
+//        log.debug("Deployed solidity {}", cAddress);
 
 
     }
