@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
@@ -63,6 +64,7 @@ public class SmartContractService {
     private List<String> tasks;
     private String CONTRACT_ADDRESS = "";
     private Web3j web3j;
+
     private Admin adm;
 
     private static boolean pendingTransaction = false;
@@ -73,7 +75,7 @@ public class SmartContractService {
         adm = Admin.build(new HttpService(blcokChainUrl));
     }
 
-    public SmartContract createSolidity(Instance instance, Path modelPath) {
+    public SmartContract oldGenerateCode(Instance instance, Path modelPath) {
 
         log.debug("Create solidity... instance {}", instance.getId(), instance.getChoreography().getName());
 
@@ -126,31 +128,38 @@ public class SmartContractService {
     }
 
 
-    public void generateCode(Instance instance, Path modelPath) {
+    public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
         SolidityGenerator sg = new SolidityGenerator(instance);
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
-        sg.traverse(Factories.bpmnModelFactory.create(modelInstance.getModelElementById(
-                "sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A")));
-        sg.build();
+        //implement a business logic that will match the exact starting orders of loading
+        modelInstance.getModelElementsByType(StartEvent.class)
+                .forEach(e -> sg.traverse(Factories.bpmnModelFactory.create(e)));
+        String code = sg.build();
+
+        //save the generated code to a file
+        try {
+            UploadFile uploadFile = new UploadFile();
+            uploadFile.setName(instance.getChoreography().getName());
+            uploadFile.setExtension(".sol");
+            uploadFile.setData(code);
+
+            fileSystemStorageService.storeSolidity(uploadFile, projectPath);
+            return uploadFile;
+        } catch (Exception e) {
+            tasks = null;
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
     public void compile(String fileName) {
         try {
-//            System.out.println(getServletContext().getInitParameter("upload.location"));
-
-            String fin = parseName(fileName, ".sol");
-
-//            String projectPath =    solidityProperties.getDir();
-//
-            String solPath = projectPath + File.separator + fin;
+            String solPath = projectPath + File.separator + fileName;
             log.debug("Solidity PATTT: " + solPath);
             String destinationPath = projectPath + File.separator;//sostituire compiled a resources
             log.debug("destination path " + destinationPath);
             String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "-o", destinationPath};
-
-
-            //String comm = "solc " + solPath + "--bin --abi --optimize -o " + destinationPath;
 
             Runtime rt = Runtime.getRuntime();
 
@@ -176,6 +185,11 @@ public class SmartContractService {
 
         }
     }
+
+
+
+
+    // TODO, understand and then or remove the removable or left there the needed
 
     public void wrapper(String fileName) {
         String path = projectPath + File.separator;

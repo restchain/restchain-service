@@ -66,9 +66,9 @@ public abstract class  FileSystemStorageServiceAbstract {
                 throw new StorageException("Failed to store empty file " + filename);
             }
 
-//            if (fileExists(file.getFilename())) {
-//                throw new StorageFileAlreadyExistsException("File already exists " + filename);
-//            }
+            if (fileExists(file.getFilename())) {
+                delete(file.getFilename());
+            }
 //            if (filename.contains("..")) {
 //                // This is a security check
 //                throw new StorageException(

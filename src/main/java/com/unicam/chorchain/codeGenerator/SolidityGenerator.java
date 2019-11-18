@@ -5,6 +5,7 @@ import com.unicam.chorchain.codeGenerator.solidity.*;
 import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.storage.StorageFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+
 import java.util.*;
 
 @Slf4j
@@ -34,8 +35,10 @@ public class SolidityGenerator {
     }
 
     //Uses visitors to start building the solidity file
-    public void build() {
+    public String build() {
         bpmnTree.forEach(v -> v.accept(new CodeGenVisitor(solidityInstance)));
-        log.debug("solidity :\n\n{}\n",solidityInstance.build());
+        String code = solidityInstance.build();
+        log.debug("solidity :\n\n{}\n", code);
+        return code;
     }
 }

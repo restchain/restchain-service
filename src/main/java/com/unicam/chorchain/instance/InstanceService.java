@@ -1,6 +1,7 @@
 package com.unicam.chorchain.instance;
 
 import com.unicam.chorchain.choreography.ChoreographyRepository;
+import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
@@ -128,14 +129,13 @@ public class InstanceService {
         Instance instance = findInstanceById(instanceDeployRequest.getId());
 
         log.debug("Generating solidity file ...");
-
-
-        smartContractService.generateCode(instance,
+        UploadFile solidityFile = smartContractService.generateSolidityCode(instance,
                 fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
 //        SmartContract cObj = smartContractService.createSolidity(instance,
 //                fileSystemStorageService.load(instance.getChoreography().getFilename()));
-//        log.debug("Compiling solidity file ...");
-//        smartContractService.compile(instance.getChoreography().getName());
+        log.debug("Compiling solidity file ...");
+        smartContractService.compile(solidityFile.getFilename());
 //        log.debug("Deploying solidity file ...");
 //        String cAddress = null;
 //        try {
