@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SolidityInstance {
@@ -14,24 +16,27 @@ public class SolidityInstance {
     @Getter
     private List<String> optionalParticipants;//List of optional Participants
     @Getter
-    private List<String> structVariables;
+    private List<String> structVariables;//List of solidity variables;
     @Getter
-    private StringBuilder text;//Growing solidity text of code
-    private StringBuilder body;//Growing solidity text of code
+    private Set<String> elementsId; //List of used bpmn components that compose functions
+    @Getter
+    private StringBuilder text;//Growing text of solidity code
+    private StringBuilder bpmnFunctions;//Growing text of BPMN functions composing solidity code
     @Getter
     @Setter
     private String startPointId; //If of the starting Point
     private Instance instance;
 
     public void addTxt(String text) {
-        this.body.append(text);
+        this.bpmnFunctions.append(text);
     }
 
     public SolidityInstance(Instance instance) {
         this.instance = instance;
         this.text = new StringBuilder();
+        this.elementsId = new HashSet<>();
         this.structVariables = new ArrayList<>();
-        this.body = new StringBuilder();
+        this.bpmnFunctions = new StringBuilder();
         this.mandatoryParticipants = instance.getMandatoryParticipants()
                 .stream()
                 .filter(p -> p.getUser() != null)
@@ -89,11 +94,13 @@ public class SolidityInstance {
         List<String> variables = new ArrayList<>();
         variables.add("Element[] elements;");
         variables.add("StateMemory currentMemory;");
+        variables.add("uint counter;");
         variables.add(printRoleList());
+        variables.add(printElementsIdList());
 
 
         Contract sol = Contract.builder()
-                .pragmaVersion("^5.4.3")
+                .pragmaVersion("^0.5.3")
                 .fileName("primaProva")
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
@@ -102,7 +109,7 @@ public class SolidityInstance {
                 .structs(structs)
                 .variables(variables)
                 .constructorBody(printConstructorBody())
-                .function(this.body.toString())
+                .function(this.bpmnFunctions.toString())
                 .custom(printOtherFunctions())
                 .custom(printFunctionInit(this.getStartPointId()))
                 .build();
@@ -115,17 +122,17 @@ public class SolidityInstance {
 
 
         sb.append("function init() internal {\n");
-        sb.append("\tbool result = true;\n");
-        sb.append("\tfor (uint i = 0; i < roleList.length; i++) {\n");
-        sb.append("\t\tif (roles[roleList[i]] == 0x0000000000000000000000000000000000000000) {\n");
-        sb.append("\t\t\tresult = false;\n");
-        sb.append("\t\t\tbreak;\n");
+        sb.append("\t\tbool result = true;\n");
+        sb.append("\t\tfor (uint i = 0; i < roleList.length; i++) {\n");
+        sb.append("\t\t\tif (roles[roleList[i]] == 0x0000000000000000000000000000000000000000) {\n");
+        sb.append("\t\t\t\tresult = false;\n");
+        sb.append("\t\t\t\tbreak;\n");
+        sb.append("\t\t\t}\n");
         sb.append("\t\t}\n");
-        sb.append("\t}\n");
-        sb.append("\tif (result) {\n");
-        sb.append("\t//Questo è lo start\n");
-        sb.append("\t\t\tenable(\"").append(startPointId).append("\");\n");
-        sb.append("\t\t\t").append(startPointId.replace("-", "_")).append("();\n\t}\n}\n");
+        sb.append("\t\tif (result) {\n");
+        sb.append("\t\t//Questo è lo start\n");
+        sb.append("\t\t\t\tenable(\"").append(startPointId).append("\");\n");
+        sb.append("\t\t\t\t").append(startPointId.replace("-", "_")).append("();\n\t\t}\n\t}\n");
         return sb.toString();
     }
 
@@ -188,7 +195,8 @@ public class SolidityInstance {
         sb.append("\t\temit stateChanged(counter++);\n\t}\n");
         sb.append(
                 "\tfunction disable(string memory _taskID) internal {elements[position[_taskID]].status = State.DISABLED;}\n\n");
-        sb.append("\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;}\n\n");
+        sb.append(
+                "\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;}\n\n");
         sb.append("\tfunction getCurrentState() public view returns (Element[] memory, StateMemory memory){\n");
         sb.append("\t\t// emit stateChanged(elements, currentMemory);\n");
         sb.append("\t\treturn (elements, currentMemory);\n\t}\n\n");
@@ -197,5 +205,12 @@ public class SolidityInstance {
         return sb.toString();
     }
 
-
+    private String printElementsIdList() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("string [] elementsID = [\n");
+        elementsId.forEach(e -> sb.append("\t\"").append(e).append("\","));
+        sb.deleteCharAt(sb.length() - 1); //remove last comma
+        sb.append("];\n");
+        return sb.toString();
+    }
 }

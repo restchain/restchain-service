@@ -176,7 +176,7 @@ public class ChoreographyBpmn {
         intro += " ]; \n" + "	mapping(string=>address) roles; \r\n"
                 + "	mapping(string=>address) optionalRoles; \r\n";
         String constr = "constructor() public{\r\n" + "    //struct instantiation\r\n"
-                + "    for (uint i = 0; i < elementsID.length; i ++) {\r\n"
+                + "    for (uint i = 0; i < elementsID.length; i++) {\r\n"
                 + "        elements.push(Element(elementsID[i], State.DISABLED));\r\n"
                 + "        position[elementsID[i]]=i;\r\n" + "    }\r\n" + "         \r\n"
                 + "         //roles definition\r\n" + "         //mettere address utenti in base ai ruoli\r\n";

@@ -18,8 +18,8 @@ public class Contract {
 //    private String constructor;
     @NotEmpty
     private String constructorBody;
-    @Singular
-    private Collection<String> customTextStrings;
+//    @Singular
+//    private Collection<String> customTextStrings;
 
     private @Singular
     Collection<String> structs;
@@ -61,12 +61,12 @@ public class Contract {
             out.append("\t}\n");
             out.append("\n");
         }
-
-        if (customTextStrings != null) {
-            out.append("\t/* Custom part */\n");
-            customTextStrings.forEach((s) -> out.append("\t").append(s).append("\n"));
-            out.append("\n");
-        }
+//
+//        if (customTextStrings != null) {
+//            out.append("\t/* Custom part */\n");
+//            customTextStrings.forEach((s) -> out.append("\t").append(s).append("\n"));
+//            out.append("\n");
+//        }
 
         if (mappings != null) {
             out.append("\t/* Mappings */\n");
@@ -93,6 +93,11 @@ public class Contract {
         if (events != null) {
             out.append("\t/* Events */ \n");
             events.forEach((s) -> out.append("\t").append(s).append("\n"));
+        }
+
+        if (modifiers != null) {
+            out.append("\t/* Events */ \n");
+            modifiers.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 
         if (functions != null) {

@@ -38,7 +38,7 @@ public class CodeGenVisitor implements Visitor {
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
-                .name(normalizeId(node.getId()))
+                .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
                 .visibility(Types.visibility.PRIVATE)
@@ -51,7 +51,7 @@ public class CodeGenVisitor implements Visitor {
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
-                .name(normalizeId(node.getId()))
+                .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -63,7 +63,7 @@ public class CodeGenVisitor implements Visitor {
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
-                .name(normalizeId(node.getId()))
+                .name(processAsElementId(node.getId()))
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
@@ -93,7 +93,7 @@ public class CodeGenVisitor implements Visitor {
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId() + " Dir: " + node.getDirection())
-                .name(normalizeId(node.getId()))
+                .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .ifConstructs(ifConstructs)
@@ -108,7 +108,7 @@ public class CodeGenVisitor implements Visitor {
                 .builder()
                 .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
-                .name(normalizeId(node.getId()))
+                .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -132,7 +132,7 @@ public class CodeGenVisitor implements Visitor {
                             .getRequestMessage()
                             .getMessage()
                             .getName())
-                    .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
                     .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
@@ -159,7 +159,7 @@ public class CodeGenVisitor implements Visitor {
             //Upper part - requestMessage
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
-                    .name(normalizeId(node.getRequestMessage().getMessage().getId()))
+                    .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
                     .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
@@ -174,7 +174,7 @@ public class CodeGenVisitor implements Visitor {
             //lower part - requestMessage
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
-                    .name(normalizeId(node.getResponseMessage().getMessage().getId()))
+                    .name(processAsElementId(node.getResponseMessage().getMessage().getId()))
                     .parameter(getParameters(node.getResponseMessage().getMessage().getName()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableResp)
@@ -190,7 +190,8 @@ public class CodeGenVisitor implements Visitor {
     }
 
     // Performs a - replacing in _
-    private String normalizeId(String id) {
+    private String processAsElementId(String id) {
+        this.instance.getElementsId().add(id);
         return id.replace("-", "_");
     }
 
