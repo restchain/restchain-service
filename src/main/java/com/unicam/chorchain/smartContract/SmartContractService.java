@@ -178,7 +178,7 @@ public class SmartContractService {
                 error.append(line);
             }
 
-            if (error.toString().length() > 0) {
+            if (error.toString().contains("Error:")) {
                 throw new SmartContractCompilationException("Compilation error:" + error.toString());
             }
             bre.close();
