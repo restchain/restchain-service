@@ -21,12 +21,12 @@ public class Struct {
         StringBuffer out = new StringBuffer();
         out.append("struct ").append(name).append(" {\n");
         if (variableMaps != null) {
-            variableMaps.forEach((type, name) -> out.append("\t").append(type).append(" ").append(name).append(";\n"));
+            variableMaps.forEach((type, name) -> out.append("\t\t").append(type).append(" ").append(name).append(";\n"));
         }
         if (variables != null) {
             variables.forEach((var) -> out.append("\t").append(var.trim()).append(";\n"));
         }
-        out.append("}\n");
+        out.append("\t}\n");
         return out.toString();
     }
 }

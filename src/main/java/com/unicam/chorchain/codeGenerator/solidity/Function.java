@@ -16,6 +16,7 @@ public class Function {
     private String target;
     private String modifier;
     private boolean payable;
+    private boolean transferTo;
     @Singular
     private List<String> enables;
     @Singular
@@ -30,11 +31,11 @@ public class Function {
 
     public String toString() {
         StringBuffer out = new StringBuffer();
-        out.append("//").append(functionComment).append("\n");
-        out.append("function ").append(name);
+        out.append("\t//").append(functionComment).append("\n");
+        out.append("\tfunction ").append(name);
         out.append("(");
         if (parameters != null) {
-            parameters.forEach(d -> out.append(d.trim().replace("string","string memory")));
+            parameters.forEach(d -> out.append(d.trim().replace("string", "string memory")));
         }
         out.append(") ").append(visibility);
         if (payable) {
@@ -44,36 +45,41 @@ public class Function {
             out.append(modifier);
         }
         out.append(" {\n");
-        out.append("\trequire(elements[position[\"").append(sourceId).append("\"]].status == State.ENABLED);\n");
-        out.append("\tdone(").append(sourceId).append("\");\n");
+        out.append("\t\trequire(elements[position[\"").append(sourceId).append("\"]].status == State.ENABLED);\n");
+        out.append("\t\tdone(\"").append(sourceId).append("\");\n");
         if (ifConstructs != null) {
             ifConstructs.forEach(d -> out.append("\t").append(d).append("\n"));
         }
-        if (varAssignments != null) {
-            varAssignments.forEach(d -> out.append("\t")
-                    .append(globalVariabilePrefix)
-                    .append(".")
-                    .append(d)
-                    .append(" = ")
-                    .append(d)
-                    .append(";\n"));
+
+        if (transferTo) {
+            out.append("\t\t").append("to.transfer(msg.value);\n");
+        } else {
+            if (varAssignments != null) {
+                varAssignments.forEach(d -> out.append("\t\t")
+                        .append(globalVariabilePrefix)
+                        .append(".")
+                        .append(d)
+                        .append(" = ")
+                        .append(d)
+                        .append(";\n"));
+            }
         }
         if (enables != null) {
-            enables.forEach(d -> out.append("\tenable(").append(d).append("\");\n"));
+            enables.forEach(d -> out.append("\t\tenable(\"").append(d).append("\");\n"));
         }
         if (enableAndActiveTasks != null) {
             enableAndActiveTasks.forEach(
                     (k, v) -> {
-                        out.append("\tenable(").append(k).append("\");\n");
+                        out.append("\t\tenable(\"").append(k).append("\");\n");
                         if (v) {
-                            out.append("\t").append(k.replace("-", "_")).append("()").append("\n");
+                            out.append("\t\t").append(k.replace("-", "_")).append("();").append("\n");
                         }
                     }
             );
 
 
         }
-        out.append("}\n");
+        out.append("\t}\n");
         return out.toString();
     }
 }

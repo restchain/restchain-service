@@ -8,7 +8,8 @@ contract resttt {
     event stateChanged(uint);
 
     mapping(string => uint) position;
-
+    mapping(string => address) roles;
+    mapping(string => address) optionalRoles;
     //
     enum State {DISABLED, ENABLED, DONE} State s;
     mapping(string => string) operator;
@@ -35,9 +36,7 @@ contract resttt {
     StateMemory currentMemory;
     string[] elementsID = ["sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A", "sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c", "sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04", "sid-624ca53e-cc27-4a74-97be-055cb19cae54", "sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b", "sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E", "sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940", "sid-abba267c-92e3-4944-a98a-d317e035c861", "sid-e385b492-6b2b-475b-a8dd-8fc09513393b", "sid-b9828a39-b70d-4470-b5d2-61cda9b2bc64", "sid-0663CB4E-D3BF-4E12-8D81-D68E9318355F", "sid-859C73C7-F0DD-45ED-AA88-E0DEA0340C91", "sid-2F272EDB-9940-467E-AADC-2B485679AF43", "sid-06caa7c5-fba5-4524-8d4d-2f24b1d51468", "sid-CCD2A372-D382-426E-B823-05F778D4EA44", "sid-094362A8-CC68-4CB6-AC98-74DCF1163997", "sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F", "sid-E761CE7E-ED53-413A-A3C8-3D6569A80525"];
     string[] roleList = ["Seller"];
-    string[] optionalList = ["Buyer"];
-    mapping(string => address) roles;
-    mapping(string => address) optionalRoles;
+ƒs
     constructor() public{
         //struct instantiation
         for (uint i = 0; i < elementsID.length; i ++) {
@@ -55,10 +54,12 @@ contract resttt {
     modifier checkMand(string storage role)
     {
         require(msg.sender == roles[role]);
-        _;}modifier checkOpt(string storage role)
+        _;}
+        modifier checkOpt(string storage role)
 {
     require(msg.sender == optionalRoles[role]);
-    _;}modifier Owner(string memory task)
+    _;}
+    modifier Owner(string memory task)
 {
     require(elements[position[task]].status == State.ENABLED);
     _;
@@ -114,7 +115,7 @@ contract resttt {
     }
 
 
-    //Task "way"
+    // ** Task "way"
     //Message
     function sid_624ca53e_cc27_4a74_97be_055cb19cae54(uint price) public checkMand(roleList[0]) {
         require(elements[position["sid-624ca53e-cc27-4a74-97be-055cb19cae54"]].status == State.ENABLED);
@@ -132,6 +133,7 @@ contract resttt {
         enable("sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E");
         sid_E2CFD2E8_7869_4F28_AC83_296ED8FA7D6E();
     }
+    //**** end task 2
 
     //ExclusiveGateway():sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E
     function sid_E2CFD2E8_7869_4F28_AC83_296ED8FA7D6E() private {
@@ -224,18 +226,22 @@ contract resttt {
     function sid_80A4BF32_23C1_4585_A70C_26A40D63DA7F() private {
         require(elements[position["sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F"]].status == State.ENABLED);
         done("sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F");
-        if (currentMemory.reiterate == true
-        ) {enable("sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04");
+        if (currentMemory.reiterate == true)
+        {
+            enable("sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04");
             sid_C240C6E9_F55F_46A5_B1F6_5FC4A0F30B04();
         }
-        if (currentMemory.reiterate == false) {enable("sid-E761CE7E-ED53-413A-A3C8-3D6569A80525");
+        if (currentMemory.reiterate == false) 
+        {
+            enable("sid-E761CE7E-ED53-413A-A3C8-3D6569A80525");
             sid_E761CE7E_ED53_413A_A3C8_3D6569A80525();
         }
     }
 
     function sid_E761CE7E_ED53_413A_A3C8_3D6569A80525() private {
         require(elements[position["sid-E761CE7E-ED53-413A-A3C8-3D6569A80525"]].status == State.ENABLED);
-        done("sid-E761CE7E-ED53-413A-A3C8-3D6569A80525");}
+        done("sid-E761CE7E-ED53-413A-A3C8-3D6569A80525");
+    }
 
     function enable(string memory _taskID) internal {elements[position[_taskID]].status = State.ENABLED;
         emit stateChanged(counter++);

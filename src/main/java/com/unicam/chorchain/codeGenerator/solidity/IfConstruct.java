@@ -14,7 +14,7 @@ public class IfConstruct {
 
     public String toString() {
         StringBuffer out = new StringBuffer();
-        out.append("if (")
+        out.append("\tif (")
                 .append(Types.GlobaStateMemory_varName)
                 .append(".")
                 .append(condition.replace("\n", " "))
@@ -22,16 +22,16 @@ public class IfConstruct {
         if (enableAndActiveTasks != null) {
             enableAndActiveTasks.forEach(
                     (k, v) -> {
-                        out.append("\t\tenable(").append(k).append("\");\n");
+                        out.append("\t\t\tenable(\"").append(k).append("\");\n");
                         if (v) {
-                            out.append("\t\t").append(k.replace("-", "_")).append("()").append("\n");
+                            out.append("\t\t\t").append(k.replace("-", "_")).append("();").append("\n");
                         }
                     }
             );
 
 
         }
-        out.append("\t}\n");
+        out.append("\t\t}\n");
         return out.toString();
     }
 }

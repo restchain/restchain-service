@@ -14,23 +14,29 @@ public class Contract {
     private String pragmaVersion;
     @NotEmpty
     private String fileName;
-//    @NotEmpty
+    //    @NotEmpty
 //    private String constructor;
     @NotEmpty
     private String constructorBody;
+    @Singular
+    private Collection<String> customTextStrings;
 
     private @Singular
-    Collection<Struct> structs;
+    Collection<String> structs;
     private @Singular
-    Collection<Mapping> mappings;
+    Collection<String> variables;
     private @Singular
-    Collection<Enum> enumElements;
+    Collection<String> modifiers;
     private @Singular
-    Collection<Event> events;
-    private
-    Collection<Function> functions;
+    Collection<String> mappings;
     private @Singular
-    Collection<String> customBodyStrings;
+    Collection<String> enumElements;
+    private @Singular
+    Collection<String> events;
+    private  @Singular
+    Collection<String> functions;
+    private @Singular
+    Collection<String> customs;
 
 //    public void addStruct(Struct s1) {
 //        structs.add(s1);
@@ -47,49 +53,57 @@ public class Contract {
         out.append("contract ").append(fileName).append("{\n");
         out.append("\n\n");
 
-        out.append("constructor() public {\n");
-        out.append("\t//constructor body\n");
+
         if (constructorBody != null) {
+            out.append("\t/* constructor */ \n");
+            out.append("\tconstructor() public {\n");
             out.append("\t").append(constructorBody).append("\n");
+            out.append("\t}\n");
+            out.append("\n");
         }
-        out.append("}\n");
-        out.append("\n");
 
-        out.append("uint counter;\n");
-        out.append("event stateChanged(uint);\n");
+        if (customTextStrings != null) {
+            out.append("\t/* Custom part */\n");
+            customTextStrings.forEach((s) -> out.append("\t").append(s).append("\n"));
+            out.append("\n");
+        }
 
-        if (structs != null) {
-            out.append("//Mappings\n");
-            mappings.forEach((s) -> out.append(s.toString()).append("\n"));
+        if (mappings != null) {
+            out.append("\t/* Mappings */\n");
+            mappings.forEach((s) -> out.append("\t").append(s).append("\n"));
             out.append("\n");
         }
 
         if (structs != null) {
-            out.append("//Structs\n");
-            structs.forEach((s) -> out.append(s.toString()).append("\n"));
+            out.append("\t/* Structs */\n");
+            structs.forEach((s) -> out.append("\t").append(s).append("\n"));
             out.append("\n");
         }
 
         if (enumElements != null) {
-            out.append("//Enums\n");
-            enumElements.forEach((s) -> out.append(s.toString()).append("\n"));
+            out.append("\t/* Enums */\n");
+            enumElements.forEach((s) -> out.append("\t").append(s).append("\n"));
+        }
+
+        if (variables != null) {
+            out.append("\t/* Variables */\n");
+            variables.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 
         if (events != null) {
-            out.append("//Events\n");
-            events.forEach((s) -> out.append(s.toString()).append("\n"));
+            out.append("\t/* Events */ \n");
+            events.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 
         if (functions != null) {
-            out.append("//Functions\n");
-            functions.forEach((s) -> out.append(s.toString()).append("\n"));
+            out.append("\t/* Functions */\n\n");
+            functions.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 
-        if (customBodyStrings != null) {
-            out.append("//CustomStringsBody\n");
-            customBodyStrings.forEach((s) -> out.append(s).append("\n"));
+        if (customs != null) {
+            out.append("\t/* Custom */\n");
+            customs.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
-
 
         out.append("\n\n");
         out.append("}");

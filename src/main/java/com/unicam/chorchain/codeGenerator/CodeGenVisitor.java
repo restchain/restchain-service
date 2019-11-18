@@ -3,8 +3,8 @@ package com.unicam.chorchain.codeGenerator;
 import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.IfConstruct;
+import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
-import com.unicam.chorchain.model.Instance;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.xml.ModelInstance;
@@ -18,23 +18,11 @@ import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter
 @Slf4j
 public class CodeGenVisitor implements Visitor {
 
-    private Instance instance;
     @Getter
-    private StringBuilder text;
-    private List<String> mandatoryParticipantsSol;
-    private List<String> optionalParticipantSol;
+    private SolidityInstance instance;
 
-    public CodeGenVisitor(Instance instance) {
-        text = new StringBuilder();
-        this.instance = instance;
-        this.mandatoryParticipantsSol = instance.getMandatoryParticipants()
-                .stream()
-                .filter(p -> p.getUser() != null)
-                .map(p -> p.getParticipant().getName())
-                .collect(Collectors.toList());
-
-        this.optionalParticipantSol = instance.getChoreography().getParticipants().stream().filter((p) ->
-                !mandatoryParticipantsSol.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
+    public CodeGenVisitor(SolidityInstance solidityInstance) {
+        this.instance = solidityInstance;
     }
 
     @Override
@@ -43,8 +31,11 @@ public class CodeGenVisitor implements Visitor {
 
     @Override
     public void visitStartEvent(StartEventAdapter node) {
+        if (this.instance.getStartPointId() == null) {
+            this.instance.setStartPointId(node.getId());
+        }
         log.debug("********StartEvent *****");
-        text.append(Function
+        this.instance.addTxt(Function
                 .builder()
                 .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
                 .name(normalizeId(node.getId()))
@@ -57,10 +48,10 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitEndEvent(EndEventAdapter node) {
         log.debug("********EndEvent *****");
-        text.append(Function
+        this.instance.addTxt(Function
                 .builder()
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
-                .name(node.getId())
+                .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -69,10 +60,10 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitParallelGateway(ParallelGatewayAdapter node) {
         log.debug("********ParallelGateway *****");
-        text.append(Function
+        this.instance.addTxt(Function
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
-                .name(node.getId())
+                .name(normalizeId(node.getId()))
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
@@ -82,8 +73,6 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitExclusiveGateway(ExclusiveGatewayAdapter node) {
         log.debug("********ExclusiveGateway: *****");
-
-
         Collection<IfConstruct> ifConstructs = new ArrayList<>(0);
         Collection<String> toEnable = new ArrayList<>(0);
 
@@ -101,7 +90,7 @@ public class CodeGenVisitor implements Visitor {
             toEnable.add(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)));
         }
 
-        text.append(Function
+        this.instance.addTxt(Function
                 .builder()
                 .functionComment("ExclusiveGateway(" + node.getName() + "):" + node.getOrigId() + " Dir: " + node.getDirection())
                 .name(normalizeId(node.getId()))
@@ -115,11 +104,11 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitEventBasedGateway(EventBasedGatewayAdapter node) {
         log.debug("********EventBasedGateway *****");
-        text.append(Function
+        this.instance.addTxt(Function
                 .builder()
                 .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
                 .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
-                .name(node.getId())
+                .name(normalizeId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -127,60 +116,75 @@ public class CodeGenVisitor implements Visitor {
 
     @Override
     public void visitChoreographyTask(ChoreographyTaskAdapter node) {
-        StringBuilder sb = new StringBuilder();
+        log.debug("********ChoreographyTask *****");
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
-        if (node.getType() == ONEWAY) {
 
-            text.append(Function.builder()
+        if (node.getType() == ONEWAY) {
+            boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
+            if (!payableReq) {
+                addGlobal(node.getRequestMessage().getMessage().getName());
+            }
+
+
+            this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
                             .getRequestMessage()
                             .getMessage()
                             .getName())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
-                    .payable(node.getRequestMessage().getMessage().getName().contains("payment"))
-                    .parameter(getParmeters(node.getRequestMessage().getMessage().getName()))
+                    .payable(payableReq)
+                    .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
-                    .enableAndActiveTask(nextElement.getTargetRefId(),
-                            nextElement.isTargetGatewayOrNot())
-                    .build());
-            text.append("\n\n");
+                    .transferTo(node.getRequestMessage().getMessage().getName().contains("payment"))
+                    .enableAndActiveTask(nextElement.getTargetRefId(), nextElement.isTargetGatewayOrNot())
+                    .build().toString());
+            this.instance.addTxt("\n\n");
 
         } else {
+
+            boolean payableResp = node.getResponseMessage().getMessage().getName().contains("payment");
+            if (!payableResp) {
+                addGlobal(node.getResponseMessage().getMessage().getName());
+            }
+            boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
+            if (!payableReq) {
+                addGlobal(node.getRequestMessage().getMessage().getName());
+            }
+
             //Upper part - requestMessage
-            text.append(Function.builder()
+            this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(normalizeId(node.getRequestMessage().getMessage().getId()))
-                    .payable(node.getRequestMessage().getMessage().getName().contains("payment"))
-                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
-
-                    .sourceId(node.getRequestMessage().getMessage().getId())
-                    .parameter(getParmeters(node.getRequestMessage().getMessage().getName()))
                     .visibility(Types.visibility.PUBLIC)
-                    .enable(node.getResponseMessage().getMessage().getId())
+                    .payable(payableReq)
+                    .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
+                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
+                    .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
-                    .build());
-            text.append("\n\n");
+                    .enable(node.getResponseMessage().getMessage().getId())
+                    .build().toString());
+            this.instance.addTxt("\n\n");
 
             //lower part - requestMessage
-            text.append(Function.builder()
+            this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(normalizeId(node.getResponseMessage().getMessage().getId()))
-                    .parameter(getParmeters(node.getResponseMessage().getMessage().getName()))
+                    .parameter(getParameters(node.getResponseMessage().getMessage().getName()))
                     .visibility(Types.visibility.PUBLIC)
-                    .payable(node.getResponseMessage().getMessage().getName().contains("payment"))
+                    .payable(payableResp)
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .sourceId(node.getResponseMessage().getMessage().getId())
                     .varAssignments(getParamsList(node.getResponseMessage().getMessage().getName()))
                     .enableAndActiveTask(nextElement.getTargetRefId(),
-                            nextElement.isTargetGatewayOrNot()).build());
-            text.append("\n\n");
+                            nextElement.isTargetGatewayOrNot()).build().toString());
+            this.instance.addTxt("\n\n");
 
         }
     }
@@ -222,7 +226,7 @@ public class CodeGenVisitor implements Visitor {
     // returns a modifier function call depending of the participant role
     private String getParticipantModifier(String participantFromModel) {
         //If participantFromRole is contained in tha Mandatory list is Mandatory else is Optional
-        if (mandatoryParticipantsSol.contains(participantFromModel)) {
+        if (this.instance.getMandatoryParticipants().contains(participantFromModel)) {
             return roleModifierFormatter(Types.Mandatory_modifier, participantFromModel);
 
         } else {
@@ -237,37 +241,25 @@ public class CodeGenVisitor implements Visitor {
                 .append(type)
                 .append("(").append(Types.Global_RoleList)
                 .append("[")
-                .append(mandatoryParticipantsSol.indexOf(name))
+                .append(this.instance.getMandatoryParticipants().indexOf(name))
                 .append("]) ")
                 .toString();
     }
 
-    // returns a string of the array declarations about participant roles (mandatory or optional)
-    private String printRoleList() {
-        StringBuffer sb = new StringBuffer();
-
-        if (mandatoryParticipantsSol.size() > 0) {
-            sb.append("string [] ").append(Types.Global_RoleList).append(" = ");
-            sb.append("[");
-            mandatoryParticipantsSol.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
-            sb.append("]");
-        }
-
-        if (optionalParticipantSol.size() > 0) {
-            sb.append("string [] ").append(Types.Global_OptionalList).append(" = ");
-            sb.append("[");
-            optionalParticipantSol.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
-            sb.append("]");
-        }
-        return sb.toString();
-    }
-
-    // Function for getting all the parameters presents in function signature,
-    private static String getParmeters(String messageName) {
+    // Function for gettingi all the parameters presents in function signature,
+    private static String getParameters(String messageName) {
         String[] parsedMsgName = messageName.split("\\(");
         return parsedMsgName[1].replace(")", "   ");
     }
+
+    private void addGlobal(String name) {
+        String r = name.replace(")", "");
+        String[] t = r.split("\\(");
+        String[] m = t[1].split(",");
+        for (String param : m) {
+            instance.getStructVariables().add(param);
+        }
+    }
+
 
 }
