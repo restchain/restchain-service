@@ -5,6 +5,7 @@ import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
+import com.unicam.chorchain.smartContract.SmartContractCompilationException;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.smartContract.SmartContractService;
 import com.unicam.chorchain.user.UserService;
@@ -124,7 +125,7 @@ public class InstanceService {
         instanceSubscription(req);
     }
 
-    public void deploy(InstanceDeployRequest instanceDeployRequest) {
+    public void deploy(InstanceDeployRequest instanceDeployRequest) throws SmartContractCompilationException {
 
         Instance instance = findInstanceById(instanceDeployRequest.getId());
 

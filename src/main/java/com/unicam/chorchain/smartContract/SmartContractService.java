@@ -156,13 +156,13 @@ public class SmartContractService {
     public void compile(String fileName) {
         try {
             String solPath = projectPath + File.separator + fileName;
-            log.debug("Solidity PATTT: " + solPath);
-            String destinationPath = projectPath + File.separator;//sostituire compiled a resources
+            log.debug("Solidity file: " + solPath);
+            String destinationPath = projectPath + File.separator;
             log.debug("destination path " + destinationPath);
             String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "-o", destinationPath};
 
             Runtime rt = Runtime.getRuntime();
-
+//            try {
             Process p = rt.exec(comm);
             BufferedReader bri = new BufferedReader(new InputStreamReader(p.getInputStream()));
             BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
@@ -171,22 +171,34 @@ public class SmartContractService {
                 log.debug(line);
             }
             bri.close();
+
+            StringBuilder error = new StringBuilder();
             while ((line = bre.readLine()) != null) {
-                log.debug(line);
+                log.error(line);
+                error.append(line);
+            }
+
+            if (error.toString().length() > 0) {
+                throw new SmartContractCompilationException("Compilation error:" + error.toString());
             }
             bre.close();
             p.waitFor();
 
+//            } catch (RuntimeException e) {
+//                log.error("Something weird happened while processing " + comm, e);
+//                throw e;
+//            }
+
 
             log.debug("abi-bin done");
 
+        } catch (SmartContractCompilationException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
 
         }
     }
-
-
 
 
     // TODO, understand and then or remove the removable or left there the needed
