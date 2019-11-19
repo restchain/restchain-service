@@ -1,7 +1,10 @@
 package com.unicam.chorchain.translator;
 
-import com.unicam.chorchain.model.ContractObject;
+import com.unicam.chorchain.model.SmartContract;
 import com.unicam.chorchain.model.User;
+import com.unicam.chorchain.smartContract.SmartContractService;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.impl.instance.EndEventImpl;
@@ -13,13 +16,19 @@ import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+
+
+/*  nel Task il messaggio sopra si chiama REQUESTS e quello sotto RESPONSE */
+
+@Slf4j
+@Getter
 public class ChoreographyBpmn {
+
+    public static String choreographyFile;
     public static int startint;
     private static BpmnModelInstance modelInstance;
     public static ArrayList<String> participantsWithoutDuplicates;
@@ -31,52 +40,57 @@ public class ChoreographyBpmn {
     public static Integer parallelCounter;
     public static Integer eventBasedCounter;
     public static Integer endEventCounter;
-    public static String choreographyFile;
     public ArrayList<DomElement> participantsTask;
     public ArrayList<DomElement> msgTask;
     public ArrayList<SequenceFlow> taskIncoming, taskOutgoing;
-    public static ArrayList<String> nodeSet;
+    public static ArrayList<String> nodeSet;                    //contiene gli id dei vari oggetti processati fino a quel moemnto, se è qui è già stato processato
     public static String request;
     public static String response;
     public static ArrayList<String> gatewayGuards;
     public static ArrayList<String> toBlock;
     public static List<String> tasks;
-    public static ContractObject finalContract;
-    public static List<String> elementsID;
+    public static SmartContract finalContract;
+    public static List<String> elementsID;                      //contiene gli id dei vari oggetti processati fino a quel moemnto, prende gli id elementi che vengono messo in solidity
     private static String startEventAdd;
-    private static List<String> roleFortask;
-    private static LinkedHashMap<String, String> taskIdAndRole;
+    private static List<String> roleFortask;                    //contiene tutti i tipi di ruoli visti
+    private static LinkedHashMap<String, String> taskIdAndRole;    //Prende gli ID di tutti gli elementi e associa un ruolo (internal,private,public), se GAtawey sarà internal
+    /* qui ci sarà l'id del messaggio (message) e il partecipante che lo deve inviare */
+
     // static String projectPath = System.getProperty("user.dir")+ "/workspace";
 
-//    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
+    //    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
 //                         List<String> mandatoryRoles) throws Exception {
-public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
-                     List<String> mandatoryRoles) throws Exception {
+    public boolean start(File bpmnFile, Map<String, User> participants, List<String> optionalRoles,
+                         List<String> mandatoryRoles) throws Exception {
         try {
-            ChoreographyBpmn choreography = new ChoreographyBpmn();
-            choreography.readFile(bpmnFile);
-            choreography.getParticipants();
-            choreography.FlowNodeSearch(optionalRoles, mandatoryRoles);
-            choreographyFile = choreography.initial(bpmnFile.getName(), participants, optionalRoles, mandatoryRoles)
+
+            ChoreographyBpmn choreographyBpmn = new ChoreographyBpmn();
+
+            choreographyBpmn.readFile(bpmnFile);
+            choreographyBpmn.getParticipants();
+            choreographyBpmn.FlowNodeSearch(optionalRoles, mandatoryRoles);
+
+            choreographyFile = choreographyBpmn.initial(bpmnFile.getName(), participants, optionalRoles, mandatoryRoles)
                     + choreographyFile;
-            choreographyFile += choreography.lastFunctions();
-//            finalContract = new ContractObject(null, tasks, null, null, gatewayGuards, taskIdAndRole);
-            finalContract = new ContractObject();
-            choreography.fileAll(bpmnFile.getName());
-            //System.out.println("Contract creation done");
-            // System.out.println("Ruolii:" + Arrays.toString(roleFortask.toArray()));
+
+            choreographyFile += choreographyBpmn.lastFunctions();
+//            finalContract = new SmartContract(null, tasks, null, null, gatewayGuards, taskIdAndRole);
+
+            finalContract = new SmartContract();
+//            choreography.save(bpmnFile.getName());
+
+            log.debug("Contract creation done");
+            log.debug("Ruolii:" + Arrays.toString(roleFortask.toArray()));
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-
     }
 
     public void mergeMap(String id, String role) {
         taskIdAndRole.put(id, role);
-
-
     }
 
     public ChoreographyBpmn() {
@@ -107,7 +121,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
     public void readFile(File bpFile) throws IOException {
         //System.out.println("You chose to open this file: " + bpFile.getName());
         modelInstance = Bpmn.readModelFromFile(bpFile);
-        allNodes = modelInstance.getModelElementsByType(FlowNode.class);
+        allNodes = modelInstance.getModelElementsByType(FlowNode.class); //Tutti gli elementi totali - i task
     }
 
     public void getParticipants() {
@@ -121,7 +135,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
     private static String initial(String filename, Map<String, User> participants, List<String> optionalRoles,
                                   List<String> mandatoryRoles) {
         String intro = "pragma solidity ^0.5.3; \n" + "	pragma experimental ABIEncoderV2;\n" + "	contract "
-                + ContractFunctions.parseName(filename, "") + "{\n" + "		uint counter;\r\n"
+                + SmartContractService.parseName(filename, "") + "{\n" + "		uint counter;\r\n"
                 + "	event stateChanged(uint);  \n" + "	mapping (string=>uint) position;\n"
                 + "\n	enum State {DISABLED, ENABLED, DONE} State s; \n" + "	mapping(string => string) operator; \n"
                 + "	struct Element{\n	string ID;\n	State status;\n}\n" + "	struct StateMemory{\n	";
@@ -162,7 +176,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         intro += " ]; \n" + "	mapping(string=>address) roles; \r\n"
                 + "	mapping(string=>address) optionalRoles; \r\n";
         String constr = "constructor() public{\r\n" + "    //struct instantiation\r\n"
-                + "    for (uint i = 0; i < elementsID.length; i ++) {\r\n"
+                + "    for (uint i = 0; i < elementsID.length; i++) {\r\n"
                 + "        elements.push(Element(elementsID[i], State.DISABLED));\r\n"
                 + "        position[elementsID[i]]=i;\r\n" + "    }\r\n" + "         \r\n"
                 + "         //roles definition\r\n" + "         //mettere address utenti in base ai ruoli\r\n";
@@ -224,16 +238,24 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return descr;
     }
 
-    private static void fileAll(String fileName) throws IOException, Exception {
-        FileWriter wChor = new FileWriter(new File(ContractFunctions.projectPath + File.separator + "resources"
-                + File.separator + ContractFunctions.parseName(fileName, ".sol")));
-        BufferedWriter bChor = new BufferedWriter(wChor);
-        bChor.write(choreographyFile);
-        bChor.flush();
-        bChor.close();
-        //System.out.println("Solidity contract created.");
 
-    }
+    //ToDO remove?? Handled externally
+//    private static void save(String fileName) throws IOException, Exception {
+//        Path rootLocation = Paths.get(projectPath);
+//        try {
+//            Files.createDirectories(rootLocation);
+//        } catch (IOException e) {
+//            throw new StorageException("Could not initialize storage", e);
+//        }
+//        FileWriter wChor = new FileWriter(new File(projectPath
+//                + File.separator + SmartContractHelpersService.parseName(fileName, ".sol")));
+//        log.debug("File to save {} ", wChor);
+//        BufferedWriter bChor = new BufferedWriter(wChor);
+//        bChor.write(choreographyFile);
+//        bChor.flush();
+//        bChor.close();
+//        System.out.println("Contract contract created.");
+//    }
 
     private static String typeParse(String toParse) {
         String n = toParse.replace("string", "").replace("uint", "").replace("bool", "");
@@ -314,32 +336,55 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return res;
     }
 
+
+    //Estrae l'id dell'elemento lo scrivo con _
     private static String parseSid(String sid) {
         return sid.replace("-", "_");
     }
 
+
     public void FlowNodeSearch(List<String> optionalRoles, List<String> mandatoryRoles) {
-        // check for all SequenceFlow elements in the BPMN model
+
+
+        // check for all SequenceFlow elements in the BPMN model (mi metto sui connettori - considero che sono ordinati, ma funziona ugale)
         for (SequenceFlow flow : modelInstance.getModelElementsByType(SequenceFlow.class)) {
+
+
             // node to be processed, created by the target reference of the sequence flow
+            //Prendo la cosa che punta la freccia tramite targetRef e lo metto in node
             ModelElementInstance node = modelInstance.getModelElementById(flow.getAttributeValue("targetRef"));
 
-            // node containing the source of the flow, useful to get the start element
+
+            // node containing the sourceId of the flow, useful to get the start element
             ModelElementInstance start = modelInstance.getModelElementById(flow.getAttributeValue("sourceRef"));
+
+
             if (start instanceof StartEvent) {
+
                 // checking and processing all the outgoing nodes
+                //Prendo le frecce che escono dallo start (SequenceFlow.getOutgoing)
                 for (SequenceFlow outgoing : ((StartEvent) start).getOutgoing()) {
+
                     ModelElementInstance nextNode = modelInstance
                             .getModelElementById(outgoing.getAttributeValue("targetRef"));
 
+                    //Formatto il nome dell'event per standrdizzarlo come vogliamo
                     start.setAttributeValue("name", "startEvent_" + startCounter);
                     startCounter++;
+
                     nodeSet.add(start.getAttributeValue("id"));
+
+                    //aggiunge in taskIDRole - Prende l'id dello Start e ci mette internal
                     mergeMap(start.getAttributeValue("id"), "internal");
+
+                    //fa stessa cosa di nodeSEt
                     elementsID.add(start.getAttributeValue("id"));
                     roleFortask.add("internal");
+
+                    //Aggiungo il nome dell'elemento che ho appena processato che verrà inserito nel db
                     tasks.add(start.getAttributeValue("name"));
 
+                    //Aggiungo l'id dello start
                     startEventAdd = start.getAttributeValue("id");
                     //
 
@@ -483,6 +528,9 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                         + "	require(elements[position[\"" + node.getAttributeValue("id")
                         + "\"]].status==State.ENABLED);\n" + "	done(\"" + node.getAttributeValue("id") + "\");  }\n\n";
                 choreographyFile += descr;
+
+
+                // IF per beccara il task, se non è niente ma è solo un ModelElementInstanceImpl è un task
             } else if (node instanceof ModelElementInstanceImpl && !(node instanceof EndEvent)
                     && !(node instanceof ParallelGateway) && !(node instanceof ExclusiveGateway)
                     && !(node instanceof EventBasedGateway) && (checkTaskPresence(getNextId(node, false)) == false)) {
@@ -496,7 +544,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                 String descr = "";
                 Participant participant = null;
                 String participantName = "";
-                ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node, modelInstance);
+                ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) node);
                 getRequestAndResponse(task);
 
                 participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
@@ -504,11 +552,13 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                 participantName = participant.getAttributeValue("name");
 
                 String[] req = response.split(" ");
-                // String res = typeParse(request);
+                // String res = typeParse(requestMessage);
                 String ret = "";
                 String call = "";
                 String eventBlock = "";
 
+
+                //vedo se cè  un event perchè poi se vado sul ramo devo disabilitare l'altro
                 if (start instanceof EventBasedGateway) {
                     for (SequenceFlow block : ((EventBasedGateway) start).getOutgoing()) {
                         ModelElementInstance nextElement = modelInstance
@@ -518,16 +568,23 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                         }
                     }
                 }
-                // if there isn't a response the function created is void
-
-                // da cambiare se funziona, levare 'if-else
+                // if there isn't a responseMessage the function created is void
+                //se OneWay cè solo un messaggio
                 if (task.getType() == ChoreographyTask.TaskType.ONEWAY) {
                     //System.out.println("Task � 1 way");
                     taskNull = false;
                     String pName = getRole(participantName, optionalRoles, mandatoryRoles);
 
+
+                    /*
+                        se cè una funzione payment nel modello vuol  dire che vuoi inviare eth ad un altro account che
+                        inserisci in input e la funzione deve essere formatta in modo standard
+
+                        payment(addres to)
+                     */
+
                     if (request.contains("payment")) {
-                        //System.out.println("nome richiesta: " + request);
+                        //System.out.println("nome richiesta: " + requestMessage);
                         descr += "function " + parseSid(getNextId(node, false)) + addMemory(getPrameters(request))
                                 + " public payable " + pName + ") {\n";
                         descr += "	require(elements[position[\"" + getNextId(node, false)
@@ -554,13 +611,14 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                     if (!request.isEmpty()) {
                         //System.out.println("RICHIESTA NON VUOTA");
                         if (request.contains("payment")) {
-                            //System.out.println(request);
+                            //System.out.println(requestMessage);
                             //System.out.println("RICHIESTA CONTIENE PAGAMENTO");
                             taskNull = false;
                             descr += "function " + parseSid(getNextId(node, false)) + addMemory(getPrameters(request))
                                     + " public payable " + pName + ") {\n";
                             descr += "	require(elements[position[\"" + getNextId(node, false)
-                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, false) + "\");\n"
+                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node,
+                                    false) + "\");\n"
                                     + createTransaction(request) + "\n" + eventBlock + "}\n";
                         } else {
                             taskNull = false;
@@ -569,7 +627,8 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                                     + " public " + pName + "){\n";
                             descr += "	require(elements[position[\"" + getNextId(node, false)
                                     + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, false)
-                                    + "\");\n" + "	enable(\"" + getNextId(node, true) + "\");\n" + addToMemory(request)
+                                    + "\");\n" + "	enable(\"" + getNextId(node, true) + "\");\n" + addToMemory(
+                                    request)
                                     + eventBlock + "}\n";
                             addGlobal(request);
                         }
@@ -580,13 +639,14 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                     if (!response.isEmpty()) {
                         //System.out.println("RISPOSTA NON VUOTA");
                         if (response.contains("payment")) {
-                            //System.out.println(response);
+                            //System.out.println(responseMessage);
                             //System.out.println("RISPOSTA CONTIENE PAGAMENTO");
                             taskNull = false;
                             descr += "function " + parseSid(getNextId(node, true)) + addMemory(getPrameters(response))
                                     + " public payable " + pName + ") {\n";
                             descr += "	require(elements[position[\"" + getNextId(node, true)
-                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node, true) + "\");\n"
+                                    + "\"]].status==State.ENABLED);  \n" + "	done(\"" + getNextId(node,
+                                    true) + "\");\n"
                                     + createTransaction(response) + "\n" + eventBlock;
                         } else {
                             taskNull = false;
@@ -604,8 +664,13 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                 }
                 choreographyFile += descr;
                 descr = "";
+
+
                 // checking the outgoing elements from the task
                 //System.out.println("TASK NULL � : " + taskNull);
+
+
+                //Attiva l'elemento successivo
                 if (taskNull == false) {
 
                     for (SequenceFlow out : task.getOutgoing()) {
@@ -613,7 +678,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                                 .getModelElementById(out.getAttributeValue("targetRef"));
                         descr += "\tenable(\"" + getNextId(nextElement, false) + "\");\n";
                         if (nextElement instanceof Gateway || nextElement instanceof EndEvent) {
-                            // nextElement = checkType(nextElement);
+                            // nextChoreographyTaskElement = checkType(nextChoreographyTaskElement);
                             // creates the call to the next function
                             descr += parseSid(getNextId(nextElement, false)) + "(); \n";
 
@@ -649,14 +714,17 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
         return res;
     }
 
+
+    //Prende REQ and RESP del task in pratica i due messaggi
     public void getRequestAndResponse(ChoreographyTask task) {
-        // if there is only the response
+        // if there is only the responseMessage
         Participant participant = modelInstance.getModelElementById(task.getInitialParticipant().getId());
         String participantName = participant.getAttributeValue("name");
 
-        if (task.getRequest() == null && task.getResponse() != null) {
-            // System.out.println("task.getRequest() = null: " + task.getRequest());
-            MessageFlow responseMessageFlowRef = task.getResponse();
+        //No Request e SI Response 1way
+        if (task.getRequestMessage() == null && task.getResponseMessage() != null) {
+            // System.out.println("task.getRequestMessage() = null: " + task.getRequestMessage());
+            MessageFlow responseMessageFlowRef = task.getResponseMessage();
             MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
             Message responseMessage = modelInstance
                     .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -670,9 +738,10 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
             }
 
         }
-        // if there is only the request
-        else if (task.getRequest() != null && task.getResponse() == null) {
-            MessageFlow requestMessageFlowRef = task.getRequest();
+        // if there is only the requestMessage
+        //SOLO Request 1Way
+        else if (task.getRequestMessage() != null && task.getResponseMessage() == null) {
+            MessageFlow requestMessageFlowRef = task.getRequestMessage();
             MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
             Message requestMessage = modelInstance
                     .getModelElementById(requestMessageFlow.getAttributeValue("messageRef"));
@@ -686,9 +755,10 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
         }
         // if there are both
+        //2way  1req 1res
         else {
-            MessageFlow requestMessageFlowRef = task.getRequest();
-            MessageFlow responseMessageFlowRef = task.getResponse();
+            MessageFlow requestMessageFlowRef = task.getRequestMessage();
+            MessageFlow responseMessageFlowRef = task.getResponseMessage();
             MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
             MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
             Message requestMessage = modelInstance
@@ -736,16 +806,24 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
     // return the next node id, useful to retrieve the first message id in case of
     // Choreography task
+
+
+    //Passi un elemento e prende l'id di quello succesivo, se è task lo prende della req o della resp (a seconda del boolean)
+    // se non è task prende l'id di quello successivo
     private static String getNextId(ModelElementInstance nextNode, boolean msg) {
         String id = "";
         // System.out.println(nextNode.getClass());
+
+        //Se è task
         if (nextNode instanceof ModelElementInstanceImpl && !(nextNode instanceof EndEvent)
                 && !(nextNode instanceof ParallelGateway) && !(nextNode instanceof ExclusiveGateway)
                 && !(nextNode instanceof EventBasedGateway) && !(nextNode instanceof StartEvent)) {
-            ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode, modelInstance);
-            if (task.getRequest() != null && msg == false) {
+            ChoreographyTask task = new ChoreographyTask((ModelElementInstanceImpl) nextNode);
+
+            //Se msg è T o F e c'è richiesta
+            if (task.getRequestMessage() != null && msg == false) {
                 //System.out.println("SONO DENTRO GETrEQUEST != NULL");
-                MessageFlow requestMessageFlowRef = task.getRequest();
+                MessageFlow requestMessageFlowRef = task.getRequestMessage();
                 MessageFlow requestMessageFlow = modelInstance.getModelElementById(requestMessageFlowRef.getId());
                 // //System.out.println("MESSAGAE FLOW REF ID:" + requestMessageFlowRef.getId());
                 Message requestMessage = modelInstance
@@ -755,7 +833,7 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                     id = requestMessage.getAttributeValue("id");
                 } else {
                     //System.out.println("SONO DENTRO LA RISPOSTA PERCH� REQUEST.GETNAME � NULL");
-                    MessageFlow responseMessageFlowRef = task.getResponse();
+                    MessageFlow responseMessageFlowRef = task.getResponseMessage();
                     MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
                     Message responseMessage = modelInstance
                             .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -769,9 +847,9 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
                 // requestMessageFlow.getAttributeValue("messageRef"));
                 // System.out.println(requestMessage.getName());
 
-            } else if (task.getRequest() == null && msg == false || task.getResponse() != null && msg == true) {
+            } else if (task.getRequestMessage() == null && msg == false || task.getResponseMessage() != null && msg == true) {
                 //System.out.println("SONO DENTRO GETREQUEST == NULL");
-                MessageFlow responseMessageFlowRef = task.getResponse();
+                MessageFlow responseMessageFlowRef = task.getResponseMessage();
                 MessageFlow responseMessageFlow = modelInstance.getModelElementById(responseMessageFlowRef.getId());
                 Message responseMessage = modelInstance
                         .getModelElementById(responseMessageFlow.getAttributeValue("messageRef"));
@@ -781,16 +859,20 @@ public boolean start(File bpmnFile, Map<String, User> participants, List<String>
 
             }//
             /*
-             * else if(task.getResponse()!= null && msg == true) { MessageFlow
-             * responseMessageFlowRef = task.getResponse(); id =
+             * else if(task.getResponseMessage()!= null && msg == true) { MessageFlow
+             * responseMessageFlowRef = task.getResponseMessage(); id =
              * responseMessageFlowRef.getId(); }
              */
+
+            // Se non sono un task prendo l'id attuale
+
         } else {
             id = nextNode.getAttributeValue("id");
         }
         //System.out.println("GET ID RETURNS: " + id);
         return id;
     }
+
     //
     private boolean checkTaskPresence(String sid) {
         // System.out.println(sid);

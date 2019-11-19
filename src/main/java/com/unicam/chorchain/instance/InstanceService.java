@@ -1,9 +1,13 @@
 package com.unicam.chorchain.instance;
 
 import com.unicam.chorchain.choreography.ChoreographyRepository;
+import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.instanceParticipantUser.InstanceParticipantUserRepository;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.participant.ParticipantRepository;
+import com.unicam.chorchain.smartContract.SmartContractCompilationException;
+import com.unicam.chorchain.storage.FileSystemStorageService;
+import com.unicam.chorchain.smartContract.SmartContractService;
 import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +32,8 @@ public class InstanceService {
     private final UserService userService;
     private final ParticipantRepository participantRepository;
     private final InstanceParticipantUserRepository instanceParticipantUserRepository;
+    private final FileSystemStorageService fileSystemStorageService;
+    private final SmartContractService smartContractService;
 
     public InstanceDTO create(InstanceRequest instanceRequest) {
 
@@ -119,4 +125,28 @@ public class InstanceService {
         instanceSubscription(req);
     }
 
+    public void deploy(InstanceDeployRequest instanceDeployRequest) throws SmartContractCompilationException {
+
+        Instance instance = findInstanceById(instanceDeployRequest.getId());
+
+        log.debug("Generating solidity file ...");
+        UploadFile solidityFile = smartContractService.generateSolidityCode(instance,
+                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
+//        SmartContract cObj = smartContractService.createSolidity(instance,
+//                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+        log.debug("Compiling solidity file ...");
+        smartContractService.compile(solidityFile.getFilename());
+//        log.debug("Deploying solidity file ...");
+//        String cAddress = null;
+//        try {
+//            cAddress = smartContractService.deploy(instance.getChoreography().getName());
+//        } catch (Exception e) {
+//            log.error(e.toString());
+//        }
+
+//        log.debug("Deployed solidity {}", cAddress);
+
+
+    }
 }

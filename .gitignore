@@ -34,5 +34,6 @@ build/
 *.db
 
 ### Upload dir ###
-upload-dir/**
+upload-dir/
+solidity-dir/
 src/main/resources/application-*.*

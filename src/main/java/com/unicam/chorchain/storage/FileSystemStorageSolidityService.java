@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FileSystemStorageService extends FileSystemStorageServiceAbstract {
+public class FileSystemStorageSolidityService extends FileSystemStorageServiceAbstract {
 
     @Getter(AccessLevel.PROTECTED)
-    @Value("${storage.upload.dir}")
+    @Value("${solidity.dir}")
     private String dir;
 
 }

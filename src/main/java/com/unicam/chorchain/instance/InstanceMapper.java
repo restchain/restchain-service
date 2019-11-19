@@ -14,7 +14,7 @@ public interface InstanceMapper {
 
 //    @Mappings({
 //
-//            @Mapping(target = "address", source = "user.address")
+//            @Mapping(target = "address", sourceId = "user.address")
 //    })
 
     InstanceDTO toInstanceDTO(Instance instance);

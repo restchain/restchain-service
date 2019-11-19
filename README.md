@@ -16,6 +16,7 @@ Secondo le impostazioni presenti nel file di configurazione (src/main/resoruces/
 Per testare gli endpoint in fase di sviluppo si consiglia l'utilizzo di ``httpie`` https://httpie.org qui abbreviato ad http.
 
 
+## WIKI
 
 Istruzioni per creare un utente su mysql;
 
@@ -25,6 +26,29 @@ create user 'chorchain'@'%' identified by 'chorchain'; -- Creates the user
 grant all on chorchain.* to 'chorchain'@'%'; 
 ```
 
+### ganache users
+master account : 
+
+account[1] = 0x535CCa8697F29DaC037a734D6984eeD7EA943A85
+account[2] = 0x9515365F4cB7463E7d0B9A12De7706dE6EB62709
+account[3] = 0x901D7C8d516a5c97bFeE31a781A1101D10BBc8e9
+account[4] = 0x84FdF08A7317c58AfBb9342636Ce1496C9Eb3B60
+account[5] = 0x07ED3d24A545f85B04bFC5Cc26De59Dde920f9Fe
+
+Login credentials:
+
+username : account[x]
+password : test  
+
+
+**comandi utilizzati spesso**
+
+http  POST :8085/signin address=aa password=aa
+http --form --session a POST :8085/login address=0x535CCa8697F29DaC037a734D6984eeD7EA943A85 password=test
+
+http --session a POST :8085/model description="aaa" data=@bpmn/OnlinePurchase.bpmn name="test" extension="bpmn"
+http --session a :8085/model/1
+http --session a POST :8085/instance modelId=1 mandatoryParticipants:='["1","2"]' visibleAt:='["null"]'
 
 ## Endpoints
 
