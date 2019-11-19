@@ -4,10 +4,12 @@ import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.codeGenerator.Factories;
 import com.unicam.chorchain.codeGenerator.SolidityGenerator;
 import com.unicam.chorchain.model.*;
+import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import com.unicam.chorchain.translator.ChoreographyBpmn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.util.FileUtil;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
@@ -19,7 +21,6 @@ import org.web3j.codegen.SolidityFunctionWrapperGenerator;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
-import org.web3j.protocol.admin.methods.response.PersonalUnlockAccount;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -52,14 +53,21 @@ public class SmartContractService {
 
     @Value("${solidity.dir}")
     private String projectPath;
-    @Value("${solidity.account.virtualpros}")
-    private String VirtualProsAccount;
-    @Value("${solidity.password.virtualpros}")
-    private String PassVirtualProsAccount;
+    @Value("${solidity.account.admin}")
+    private String adminAccount;
+    @Value("${solidity.password.admin}")
+    private String passAdminAccount;
     @Value("${solidity.node.url}")
     private String blcokChainUrl;
+    @Value("${solidity.gas.limit}")
+    private long gasLimit;
+    @Value("${solidity.gas.price}")
+    private long gasPrice;
 
-    private final FileSystemStorageSolidityService fileSystemStorageService;
+
+    private final FileSystemStorageSolidityService fileSystemStorageSolidityService;
+    private final FileSystemStorageService fileSystemStorageService;
+    private final SmartContractRepository repository;
 
     private List<String> tasks;
     private String CONTRACT_ADDRESS = "";
@@ -74,59 +82,6 @@ public class SmartContractService {
         web3j = Web3j.build(new HttpService(blcokChainUrl));
         adm = Admin.build(new HttpService(blcokChainUrl));
     }
-
-    public SmartContract oldGenerateCode(Instance instance, Path modelPath) {
-
-        log.debug("Create solidity... instance {}", instance.getId(), instance.getChoreography().getName());
-
-
-        Choreography choreography = instance.getChoreography();
-        Set<Participant> setOfMandatoryParticipants = instance.getMandatoryParticipants()
-                .stream()
-                .map(InstanceParticipantUser::getParticipant).distinct().collect(Collectors.toSet());
-
-        Set<Participant> optionalParticipants = new HashSet<>(choreography.getParticipants());
-        optionalParticipants.removeAll(setOfMandatoryParticipants);
-
-
-        List<String> setStringOptionalParticipants = optionalParticipants.stream()
-                .map((p) -> p.getName())
-                .collect(Collectors.toList());
-        List<String> setStringMandatoryParticipants = setOfMandatoryParticipants.stream()
-                .map((p) -> p.getName())
-                .collect(Collectors.toList());
-
-        ChoreographyBpmn choreographyBpmn = new ChoreographyBpmn();
-//        File f = new File(projectPath + File.separator + "bpmn" + File.separator + fileName);
-
-
-        HashMap<String, User> myParticipants = new HashMap();
-
-        instance.getMandatoryParticipants()
-                .forEach((i) -> myParticipants.put(i.getParticipant().getName(), i.getUser()));
-
-        try {
-            choreographyBpmn.start(modelPath.toFile(),
-                    myParticipants,
-                    setStringOptionalParticipants,
-                    setStringMandatoryParticipants);
-
-            UploadFile uploadFile = new UploadFile();
-            uploadFile.setName(choreography.getName());
-            uploadFile.setExtension(".sol");
-            uploadFile.setData(choreographyBpmn.choreographyFile);
-
-
-            fileSystemStorageService.storeSolidity(uploadFile, projectPath);
-
-        } catch (Exception e) {
-            tasks = null;
-            e.printStackTrace();
-        }
-
-        return choreographyBpmn.finalContract;
-    }
-
 
     public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
         SolidityGenerator sg = new SolidityGenerator(instance);
@@ -143,7 +98,7 @@ public class SmartContractService {
             uploadFile.setExtension(".sol");
             uploadFile.setData(code);
 
-            fileSystemStorageService.storeSolidity(uploadFile, projectPath);
+            fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
             return uploadFile;
         } catch (Exception e) {
             tasks = null;
@@ -178,9 +133,11 @@ public class SmartContractService {
                 error.append(line);
             }
 
+
             if (error.toString().contains("Error:")) {
                 throw new SmartContractCompilationException("Compilation error:" + error.toString());
             }
+
             bre.close();
             p.waitFor();
 
@@ -189,15 +146,58 @@ public class SmartContractService {
 //                throw e;
 //            }
 
-
-            log.debug("abi-bin done");
-
         } catch (SmartContractCompilationException e) {
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
-
         }
+    }
+
+    public SmartContract create(Instance instance) {
+        try {
+
+            log.debug("Generating solidity file ...");
+
+            UploadFile solidityFile = generateSolidityCode(instance,
+                    fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
+            log.debug("Compiling solidityy file ...");
+            compile(solidityFile.getFilename());
+
+            log.debug("Deploying ...");
+            String contractAddress = deploy(solidityFile.getName());
+
+
+            log.debug("Building a SmartContract.....");
+            String abi = FileUtil.readAsString(fileSystemStorageSolidityService.load(instance.getChoreography()
+                    .getName()
+                    .concat(".abi"))
+                    .toFile());
+            String bin = FileUtil.readAsString(fileSystemStorageSolidityService.load(instance.getChoreography()
+                    .getName()
+                    .concat(".bin"))
+                    .toFile());
+            SmartContract smartContract = new SmartContract(contractAddress, abi, bin, instance);
+            repository.save(smartContract);
+
+            return smartContract;
+        } catch (Exception e) {
+            throw new SmartContractDeployException("Deploy exception:", e);
+        }
+    }
+
+    public String getFileContent(String filePath, boolean newLinePerRow) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
+            if (newLinePerRow)
+                stream.forEach(s -> contentBuilder.append(s));
+            else
+                stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return contentBuilder.toString();
     }
 
 
@@ -291,7 +291,8 @@ public class SmartContractService {
                     Object arglist[] = new Object[2];
                     arglist[0] = role;
                     arglist[1] = new BigInteger("0");
-                    RemoteCall<TransactionReceipt> returnv1 = (RemoteCall<TransactionReceipt>) method.invoke(contract,
+                    RemoteCall<TransactionReceipt> returnv1 = (RemoteCall<TransactionReceipt>) method.invoke(
+                            contract,
                             arglist);
                     TransactionReceipt t = returnv1.send();
                     if (t != null) {
@@ -327,69 +328,132 @@ public class SmartContractService {
 
     }
 
-    public String readLineByLineJava8(String filePath, boolean bin) {
-        StringBuilder contentBuilder = new StringBuilder();
 
-        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
-            if (bin)
-                stream.forEach(s -> contentBuilder.append(s));
-            else
-                stream.forEach(s -> contentBuilder.append(s).append("\n"));
-        } catch (IOException e) {
+    public String deploy(String name) throws Exception {
+
+        //Unlocking administration account
+        adm.personalUnlockAccount(adminAccount, passAdminAccount).send();
+
+        EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
+                adminAccount, DefaultBlockParameterName.LATEST).sendAsync().get();
+        BigInteger nonce = ethGetTransactionCount.getTransactionCount();
+
+        BigInteger GAS_PRICE = BigInteger.valueOf(gasPrice);
+        BigInteger GAS_LIMIT = BigInteger.valueOf(gasLimit);
+
+        //compiled smart contract code
+        String compiledSCCode = new String(Files.readAllBytes(Paths.get(projectPath + File.separator + parseName(
+                name,
+                ".bin"))));
+
+        Transaction transaction = Transaction.createContractTransaction(
+                adminAccount,
+                nonce,
+                GAS_PRICE,
+                GAS_LIMIT,
+                BigInteger.ZERO,
+                "0x" + compiledSCCode);
+
+        //send sync
+        EthSendTransaction transactionResponse = web3j.ethSendTransaction(transaction).send();
+
+        if (transactionResponse.hasError()) {
+            log.error(transactionResponse.getError().getData());
+            log.error(transactionResponse.getError().getMessage());
+        }
+        String transactionHash = transactionResponse.getTransactionHash();
+        log.info("TxHash: " + transactionHash);
+
+        EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionResponse.getTransactionHash())
+                .send();
+        if (receipt.getTransactionReceipt().isPresent()) {
+            TransactionReceipt r = receipt.getTransactionReceipt().get();
+            String contractAddress = r.getContractAddress();
+            log.info("Contract address: {}", contractAddress);
+            log.info("Tx receipt: from={}, to={}, gas={}, cumulativeGas={}",
+                    r.getFrom(),
+                    r.getTo(),
+                    r.getGasUsed().intValue(),
+                    r.getCumulativeGasUsed().intValue());
+            return contractAddress;
+        }
+
+        return null;
+
+    }
+
+
+    public SmartContract oldGenerateCode(Instance instance, Path modelPath) {
+
+        log.debug("Create solidity... instance {}", instance.getId(), instance.getChoreography().getName());
+
+
+        Choreography choreography = instance.getChoreography();
+        Set<Participant> setOfMandatoryParticipants = instance.getMandatoryParticipants()
+                .stream()
+                .map(InstanceParticipantUser::getParticipant).distinct().collect(Collectors.toSet());
+
+        Set<Participant> optionalParticipants = new HashSet<>(choreography.getParticipants());
+        optionalParticipants.removeAll(setOfMandatoryParticipants);
+
+
+        List<String> setStringOptionalParticipants = optionalParticipants.stream()
+                .map((p) -> p.getName())
+                .collect(Collectors.toList());
+        List<String> setStringMandatoryParticipants = setOfMandatoryParticipants.stream()
+                .map((p) -> p.getName())
+                .collect(Collectors.toList());
+
+        ChoreographyBpmn choreographyBpmn = new ChoreographyBpmn();
+//        File f = new File(projectPath + File.separator + "bpmn" + File.separator + fileName);
+
+
+        HashMap<String, User> myParticipants = new HashMap();
+
+        instance.getMandatoryParticipants()
+                .forEach((i) -> myParticipants.put(i.getParticipant().getName(), i.getUser()));
+
+        try {
+            choreographyBpmn.start(modelPath.toFile(),
+                    myParticipants,
+                    setStringOptionalParticipants,
+                    setStringMandatoryParticipants);
+
+            UploadFile uploadFile = new UploadFile();
+            uploadFile.setName(choreography.getName());
+            uploadFile.setExtension(".sol");
+            uploadFile.setData(choreographyBpmn.choreographyFile);
+
+
+            fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
+
+        } catch (Exception e) {
+            tasks = null;
             e.printStackTrace();
         }
 
-        return contentBuilder.toString();
+        return choreographyBpmn.finalContract;
     }
 
-    public SmartContract deploy(Instance instance) {
 
-        SmartContract smartContract = new SmartContract();
-        log.debug("Generating solidity file ...");
-
-        UploadFile solidityFile = generateSolidityCode(instance,
-                fileSystemStorageService.load(instance.getChoreography().getFilename()));
-
-        log.debug("Compiling solidity file ...");
-        compile(solidityFile.getFilename());
-
-//        smartContract.setAddress();
-        return smartContract;
-    }
-
-    public String deploy(String bin) throws Exception {
+    public String deployOld(String bin) throws Exception {
         if (pendingTransaction == true) {
             log.error("Sembra ci sia una transazione pendente");
             return "ERROR";
         }
 
-		/*System.out.println(solPath);
-
-		String solPath = projectPath + "ChorChain/src/com/unicam/resources/" + parseName(bin, ".sol");
-		String[] comm = {"solc",
-				"--gas",
-				solPath,};
+        String binar = new String(Files.readAllBytes(Paths.get(projectPath + File.separator + parseName(bin,
+                ".bin"))));
 
 
-		Runtime rt = Runtime.getRuntime();
-		Process p = rt.exec(comm);
-		String gasEstimation = getStringFromInputStream(p.getInputStream());
-		System.out.println(gasEstimation);
-		gasEstimation = gasEstimation.split("=/s")[2].replaceAll("/D+","");
-		System.out.println("GAS ESTIMATION: "+ gasEstimation);
-		int result = Integer.parseInt(gasEstimation);*/
-        //sostituire resources con compiled
-        String binar = new String(Files.readAllBytes(Paths.get(projectPath + File.separator + parseName(bin, ".bin"))));
-
-
-        //Unlocking the account
-        PersonalUnlockAccount personalUnlockAccount = adm.personalUnlockAccount(VirtualProsAccount,
-                PassVirtualProsAccount).send();
-        //Getting the nonce
+//        //Unlocking the account
+//        PersonalUnlockAccount personalUnlockAccount = adm.personalUnlockAccount(adminAccount,
+//                passAdminAccount).send();
+//        //Getting the nonce
 
 
         EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
-                VirtualProsAccount, DefaultBlockParameterName.LATEST).sendAsync().get();
+                adminAccount, DefaultBlockParameterName.LATEST).sendAsync().get();
         BigInteger nonce = ethGetTransactionCount.getTransactionCount();
 
         BigInteger GAS_PRICE = BigInteger.valueOf(13_000_000_000L);
@@ -402,7 +466,7 @@ public class SmartContractService {
 
 
         Transaction transaction = Transaction.createContractTransaction(
-                VirtualProsAccount,
+                adminAccount,
                 nonce,
                 GAS_PRICE,
                 GAS_LIMIT,
@@ -415,7 +479,7 @@ public class SmartContractService {
 
 
         Transaction transaction1 = Transaction.createContractTransaction(
-                VirtualProsAccount,
+                adminAccount,
                 nonce,
                 GAS_PRICE,
                 GAS_LIMIT,
@@ -426,11 +490,11 @@ public class SmartContractService {
         EthSendTransaction transactionResponse = web3j.ethSendTransaction(transaction1).sendAsync().get();
         pendingTransaction = true;
         if (transactionResponse.hasError()) {
-            System.out.println(transactionResponse.getError().getData());
-            System.out.println(transactionResponse.getError().getMessage());
+            log.error(transactionResponse.getError().getData());
+            log.error(transactionResponse.getError().getMessage());
         }
         String transactionHash = transactionResponse.getTransactionHash();
-        System.out.println("Thash: " + transactionHash);
+        log.info("Thash: " + transactionHash);
         EthGetTransactionReceipt transactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
 
         //Optional<TransactionReceipt> receiptOptional = transactionReceipt.getTransactionReceipt();
