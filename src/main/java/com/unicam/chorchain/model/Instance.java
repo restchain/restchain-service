@@ -44,8 +44,8 @@ public class Instance {
                 .filter((m) -> m.getUser() == null).count();
     }
 
-	@OneToOne
-	private SmartContract deployedContract;
+//	@OneToOne
+//	private SmartContract deployedContract;
 
     public Instance(Choreography choreography, LocalDateTime created, User createdBy) {
         this.choreography = choreography;
