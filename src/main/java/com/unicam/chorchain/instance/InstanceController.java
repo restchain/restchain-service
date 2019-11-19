@@ -37,6 +37,11 @@ public class InstanceController {
 //        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(id));
 //    }
 
+    @GetMapping("{id}")
+    public ResponseEntity<?> instancesByModel(@PathVariable("id") Long modelId) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.findAllByModelId(modelId));
+    }
+
     @RequestMapping(value = "{id}", method = DELETE)
     public String delete(@PathVariable("id") Long id) {
         InstanceDTO instanceDTO = service.read(id);

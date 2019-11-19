@@ -12,9 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-//import org.camunda.bpm.engine.RuntimeService;
 
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+
+//import org.camunda.bpm.engine.RuntimeService;
 
 
 @RequestMapping("/model")
@@ -47,7 +48,7 @@ public class ChoreographyController {
         log.info("{}", uploadFile);
         uploadFile.setExtension(".bpmn");
         fileSystemStorageService.store(uploadFile);
-        choreographyService.create(uploadFile.getName(), uploadFile.getDescription(),uploadFile.getFilename());
+        choreographyService.create(uploadFile.getName(), uploadFile.getDescription(), uploadFile.getFilename());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -67,13 +68,6 @@ public class ChoreographyController {
         fileSystemStorageService.delete(choreographyDTO.getName() + ".bpmn");
         return choreographyService.delete(id);
     }
-
-    @GetMapping("/{id}/instance")
-    public ResponseEntity<?> instancesByModel(@PathVariable("id") Long modelId) {
-        return ResponseEntity.status(HttpStatus.OK).body(instanceService.findAllByModelId(modelId));
-    }
-
-
 
 
     @ExceptionHandler(NotFoundException.class)
