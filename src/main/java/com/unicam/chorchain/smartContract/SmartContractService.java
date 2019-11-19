@@ -342,6 +342,21 @@ public class SmartContractService {
         return contentBuilder.toString();
     }
 
+    public SmartContract deploy(Instance instance) {
+
+        SmartContract smartContract = new SmartContract();
+        log.debug("Generating solidity file ...");
+
+        UploadFile solidityFile = generateSolidityCode(instance,
+                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
+        log.debug("Compiling solidity file ...");
+        compile(solidityFile.getFilename());
+
+//        smartContract.setAddress();
+        return smartContract;
+    }
+
     public String deploy(String bin) throws Exception {
         if (pendingTransaction == true) {
             log.error("Sembra ci sia una transazione pendente");
