@@ -2,6 +2,7 @@ package com.unicam.chorchain.instance;
 
 import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.SmartContract;
+import com.unicam.chorchain.smartContract.SmartContractAlreadyExistsException;
 import com.unicam.chorchain.smartContract.SmartContractDeployException;
 import com.unicam.chorchain.smartContract.SmartContractService;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +65,7 @@ public class InstanceController {
             @RequestBody InstanceDeployRequest instanceDeployRequest) {
         Instance instance = service.findInstanceById(instanceDeployRequest.getId());
         if (instance.getSmartContract() != null) {
-            throw new SmartContractDeployException("SmartContract already exists for instance: " + instance.getId());
+            throw new SmartContractAlreadyExistsException("SmartContract already exists for instance: " + instance.getId());
         }
         SmartContract smartContract = smartContractService.create(instance);
         instance.setSmartContract(smartContract);
