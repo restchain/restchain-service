@@ -1,8 +1,10 @@
 package com.unicam.chorchain.model;
 
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 
 @Entity
@@ -21,6 +23,9 @@ public class SmartContract {
 
     @OneToOne(mappedBy = "smartContract")
     private Instance instance;
+
+    @CreatedDate
+    private LocalDateTime created;
 
     //TODO capire - tutti i nome gli oggetti BPMN proccessati - BPMNObjectNames
     //	@ElementCollection(fetch = FetchType.EAGER)
@@ -46,5 +51,6 @@ public class SmartContract {
         this.bin = bin;
         this.address = contractAddress;
         this.instance = instance;
+        this.created = LocalDateTime.now();
     }
 }

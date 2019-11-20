@@ -32,6 +32,9 @@ public class Instance {
     @ManyToOne(optional = false)
     private User createdBy;
 
+    @OneToOne
+    private SmartContract smartContract;
+
     @Transient
     public boolean isDone() {
         return getMandatoryParticipants().stream()
@@ -43,9 +46,6 @@ public class Instance {
         return (int) getMandatoryParticipants().stream()
                 .filter((m) -> m.getUser() == null).count();
     }
-
-    @OneToOne
-    private SmartContract smartContract;
 
     public Instance(Choreography choreography, LocalDateTime created, User createdBy) {
         this.choreography = choreography;
