@@ -33,12 +33,12 @@ public class User {
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private Set<InstanceParticipantUser> participantUsers = new HashSet<>();
-    @OneToMany(mappedBy = "uploadedBy")
+    @OneToMany(mappedBy = "uploadedBy",cascade = CascadeType.ALL)
     private Set<Choreography> choreographiesUploaded = new HashSet<>(0);
 
-    @OneToMany(mappedBy = "createdBy")
+    @OneToMany(mappedBy = "createdBy",cascade = CascadeType.ALL)
     private Set<Instance> instancesCreatedBy = new HashSet<>(0);
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
     private Set<InstanceParticipantUser> participantsAssociated = new HashSet<>(0);
 }

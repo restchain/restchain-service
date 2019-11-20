@@ -26,7 +26,7 @@ public class Instance {
     @CreatedDate
     private LocalDateTime created;
 
-    @OneToMany(mappedBy = "instance")
+    @OneToMany(mappedBy = "instance",cascade = CascadeType.ALL)
     private Set<InstanceParticipantUser> mandatoryParticipants = new HashSet<>(0);
 
     @ManyToOne(optional = false)

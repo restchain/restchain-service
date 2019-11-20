@@ -34,11 +34,11 @@ public class Choreography {
 	private LocalDateTime created;
 
 
-	@OneToMany(mappedBy = "choreography") //Direttamente agganciata
+	@OneToMany(mappedBy = "choreography",cascade = CascadeType.ALL) //Direttamente agganciata
 	//TODO - aggiungi set(0)
 	private Set<Instance> instances = new HashSet<>(0);
 
-	@OneToMany(mappedBy = "choreography")
+	@OneToMany(mappedBy = "choreography",cascade = CascadeType.ALL)
 	private Set<Participant> participants = new HashSet<>(0);
 
 }
