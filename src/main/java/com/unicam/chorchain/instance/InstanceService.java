@@ -94,7 +94,9 @@ public class InstanceService {
     }
 
     public String delete(@Valid Long id) {
-        repository.delete(findInstanceById(id));
+        Instance instance = findInstanceById(id);
+        log.debug("instance {} ",instance.getId());
+        repository.delete(instance);
         return "Instance with id " + id + " has been removed";
     }
 

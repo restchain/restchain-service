@@ -68,20 +68,4 @@ public class ChoreographyController {
         fileSystemStorageService.delete(choreographyDTO.getName() + ".bpmn");
         return choreographyService.delete(id);
     }
-
-
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<?> handleStorageFileNotFound(NotFoundException exc) {
-        return ResponseEntity.notFound().build();
-    }
-
-    @ExceptionHandler(StorageFileNotFoundException.class)
-    public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
-        return ResponseEntity.notFound().build();
-    }
-
-    @ExceptionHandler(StorageFileAlreadyExistsException.class)
-    public ResponseEntity<?> handleStorageFileAlreadyExists(StorageFileAlreadyExistsException exc) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(exc.getMessage());
-    }
 }

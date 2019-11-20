@@ -4,6 +4,9 @@ import com.unicam.chorchain.smartContract.SmartContractAlreadyExistsException;
 import com.unicam.chorchain.smartContract.SmartContractCompilationException;
 import com.unicam.chorchain.smartContract.SmartContractConnectExceptionException;
 import com.unicam.chorchain.smartContract.SmartContractDeployException;
+import com.unicam.chorchain.storage.StorageFileAlreadyExistsException;
+import com.unicam.chorchain.storage.StorageFileNotFoundException;
+import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +49,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SmartContractConnectExceptionException.class)
     public ResponseEntity<?> smartContractConnectedException(SmartContractConnectExceptionException exc) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exc.getMessage());
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleStorageFileNotFound(NotFoundException exc) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exc.getMessage());
+    }
+
+    @ExceptionHandler(StorageFileNotFoundException.class)
+    public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exc.getMessage());
+    }
+
+    @ExceptionHandler(StorageFileAlreadyExistsException.class)
+    public ResponseEntity<?> handleStorageFileAlreadyExists(StorageFileAlreadyExistsException exc) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exc.getMessage());
     }
 }
