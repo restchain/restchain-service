@@ -101,7 +101,7 @@ public class SolidityInstance {
 
         Contract sol = Contract.builder()
                 .pragmaVersion("^0.5.3")
-                .fileName("primaProva")
+                .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
                 .modifiers(modifiers)

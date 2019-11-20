@@ -1,5 +1,8 @@
 package com.unicam.chorchain.error;
 
+import com.unicam.chorchain.smartContract.SmartContractAlreadyExistsException;
+import com.unicam.chorchain.smartContract.SmartContractCompilationException;
+import com.unicam.chorchain.smartContract.SmartContractDeployException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
+    @ExceptionHandler(SmartContractCompilationException.class)
+    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exc.getMessage());
+    }
+
+    @ExceptionHandler(SmartContractDeployException.class)
+    public ResponseEntity<?> smartContractDeployException(SmartContractCompilationException exc) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exc.getMessage());
+    }
+
+    @ExceptionHandler(SmartContractAlreadyExistsException.class)
+    public ResponseEntity<?> smartContractAlreadyExistsException(SmartContractCompilationException exc) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(exc.getMessage());
+    }
 //    @ExceptionHandler(EntityNotFoundException.class)
 //    public ResponseEntity entityNotFoundExceptionHandler(EntityNotFoundException e) {
 //        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createMessage(e.getMessage()));

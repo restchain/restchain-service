@@ -3,6 +3,7 @@ package com.unicam.chorchain.user;
 import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +27,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class UserService implements UserDetailsService {
 
     private final UserMapper mapper;
@@ -61,7 +63,7 @@ public class UserService implements UserDetailsService {
         if (userById.isPresent()) {
             return mapper.toUserDTO(userById.get());
         } else {
-            System.out.println("User not found! " + id);
+            log.info("User not found! " + id);
             throw new UsernameNotFoundException("User " + id + " was not found in the database");
         }
     }
@@ -72,7 +74,7 @@ public class UserService implements UserDetailsService {
         if (userById.isPresent()) {
             return userById.get();
         } else {
-            System.out.println("User not found! " + address);
+            log.info("User not found! " + address);
             throw new UsernameNotFoundException("User " + address + " was not found in the database");
         }
     }
@@ -87,16 +89,16 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        System.out.println("username! " + s);
+        log.debug("username! " + s);
 
         final Optional<User> userByAddress = repository.findByAddress(s);
 
 
         if (!userByAddress.isPresent()) {
-            System.out.println("User not found! " + s);
+            log.info("User not found! " + s);
             throw new UsernameNotFoundException("User " + s + " was not found in the database");
         }
-        System.out.println("userByAddress.get().getPassword()! " + userByAddress.get().getPassword());
+        log.debug("userByAddress.get().getPassword()! " + userByAddress.get().getPassword());
 
         UserDetails userDetails = (UserDetails) new org.springframework.security.core.userdetails.User(
                 userByAddress.get().getAddress(),
@@ -114,7 +116,7 @@ public class UserService implements UserDetailsService {
         if (userById.isPresent()) {
             return userById.get();
         } else {
-            System.out.println("User not found! " + id);
+            log.info("User not found! " + id);
             throw new UsernameNotFoundException("Id " + id + " was not found in the database");
         }
     }

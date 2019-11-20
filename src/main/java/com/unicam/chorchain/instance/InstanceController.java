@@ -1,28 +1,26 @@
 package com.unicam.chorchain.instance;
 
-import com.unicam.chorchain.error.GlobalExceptionHandler;
+import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.SmartContract;
-import com.unicam.chorchain.smartContract.SmartContractCompilationException;
-import com.unicam.chorchain.storage.StorageFileAlreadyExistsException;
+import com.unicam.chorchain.smartContract.SmartContractDeployException;
+import com.unicam.chorchain.smartContract.SmartContractService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
-@Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 @RequestMapping("/instance")
+@RestController
 public class InstanceController {
 
     private final InstanceService service;
+    private final SmartContractService smartContractService;
+    private final InstanceRepository repo;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody InstanceRequest instanceRequest) {
@@ -63,14 +61,16 @@ public class InstanceController {
 
     @PostMapping("/deploy")
     public ResponseEntity<?> instanceDeploy(
-            @RequestBody InstanceDeployRequest instanceDeployRequest) throws SmartContractCompilationException {
-        service.deploy(instanceDeployRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
+            @RequestBody InstanceDeployRequest instanceDeployRequest) {
+        Instance instance = service.findInstanceById(instanceDeployRequest.getId());
+        if (instance.getSmartContract() != null) {
+            throw new SmartContractDeployException("SmartContract already exists for instance: " + instance.getId());
+        }
+        SmartContract smartContract = smartContractService.create(instance);
+        instance.setSmartContract(smartContract);
+        repo.save(instance);
 
-    @ExceptionHandler(SmartContractCompilationException.class)
-    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exc.getMessage());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
 }

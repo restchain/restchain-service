@@ -12,28 +12,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Service
+import java.io.IOException;
+
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 @RequestMapping("/smart_contract")
 public class SmartContractController {
 
-    private final InstanceService instanceService;
-
-    @PostMapping("/deploy")
-    public ResponseEntity<?> instanceDeploy(
-            @RequestBody Long id) throws SmartContractCompilationException {
-        service.deploy(instanceService.findInstanceById(id));
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @ExceptionHandler(SmartContractCompilationException.class)
-    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exc.getMessage());
-    }
-
-
-    private final SmartContractService service;
+//    private final InstanceService instanceService;
+//
+//    @PostMapping("/deploy")
+//    public ResponseEntity<?> instanceDeploy(@RequestBody Long id) throws SmartContractDeployException, IOException {
+//        service.create(instanceService.findInstanceById(id));
+//        return ResponseEntity.status(HttpStatus.CREATED).build();
+//    }
+//
+//    @ExceptionHandler(SmartContractCompilationException.class)
+//    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {
+//        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exc.getMessage());
+//    }
+//
+//
+//    private final SmartContractService service;
 
 }
