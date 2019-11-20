@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.ws.Service;
+
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
 @RequiredArgsConstructor
@@ -43,9 +45,9 @@ public class InstanceController {
 
     @RequestMapping(value = "{id}", method = DELETE)
     public String delete(@PathVariable("id") Long id) {
-        InstanceDTO instanceDTO = service.read(id);
-        log.debug("Model id - {}", id);
-        return service.delete(instanceDTO.getId());
+//        InstanceDTO instanceDTO = service.read(id);
+        log.debug("Instance to delete id - {}", id);
+        return service.delete(id);
     }
 
     @PostMapping("/subscribe")
@@ -70,7 +72,6 @@ public class InstanceController {
         SmartContract smartContract = smartContractService.create(instance);
         instance.setSmartContract(smartContract);
         repo.save(instance);
-
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

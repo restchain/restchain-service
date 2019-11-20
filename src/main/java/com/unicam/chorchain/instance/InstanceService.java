@@ -149,4 +149,8 @@ public class InstanceService {
 
 
     }
+
+    public void save(Instance instance) {
+        repository.save(instance);
+    }
 }
