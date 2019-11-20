@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -225,24 +226,23 @@ public class CodeGenVisitor implements Visitor {
     }
 
     // returns a modifier function call depending of the participant role
-    private String getParticipantModifier(String participantFromModel) {
+    private String getParticipantModifier(String participantName) {
         //If participantFromRole is contained in tha Mandatory list is Mandatory else is Optional
-        if (this.instance.getMandatoryParticipants().contains(participantFromModel)) {
-            return roleModifierFormatter(Types.Mandatory_modifier, participantFromModel);
-
+        if (this.instance.getMandatoryParticipants().contains(participantName)) {
+            return roleModifierFormatter(Types.Mandatory_modifier, participantName,Types.Global_RoleList,instance.getMandatoryParticipants());
         } else {
-            return roleModifierFormatter(Types.Optional_modifier, participantFromModel);
+            return roleModifierFormatter(Types.Optional_modifier, participantName, Types.Global_OptionalList,instance.getOptionalParticipants());
         }
     }
 
     // String formatter for  a modifier function call
-    private String roleModifierFormatter(String type, String name) {
+    private String roleModifierFormatter(String type, String name,String modifierName,List<String> participantList) {
         StringBuffer sb = new StringBuffer();
         return sb.append(" ")
                 .append(type)
-                .append("(").append(Types.Global_RoleList)
+                .append("(").append(modifierName)
                 .append("[")
-                .append(this.instance.getMandatoryParticipants().indexOf(name))
+                .append(participantList.indexOf(name))
                 .append("]) ")
                 .toString();
     }
@@ -261,6 +261,4 @@ public class CodeGenVisitor implements Visitor {
             instance.getStructVariables().add(param);
         }
     }
-
-
 }
