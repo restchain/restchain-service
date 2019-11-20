@@ -36,4 +36,4 @@ build/
 ### Upload dir ###
 upload-dir/
 solidity-dir/
-src/main/resources/application-*.*
+application.properties
