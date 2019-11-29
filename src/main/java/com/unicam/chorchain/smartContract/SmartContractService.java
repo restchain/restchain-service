@@ -7,6 +7,7 @@ import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import com.unicam.chorchain.translator.ChoreographyBpmn;
+import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FileUtil;
@@ -15,6 +16,7 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.*;
 import org.web3j.codegen.SolidityFunctionWrapperGenerator;
@@ -47,9 +49,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
+@Slf4j
 public class SmartContractService {
 
     @Value("${solidity.dir}")
@@ -68,6 +71,7 @@ public class SmartContractService {
 
     private final FileSystemStorageSolidityService fileSystemStorageSolidityService;
     private final FileSystemStorageService fileSystemStorageService;
+    private final UserService userService;
     private final SmartContractRepository repository;
 
     private List<String> tasks;
@@ -83,6 +87,21 @@ public class SmartContractService {
         web3j = Web3j.build(new HttpService(blcokChainUrl));
         adm = Admin.build(new HttpService(blcokChainUrl));
     }
+
+
+    public Set<SmartContract> getMySmartContract() {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<SmartContract> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(Instance::getSmartContract)
+                .collect(Collectors.toSet());
+
+        return sc;
+    }
+
 
     public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
         SolidityGenerator sg = new SolidityGenerator(instance);
@@ -386,7 +405,7 @@ public class SmartContractService {
 
             return null;
         } catch (ConnectException e) {
-            throw new SmartContractConnectExceptionException("Impossible to reach the block chain node - " +e.getMessage());
+            throw new SmartContractConnectExceptionException("Impossible to reach the block chain node - " + e.getMessage());
         } catch (Exception e) {
             throw new SmartContractDeployException(e.getMessage());
         }
