@@ -29,7 +29,7 @@ public class SmartContractController {
 
 
     @GetMapping
-    public Set<SmartContract> listAllModels(Pageable pageable) {
+    public Set<SmartContractFullDTO> listAllModels(Pageable pageable) {
         return service.getMySmartContract();
     }
 //

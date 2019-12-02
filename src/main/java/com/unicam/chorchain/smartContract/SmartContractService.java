@@ -73,6 +73,7 @@ public class SmartContractService {
     private final FileSystemStorageService fileSystemStorageService;
     private final UserService userService;
     private final SmartContractRepository repository;
+    private final SmartContractMapper mapper;
 
     private List<String> tasks;
     private String CONTRACT_ADDRESS = "";
@@ -89,14 +90,15 @@ public class SmartContractService {
     }
 
 
-    public Set<SmartContract> getMySmartContract() {
+    public Set<SmartContractFullDTO> getMySmartContract() {
         Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
                 .getUsername())
                 .getParticipantsAssociated();
-        Set<SmartContract> sc = instances.stream()
+        Set<SmartContractFullDTO> sc = instances.stream()
                 .filter(i -> i.getInstance().getSmartContract() != null)
                 .map(InstanceParticipantUser::getInstance)
                 .map(Instance::getSmartContract)
+                .map(mapper::toFullDTO)
                 .collect(Collectors.toSet());
 
         return sc;
