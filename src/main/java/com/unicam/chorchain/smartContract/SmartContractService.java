@@ -35,6 +35,8 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -90,19 +92,30 @@ public class SmartContractService {
     }
 
 
-    public Set<SmartContractFullDTO> getMySmartContract() {
+    public Set<SmartContractDTO> getMySmartContracts() {
         Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
                 .getUsername())
                 .getParticipantsAssociated();
-        Set<SmartContractFullDTO> sc = instances.stream()
+        Set<SmartContractDTO> sc = instances.stream()
                 .filter(i -> i.getInstance().getSmartContract() != null)
                 .map(InstanceParticipantUser::getInstance)
                 .map(Instance::getSmartContract)
-                .map(mapper::toFullDTO)
+                .map(mapper::toDTO)
                 .collect(Collectors.toSet());
 
         return sc;
     }
+
+    public SmartContractFullDTO read(@Valid Long id) {
+        return mapper.toFullDTO(findSmartContractById(id));
+    }
+
+    public SmartContract findSmartContractById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("SmartContract " + id + " was not found in the database",
+                        id)));
+    }
+
 
 
     public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
