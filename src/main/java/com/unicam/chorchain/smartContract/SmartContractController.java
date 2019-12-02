@@ -1,5 +1,6 @@
 package com.unicam.chorchain.smartContract;
 
+import com.unicam.chorchain.instance.InstanceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +20,13 @@ public class SmartContractController {
     private final SmartContractService service;
 
     @GetMapping
-    public Set<SmartContractDTO> listAllModels(Pageable pageable) {
+    public Set<SmartContractDTO> listAllSmartContract(Pageable pageable) {
         return service.getMySmartContracts();
+    }
+
+    @GetMapping("/i")
+    public Set<InstanceDTO> listAllInstancesWithSmartContract(Pageable pageable) {
+        return service.getInstancesWithSmartContract();
     }
 
     @GetMapping("{id}")

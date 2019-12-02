@@ -3,6 +3,8 @@ package com.unicam.chorchain.smartContract;
 import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.codeGenerator.Factories;
 import com.unicam.chorchain.codeGenerator.SolidityGenerator;
+import com.unicam.chorchain.instance.InstanceDTO;
+import com.unicam.chorchain.instance.InstanceMapper;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
@@ -76,6 +78,7 @@ public class SmartContractService {
     private final UserService userService;
     private final SmartContractRepository repository;
     private final SmartContractMapper mapper;
+    private final InstanceMapper instanceMapper;
 
     private List<String> tasks;
     private String CONTRACT_ADDRESS = "";
@@ -105,6 +108,21 @@ public class SmartContractService {
 
         return sc;
     }
+
+    public Set<InstanceDTO> getInstancesWithSmartContract() {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<InstanceDTO> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(instanceMapper::toInstanceDTO)
+                .collect(Collectors.toSet());
+
+        return sc;
+    }
+
+
 
     public SmartContractFullDTO read(@Valid Long id) {
         return mapper.toFullDTO(findSmartContractById(id));
