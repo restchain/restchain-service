@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+
+/** Contains all the information related to the solidity file **/
 public class SolidityInstance {
     @Getter
     private List<String> mandatoryParticipants;//List of mandatory Participants
