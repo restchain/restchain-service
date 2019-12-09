@@ -7,6 +7,11 @@ import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.bpmn.Query;
+import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
+import org.camunda.bpm.model.bpmn.instance.Message;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormData;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormField;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
@@ -127,6 +132,21 @@ public class CodeGenVisitor implements Visitor {
                 addGlobal(node.getRequestMessage().getMessage().getName());
             }
 
+            Message reqMessage = node.getRequestMessage().getMessage();
+            MessageAdapter reqMessageAdapter = new MessageAdapter(reqMessage);
+
+
+            //TODO works on this, change the approach regarding how to populate the getParams..
+//            getParameters(node.getRequestMessage().getMessage().getName())
+
+            List<String> params = new ArrayList<>(0);
+            String tmp = getParameters(node.getRequestMessage().getMessage().getName());
+            if (tmp != ""){
+                params.add(tmp);
+            } else {
+                params.addAll(reqMessageAdapter.getParameters());
+            }
+
 
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
@@ -136,15 +156,18 @@ public class CodeGenVisitor implements Visitor {
                     .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
-                    .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
+                    .parameters(params)
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .bodyStrings(reqMessageAdapter.getFunctionCalls().stream().map(s ->s.concat(";") ).collect(Collectors.toList()))
                     .transferTo(node.getRequestMessage().getMessage().getName().contains("payment"))
                     .enableAndActiveTask(nextElement.getTargetRefId(), nextElement.isTargetGatewayOrNot())
                     .build().toString());
             this.instance.addTxt("\n\n");
+
+            this.instance.addTxt(reqMessageAdapter.getFunctions().stream().collect(Collectors.joining("\n")));
 
         } else {
 
@@ -214,14 +237,17 @@ public class CodeGenVisitor implements Visitor {
     // returns a List of all params name contained in the passed signature (msg)
     private Collection<String> getParamsList(String msg) {
         log.debug("signature {}:", msg);
+        List<String> res = new ArrayList<>();
         String add = "";
         String n = msg.replace("string", "").replace("uint", "").replace("bool", "").replace(" ", "");
         String r = n.replace(")", "");
         String[] t = r.split("\\(");
-        String[] m = t[1].split(",");
+        if (t.length > 1) {
+            String[] m = t[1].split(",");
 
-        List<String> res = new ArrayList<>();
-        res.addAll(Arrays.asList(m));
+            res.addAll(Arrays.asList(m));
+
+        }
         return res;
     }
 
@@ -250,15 +276,20 @@ public class CodeGenVisitor implements Visitor {
     // Function for gettingi all the parameters presents in function signature,
     private static String getParameters(String messageName) {
         String[] parsedMsgName = messageName.split("\\(");
-        return parsedMsgName[1].replace(")", "   ");
+        if (parsedMsgName.length > 1)
+            return parsedMsgName[1].replace(")", "   ");
+
+        return "";
     }
 
     private void addGlobal(String name) {
         String r = name.replace(")", "");
         String[] t = r.split("\\(");
-        String[] m = t[1].split(",");
-        for (String param : m) {
-            instance.getStructVariables().add(param);
+        if (t.length > 1) {
+            String[] m = t[1].split(",");
+            for (String param : m) {
+                instance.getStructVariables().add(param);
+            }
         }
     }
 }

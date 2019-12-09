@@ -214,14 +214,13 @@ public class SmartContractService {
             UploadFile solidityFile = generateSolidityCode(instance,
                     fileSystemStorageService.load(instance.getChoreography().getFilename()));
 
-            log.debug("Compiling solidityy file ...");
+            log.debug("Compiling solidity file ...");
             compile(solidityFile.getFilename());
 
-            log.debug("Deploying ...");
+            log.debug("Deploying on the blockchain ...");
             String contractAddress = deploy(solidityFile.getName());
 
-
-            log.debug("Building a SmartContract.....");
+            log.debug("Storing the SmartContract.....");
             String abi = FileUtil.readAsString(fileSystemStorageSolidityService.load(instance.getChoreography()
                     .getName()
                     .concat(".abi"))
@@ -234,13 +233,11 @@ public class SmartContractService {
             repository.save(smartContract);
 
             return smartContract;
-        } catch (SmartContractConnectExceptionException e) {
-            throw e;
-        } catch (SmartContractCompilationException e) {
+        } catch (SmartContractConnectExceptionException | SmartContractCompilationException e) {
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new SmartContractDeployException(e.getMessage());
+            throw new SmartContractDeployException(e.getMessage(),e.getCause());
         }
     }
 

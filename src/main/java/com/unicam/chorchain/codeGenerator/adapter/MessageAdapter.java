@@ -1,0 +1,82 @@
+package com.unicam.chorchain.codeGenerator.adapter;
+
+
+import com.unicam.chorchain.codeGenerator.solidity.Function;
+import com.unicam.chorchain.codeGenerator.solidity.Types;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.bpmn.Query;
+import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
+import org.camunda.bpm.model.bpmn.instance.Message;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormData;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormField;
+import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Getter
+//@Setter
+@Slf4j
+public class MessageAdapter {
+
+
+    private final Message message;
+    private ExtensionElements extensionElements;
+    private Collection<CamundaFormField> camundaFormFields;
+    private List<String> functions = new ArrayList<String>(0);
+    private List<String> functionCalls = new ArrayList<String>(0);
+    private List<String> parameters = new ArrayList<String>(0);
+
+    public MessageAdapter(Message message) {
+        this.message = message;
+        this.extensionElements = message.getExtensionElements();
+        init();
+    }
+
+    public void init() {
+        if (extensionElements != null) {
+            Query<CamundaFormData> camundaFormData = extensionElements.getElementsQuery()
+                    .filterByType(CamundaFormData.class);
+            if (camundaFormData.count() > 0) {
+                camundaFormFields = camundaFormData.singleResult()
+                        .getCamundaFormFields();
+
+//                List<CamundaProperties> pp =  camundaFormData.singleResult().getCamundaFormFields()
+
+                functions = camundaFormFields.stream()
+                        .map(cff -> Function.builder()
+                                .name(cff.getCamundaId())
+                                .internal(true)
+                                .bodyString(cff.getAttributeValue("body"))
+                                .visibility(Types.visibility.PRIVATE)
+                                .parameters(createParameters(cff.getCamundaProperties(), cff.getCamundaId()))
+                                .build().toString()
+                        ).collect(Collectors.toList());
+            }
+        }
+    }
+
+    private Collection<? extends String> createParameters(CamundaProperties camundaProperties,
+                                                          String functionName) {
+
+        List<String> params;
+        params = camundaProperties.getCamundaProperties()
+                .stream()
+                .map(p -> p.getAttributeValue("type") + " " + p.getCamundaName())
+                .collect(Collectors.toList());
+        parameters.addAll(params);
+        functionCalls.add(functionName + "(" + camundaProperties.getCamundaProperties()
+                .stream()
+                .map(p -> p.getAttributeValue("defaultValue") != null &&
+                        !p.getAttributeValue("defaultValue")
+                                .equals("") ? p.getAttributeValue("defaultValue") : p.getCamundaName())
+                .collect(Collectors.joining(",")) + ")");
+        return params;
+    }
+
+
+}

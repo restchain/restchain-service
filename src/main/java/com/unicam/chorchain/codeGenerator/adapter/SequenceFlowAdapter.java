@@ -25,6 +25,8 @@ public class SequenceFlowAdapter implements BpmnModelAdapter {
     private boolean isTargetGatewayOrNot;
 
     public SequenceFlowAdapter(FlowElement value) {
+
+        log.debug(" FlowElement {} ", value);
         log.debug(" Me {} ", value.getClass().getSimpleName());
         this.value = value;
         this.sourceId = value.getAttributeValue("sourceRef");
