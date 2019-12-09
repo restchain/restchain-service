@@ -141,7 +141,7 @@ public class CodeGenVisitor implements Visitor {
 
             List<String> params = new ArrayList<>(0);
             String tmp = getParameters(node.getRequestMessage().getMessage().getName());
-            if (tmp != ""){
+            if (!tmp.equals("")){
                 params.add(tmp);
             } else {
                 params.addAll(reqMessageAdapter.getParameters());
