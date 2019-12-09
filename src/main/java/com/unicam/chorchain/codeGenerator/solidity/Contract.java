@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 @Builder
 @Slf4j
@@ -16,8 +17,8 @@ public class Contract {
     private String fileName;
     //    @NotEmpty
 //    private String constructor;
-    @NotEmpty
-    private String constructorBody;
+    @Singular
+    private Collection<String> bodyStrings;
 //    @Singular
 //    private Collection<String> customTextStrings;
 
@@ -54,10 +55,10 @@ public class Contract {
         out.append("\n\n");
 
 
-        if (constructorBody != null) {
+        if (bodyStrings != null) {
             out.append("\t/* constructor */ \n");
             out.append("\tconstructor() public {\n");
-            out.append("\t").append(constructorBody).append("\n");
+            out.append("\t").append(String.join("\n", bodyStrings));
             out.append("\t}\n");
             out.append("\n");
         }

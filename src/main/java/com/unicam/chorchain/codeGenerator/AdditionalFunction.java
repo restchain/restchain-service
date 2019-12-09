@@ -1,17 +1,16 @@
-package com.unicam.chorchain.codeGenerator.adapter;
+package com.unicam.chorchain.codeGenerator;
 
 
 import com.unicam.chorchain.codeGenerator.solidity.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Query;
 import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
-import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormData;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormField;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,19 +20,20 @@ import java.util.stream.Collectors;
 @Getter
 //@Setter
 @Slf4j
-public class MessageAdapter {
+public class AdditionalFunction {
 
 
-    private final Message message;
+    private final ModelElementInstance message;
     private ExtensionElements extensionElements;
     private Collection<CamundaFormField> camundaFormFields;
     private List<String> functions = new ArrayList<String>(0);
     private List<String> functionCalls = new ArrayList<String>(0);
     private List<String> parameters = new ArrayList<String>(0);
 
-    public MessageAdapter(Message message) {
+    public AdditionalFunction(ModelElementInstance message) {
         this.message = message;
-        this.extensionElements = message.getExtensionElements();
+
+        this.extensionElements =  message.getChildElementsByType(ExtensionElements.class).stream().findFirst().orElse(null);
         init();
     }
 

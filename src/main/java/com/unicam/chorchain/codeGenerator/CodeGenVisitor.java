@@ -7,15 +7,10 @@ import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.model.bpmn.Query;
-import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.Message;
-import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormData;
-import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormField;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -133,7 +128,7 @@ public class CodeGenVisitor implements Visitor {
             }
 
             Message reqMessage = node.getRequestMessage().getMessage();
-            MessageAdapter reqMessageAdapter = new MessageAdapter(reqMessage);
+            AdditionalFunction reqMessageAdapter = new AdditionalFunction(reqMessage);
 
 
             //TODO works on this, change the approach regarding how to populate the getParams..

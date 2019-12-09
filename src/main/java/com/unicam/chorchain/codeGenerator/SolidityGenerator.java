@@ -3,8 +3,8 @@ package com.unicam.chorchain.codeGenerator;
 import com.unicam.chorchain.codeGenerator.adapter.BpmnModelAdapter;
 import com.unicam.chorchain.codeGenerator.solidity.*;
 import com.unicam.chorchain.model.Instance;
-import com.unicam.chorchain.storage.StorageFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.*;
 
@@ -16,6 +16,7 @@ public class SolidityGenerator {
     private SolidityInstance solidityInstance;
     private Set<String> visited = new HashSet<>();
     private List<Visitable> bpmnTree = new ArrayList<>();
+    private ModelElementInstance choreography;
 
     public SolidityGenerator(Instance instance) {
         this.solidityInstance = new SolidityInstance(instance);
@@ -37,8 +38,12 @@ public class SolidityGenerator {
     //Uses visitors to start building the solidity file
     public String build() {
         bpmnTree.forEach(v -> v.accept(new CodeGenVisitor(solidityInstance)));
-        String code = solidityInstance.build();
+        String code = solidityInstance.build(choreography);
         log.debug("solidity :\n\n{}\n", code);
         return code;
+    }
+
+    public void setChoreography(ModelElementInstance choreography) {
+        this.choreography=choreography;
     }
 }

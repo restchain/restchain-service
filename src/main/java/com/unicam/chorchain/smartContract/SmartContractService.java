@@ -16,6 +16,8 @@ import org.aspectj.util.FileUtil;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import org.camunda.bpm.model.xml.instance.DomElement;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -123,7 +125,6 @@ public class SmartContractService {
     }
 
 
-
     public SmartContractFullDTO read(@Valid Long id) {
         return mapper.toFullDTO(findSmartContractById(id));
     }
@@ -135,10 +136,25 @@ public class SmartContractService {
     }
 
 
-
     public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
         SolidityGenerator sg = new SolidityGenerator(instance);
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
+
+        //Business logic to retrieve the choreography id of the bpmn:choreography element
+        Optional<DomElement> choreographyDom = modelInstance.getDocument()
+                .getRootElement()
+                .getChildElements()
+                .stream()
+                .filter(e -> e.getLocalName().equals("choreography"))
+                .findFirst();
+
+        if (choreographyDom.isPresent()) {
+            ModelElementInstance choreography = modelInstance.getModelElementById(choreographyDom.get()
+                    .getAttribute("id"));
+            sg.setChoreography(choreography);
+        }
+
+
         //implement a business logic that will match the exact starting orders of loading
         modelInstance.getModelElementsByType(StartEvent.class)
                 .forEach(e -> sg.traverse(Factories.bpmnModelFactory.create(e)));
@@ -237,7 +253,7 @@ public class SmartContractService {
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new SmartContractDeployException(e.getMessage(),e.getCause());
+            throw new SmartContractDeployException(e.getMessage(), e.getCause());
         }
     }
 

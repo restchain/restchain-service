@@ -1,8 +1,10 @@
 package com.unicam.chorchain.codeGenerator.solidity;
 
+import com.unicam.chorchain.codeGenerator.AdditionalFunction;
 import com.unicam.chorchain.model.Instance;
 import lombok.Getter;
 import lombok.Setter;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,7 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 
-/** Contains all the information related to the solidity file **/
+/**
+ * Contains all the information related to the solidity file
+ **/
 public class SolidityInstance {
     @Getter
     private List<String> mandatoryParticipants;//List of mandatory Participants
@@ -49,7 +53,8 @@ public class SolidityInstance {
                 !mandatoryParticipants.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
     }
 
-    public String build() {
+    public String build(ModelElementInstance choreography) {
+
 
         //*** starts here ***/
 
@@ -100,7 +105,7 @@ public class SolidityInstance {
         variables.add(printRoleList());
         variables.add(printElementsIdList());
 
-
+        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
         Contract sol = Contract.builder()
                 .pragmaVersion("^0.5.3")
                 .fileName(instance.getChoreography().getName())
@@ -110,8 +115,9 @@ public class SolidityInstance {
                 .event("event stateChanged(uint);\n")
                 .structs(structs)
                 .variables(variables)
-                .constructorBody(printConstructorBody())
+                .bodyString(printConstructorBody(additionalFunction))
                 .function(this.bpmnFunctions.toString())
+                .custom(String.join("\n", additionalFunction.getFunctions()))
                 .custom(printOtherFunctions())
                 .custom(printFunctionInit(this.getStartPointId()))
                 .build();
@@ -139,7 +145,7 @@ public class SolidityInstance {
     }
 
 
-    private String printConstructorBody() {
+    private String printConstructorBody(AdditionalFunction additionalFunction) {
         StringBuilder sb = new StringBuilder();
         sb.append("\tfor (uint i = 0; i < elementsID.length; i ++) {\n");
         sb.append("\t\t\telements.push(Element(elementsID[i], State.DISABLED));\n");
@@ -158,6 +164,8 @@ public class SolidityInstance {
                         .append("\"] = ")
                         .append("0x0000000000000000000000000000000000000000")
                         .append(";\n"));
+
+        sb.append("\t\t") .append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
         sb.append("\t\t//enable the start process\n\t\tinit();\n");
         return sb.toString();
     }
