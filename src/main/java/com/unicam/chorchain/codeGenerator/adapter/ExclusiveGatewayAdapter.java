@@ -37,7 +37,13 @@ public class ExclusiveGatewayAdapter implements BpmnModelAdapter, Visitable {
     }
 
     public String getDirection(){
-        return value.getGatewayDirection().name();
+        if (getIncoming().size()>getOutgoing().size()){
+            return "Converging";
+
+        } else {
+            return "Diverging";
+        }
+//        return value.getGatewayDirection().name();
     }
 
     @Override
