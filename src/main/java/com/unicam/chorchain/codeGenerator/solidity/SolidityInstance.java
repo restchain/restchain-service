@@ -1,6 +1,7 @@
 package com.unicam.chorchain.codeGenerator.solidity;
 
 import com.unicam.chorchain.codeGenerator.AdditionalFunction;
+import com.unicam.chorchain.codeGenerator.AdditionalType;
 import com.unicam.chorchain.model.Instance;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,6 +57,8 @@ public class SolidityInstance {
     public String build(ModelElementInstance choreography) {
 
 
+        AdditionalType additionalType = new AdditionalType(choreography);
+
         //*** starts here ***/
 
         Struct structGlobal = Struct.builder()
@@ -73,6 +76,7 @@ public class SolidityInstance {
         List<String> structs = new ArrayList<>();
         structs.add(structGlobal.toString());
         structs.add(structElement.toString());
+        structs.addAll(additionalType.getStructs());
 
         List<String> maps = new ArrayList<>();
         maps.add("mapping(string => uint) position;");
@@ -102,6 +106,7 @@ public class SolidityInstance {
         variables.add("Element[] elements;");
         variables.add("StateMemory currentMemory;");
         variables.add("uint counter;");
+        variables.addAll(additionalType.getGlobals());
         variables.add(printRoleList());
         variables.add(printElementsIdList());
 
@@ -111,6 +116,7 @@ public class SolidityInstance {
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
+                .mappings(additionalType.getMappings())
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
                 .structs(structs)
@@ -164,8 +170,11 @@ public class SolidityInstance {
                         .append("\"] = ")
                         .append("0x0000000000000000000000000000000000000000")
                         .append(";\n"));
-
-        sb.append("\t\t") .append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
+        if (additionalFunction.getFunctionCalls().size() > 0) {
+            sb.append("\t\t//Additional functions\n");
+            sb.append("\t\t")
+                    .append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
+        }
         sb.append("\t\t//enable the start process\n\t\tinit();\n");
         return sb.toString();
     }

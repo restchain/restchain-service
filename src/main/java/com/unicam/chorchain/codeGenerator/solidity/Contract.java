@@ -57,7 +57,8 @@ public class Contract {
 
         if (bodyStrings != null) {
             out.append("\t/* constructor */ \n");
-            out.append("\tconstructor() public {\n");
+            out.append("\tconstructor(");
+            out.append(") public {\n");
             out.append("\t").append(String.join("\n", bodyStrings));
             out.append("\t}\n");
             out.append("\n");
