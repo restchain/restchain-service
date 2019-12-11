@@ -15,6 +15,8 @@ public class Contract {
     private String pragmaVersion;
     @NotEmpty
     private String fileName;
+    @NotEmpty
+    private String constructor;
     //    @NotEmpty
 //    private String constructor;
     @Singular
@@ -54,14 +56,13 @@ public class Contract {
         out.append("contract ").append(fileName).append("{\n");
         out.append("\n\n");
 
+        if (constructor != null){
+            out.append("\t/* constructor */ \n");
+            out.append(constructor);
+        }
 
         if (bodyStrings != null) {
-            out.append("\t/* constructor */ \n");
-            out.append("\tconstructor(");
-            out.append(") public {\n");
             out.append("\t").append(String.join("\n", bodyStrings));
-            out.append("\t}\n");
-            out.append("\n");
         }
 //
 //        if (customTextStrings != null) {
