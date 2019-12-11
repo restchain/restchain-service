@@ -1,8 +1,11 @@
 package com.unicam.chorchain.codeGenerator.solidity;
 
-import com.unicam.chorchain.codeGenerator.AdditionalFunction;
-import com.unicam.chorchain.codeGenerator.AdditionalType;
+import com.unicam.chorchain.codeGenerator.solidity.element.Constructor;
+import com.unicam.chorchain.codeGenerator.solidity.element.Contract;
+import com.unicam.chorchain.codeGenerator.solidity.element.Event;
+import com.unicam.chorchain.codeGenerator.solidity.element.Struct;
 import com.unicam.chorchain.model.Instance;
+import com.unicam.chorchain.model.Participant;
 import lombok.Getter;
 import lombok.Setter;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -18,7 +21,6 @@ import java.util.stream.Collectors;
  * Contains all the information related to the solidity file.
  * It is working as bridge between the SpringBoot Model by the Instance and the Solidity file to be built.
  * Collects all the needed information and then provides the solidity building by the built method.
- *
  **/
 public class SolidityInstance {
     @Getter
@@ -54,12 +56,12 @@ public class SolidityInstance {
                 .collect(Collectors.toList());
 
         this.optionalParticipants = instance.getChoreography().getParticipants().stream().filter((p) ->
-                !mandatoryParticipants.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
+                !mandatoryParticipants.contains(p.getName())).map(Participant::getName).collect(Collectors.toList());
     }
 
 
     /***
-     * Provide the solidty generation.
+     * Provides the solidity generation.
      * @param choreography - Corresponds to the choreography element (bpmn:Choreography) and it is use for retrieves all
      *                     the custom information addressed by this element from the BPMN model such as Types and Constructor
      * @return
@@ -68,9 +70,10 @@ public class SolidityInstance {
 
 
         AdditionalType additionalType = new AdditionalType(choreography);
+        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
+
 
         //*** starts here ***/
-
         Struct structGlobal = Struct.builder()
                 .variableMap(Types.string, "ID")
                 .variableMap("State", "status")
@@ -87,11 +90,6 @@ public class SolidityInstance {
         structs.add(structGlobal.toString());
         structs.add(structElement.toString());
         structs.addAll(additionalType.getStructs());
-
-//        Mapping mapping1 =Mapping.builder().name("position").key("string").value("uint").build();
-//        Mapping mapping2 =Mapping.builder().name("operator").key("string").value("string").build();
-//        Mapping mapping3 =Mapping.builder().name("roles").key("string").value("address").build();
-//        Mapping mapping4 =Mapping.builder().name("optionalRoles").key("string").value("address").build();
 
         List<String> maps = new ArrayList<>();
         maps.add("mapping(string => uint) position;");
@@ -116,7 +114,6 @@ public class SolidityInstance {
         modifiers.add(
                 "modifier Owner(string memory task){\n\t\trequire(bodyElements[position[task]].status == State.ENABLED);\n\t\t_;\n\t}\n");
 
-        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
 
         Constructor constructor = Constructor.builder()
                 .params(additionalFunction.getParameters())
@@ -137,7 +134,7 @@ public class SolidityInstance {
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
                 .mappings(additionalType.getMappings())
-                .bodyString("address payable public owner;\n\n")
+                .variable("address payable public owner;\n\n")
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
                 .structs(structs)
@@ -154,9 +151,10 @@ public class SolidityInstance {
 
     /***
      * Print the function Init included as internal function on the Solidity constructor.
-     * In solidity this function tell which is the starting point of the sequence fllow of the fuunctions following the BPMN model.
+     * From the solidity point of view this function tell which is the starting point of the sequence flow of the
+     * functions following the BPMN model.
      * @param startPointId - Bpmn Nname of the start point element that will be pointed and calls by the _init() function
-     * @return String code
+     * @return String representing generated code
      */
     private String printFunctionInit(String startPointId) {
         StringBuilder sb = new StringBuilder();
@@ -184,7 +182,7 @@ public class SolidityInstance {
         sb.append("\t\t\telements.push(Element(elementsID[i], State.DISABLED));\n");
         sb.append("\t\t\tposition[elementsID[i]]=i;\n\t\t}\n");
         sb.append("\t\t//roles definition\n\t\t//mettere address utenti in base ai ruoli\n");
-        instance.getMandatoryParticipants().forEach((p) ->
+        this.instance.getMandatoryParticipants().forEach((p) ->
                 sb.append("\t\troles[\"")
                         .append(p.getParticipant().getName())
                         .append("\"] = ")
@@ -210,19 +208,17 @@ public class SolidityInstance {
     private String printRoleList() {
         StringBuffer sb = new StringBuffer();
 
-        if (mandatoryParticipants.size() > 0) {
+        if (this.mandatoryParticipants.size() > 0) {
             sb.append("string [] ").append(Types.Global_RoleList).append(" = ");
             sb.append("[");
-            mandatoryParticipants.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append(this.mandatoryParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
         }
 
-        if (optionalParticipants.size() > 0) {
+        if (this.optionalParticipants.size() > 0) {
             sb.append("string [] ").append(Types.Global_OptionalList).append(" = ");
             sb.append("[");
-            optionalParticipants.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append(this.optionalParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
 
         }
@@ -251,12 +247,21 @@ public class SolidityInstance {
         return sb.toString();
     }
 
+    /***
+     * Provides the elementsID list included on the solidity file.
+     * From the solidity point of view the ElementsID contains all the Ids (BPMN ids) of the BPMN elements involved on
+     * the sequence flow and that need to be calls.
+     * @return String representing generated code
+     */
     private String printElementsIdList() {
         StringBuilder sb = new StringBuilder();
-        sb.append("string [] elementsID = [\n");
-        elementsId.forEach(e -> sb.append("\t\"").append(e).append("\","));
-        sb.deleteCharAt(sb.length() - 1); //remove last comma
-        sb.append("];\n");
+        sb.append("string [] elementsID = [\n\t");
+        sb.append(this.elementsId.stream().map(e -> "\t\"" + e + "\"").collect(Collectors.joining(",")));
+        sb.append("\n\t];\n");
         return sb.toString();
+    }
+
+    public void addElementId(String id) {
+        this.elementsId.add(id);
     }
 }

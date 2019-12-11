@@ -1,7 +1,7 @@
-package com.unicam.chorchain.codeGenerator;
+package com.unicam.chorchain.codeGenerator.solidity;
 
 
-import com.unicam.chorchain.codeGenerator.solidity.Function;
+import com.unicam.chorchain.codeGenerator.solidity.element.Function;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

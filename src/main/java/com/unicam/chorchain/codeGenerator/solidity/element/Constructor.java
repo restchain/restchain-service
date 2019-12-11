@@ -1,4 +1,4 @@
-package com.unicam.chorchain.codeGenerator.solidity;
+package com.unicam.chorchain.codeGenerator.solidity.element;
 
 import lombok.Builder;
 import lombok.Singular;

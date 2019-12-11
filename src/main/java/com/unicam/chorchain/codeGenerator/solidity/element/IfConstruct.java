@@ -1,5 +1,6 @@
-package com.unicam.chorchain.codeGenerator.solidity;
+package com.unicam.chorchain.codeGenerator.solidity.element;
 
+import com.unicam.chorchain.codeGenerator.solidity.Types;
 import lombok.Builder;
 import lombok.Singular;
 

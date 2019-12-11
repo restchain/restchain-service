@@ -1,17 +1,21 @@
 package com.unicam.chorchain.codeGenerator;
 
 import com.unicam.chorchain.codeGenerator.adapter.*;
-import com.unicam.chorchain.codeGenerator.solidity.Function;
-import com.unicam.chorchain.codeGenerator.solidity.IfConstruct;
+import com.unicam.chorchain.codeGenerator.solidity.AdditionalFunction;
 import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
+import com.unicam.chorchain.codeGenerator.solidity.element.Function;
+import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
@@ -136,7 +140,7 @@ public class CodeGenVisitor implements Visitor {
 
             List<String> params = new ArrayList<>(0);
             String tmp = getParameters(node.getRequestMessage().getMessage().getName());
-            if (!tmp.equals("")){
+            if (!tmp.equals("")) {
                 params.add(tmp);
             } else {
                 params.addAll(reqMessageAdapter.getParameters());
@@ -156,7 +160,10 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
-                    .bodyStrings(reqMessageAdapter.getFunctionCalls().stream().map(s ->s.concat(";") ).collect(Collectors.toList()))
+                    .bodyStrings(reqMessageAdapter.getFunctionCalls()
+                            .stream()
+                            .map(s -> s.concat(";"))
+                            .collect(Collectors.toList()))
                     .transferTo(node.getRequestMessage().getMessage().getName().contains("payment"))
                     .enableAndActiveTask(nextElement.getTargetRefId(), nextElement.isTargetGatewayOrNot())
                     .build().toString());
@@ -210,7 +217,7 @@ public class CodeGenVisitor implements Visitor {
 
     // Performs a - replacing in _
     private String processAsElementId(String id) {
-        this.instance.getElementsId().add(id);
+        this.instance.addElementId(id);
         return id.replace("-", "_");
     }
 
@@ -250,14 +257,20 @@ public class CodeGenVisitor implements Visitor {
     private String getParticipantModifier(String participantName) {
         //If participantFromRole is contained in tha Mandatory list is Mandatory else is Optional
         if (this.instance.getMandatoryParticipants().contains(participantName)) {
-            return roleModifierFormatter(Types.Mandatory_modifier, participantName,Types.Global_RoleList,instance.getMandatoryParticipants());
+            return roleModifierFormatter(Types.Mandatory_modifier,
+                    participantName,
+                    Types.Global_RoleList,
+                    instance.getMandatoryParticipants());
         } else {
-            return roleModifierFormatter(Types.Optional_modifier, participantName, Types.Global_OptionalList,instance.getOptionalParticipants());
+            return roleModifierFormatter(Types.Optional_modifier,
+                    participantName,
+                    Types.Global_OptionalList,
+                    instance.getOptionalParticipants());
         }
     }
 
     // String formatter for  a modifier function call
-    private String roleModifierFormatter(String type, String name,String modifierName,List<String> participantList) {
+    private String roleModifierFormatter(String type, String name, String modifierName, List<String> participantList) {
         StringBuffer sb = new StringBuffer();
         return sb.append(" ")
                 .append(type)

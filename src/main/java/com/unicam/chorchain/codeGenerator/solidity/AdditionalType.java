@@ -1,8 +1,8 @@
-package com.unicam.chorchain.codeGenerator;
+package com.unicam.chorchain.codeGenerator.solidity;
 
 
-import com.unicam.chorchain.codeGenerator.solidity.Mapping;
-import com.unicam.chorchain.codeGenerator.solidity.Struct;
+import com.unicam.chorchain.codeGenerator.solidity.element.Mapping;
+import com.unicam.chorchain.codeGenerator.solidity.element.Struct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
