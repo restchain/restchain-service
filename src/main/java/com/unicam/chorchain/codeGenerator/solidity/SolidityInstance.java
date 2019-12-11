@@ -15,7 +15,10 @@ import java.util.stream.Collectors;
 
 
 /**
- * Contains all the information related to the solidity file
+ * Contains all the information related to the solidity file.
+ * It is working as bridge between the SpringBoot Model by the Instance and the Solidity file to be built.
+ * Collects all the needed information and then provides the solidity building by the built method.
+ *
  **/
 public class SolidityInstance {
     @Getter
@@ -54,6 +57,13 @@ public class SolidityInstance {
                 !mandatoryParticipants.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
     }
 
+
+    /***
+     * Provide the solidty generation.
+     * @param choreography - Corresponds to the choreography element (bpmn:Choreography) and it is use for retrieves all
+     *                     the custom information addressed by this element from the BPMN model such as Types and Constructor
+     * @return
+     */
     public String build(ModelElementInstance choreography) {
 
 
@@ -142,6 +152,12 @@ public class SolidityInstance {
         return text.append(sol.toString()).toString();
     }
 
+    /***
+     * Print the function Init included as internal function on the Solidity constructor.
+     * In solidity this function tell which is the starting point of the sequence fllow of the fuunctions following the BPMN model.
+     * @param startPointId - Bpmn Nname of the start point element that will be pointed and calls by the _init() function
+     * @return String code
+     */
     private String printFunctionInit(String startPointId) {
         StringBuilder sb = new StringBuilder();
 
