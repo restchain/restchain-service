@@ -23,7 +23,7 @@ public class SolidityInstance {
     @Getter
     private List<String> optionalParticipants;//List of optional Participants
     @Getter
-    private List<String> structVariables;//List of solidity variables;
+    private Set<String> structVariables;//List of solidity variables;
     @Getter
     private Set<String> elementsId; //List of used bpmn components that compose functions
     @Getter
@@ -42,7 +42,7 @@ public class SolidityInstance {
         this.instance = instance;
         this.text = new StringBuilder();
         this.elementsId = new HashSet<>();
-        this.structVariables = new ArrayList<>();
+        this.structVariables = new HashSet<>();
         this.bpmnFunctions = new StringBuilder();
         this.mandatoryParticipants = instance.getMandatoryParticipants()
                 .stream()
@@ -78,6 +78,11 @@ public class SolidityInstance {
         structs.add(structElement.toString());
         structs.addAll(additionalType.getStructs());
 
+//        Mapping mapping1 =Mapping.builder().name("position").key("string").value("uint").build();
+//        Mapping mapping2 =Mapping.builder().name("operator").key("string").value("string").build();
+//        Mapping mapping3 =Mapping.builder().name("roles").key("string").value("address").build();
+//        Mapping mapping4 =Mapping.builder().name("optionalRoles").key("string").value("address").build();
+
         List<String> maps = new ArrayList<>();
         maps.add("mapping(string => uint) position;");
         maps.add("mapping(string => string) operator;");
@@ -95,12 +100,18 @@ public class SolidityInstance {
 
         List<String> modifiers = new ArrayList<>();
         modifiers.add(
-                "modifier checkMand(string storage role){\n\trequire(msg.sender == roles[role]);\n\t_;\n}\n");
+                "modifier checkMand(string storage role){\n\t\trequire(msg.sender == roles[role]);\n\t\t_;\n\t}\n");
         modifiers.add(
-                "modifier checkOpt(string storage role){\n\trequire(msg.sender == optionalRoles[role]);\n\t_;\n}\n");
+                "modifier checkOpt(string storage role){\n\t\trequire(msg.sender == optionalRoles[role]);\n\t\t_;\n\t}\n");
         modifiers.add(
-                "modifier Owner(string memory task){\n\trequire(elements[position[task]].status == State.ENABLED);\n\t_;\n}\n");
+                "modifier Owner(string memory task){\n\t\trequire(bodyElements[position[task]].status == State.ENABLED);\n\t\t_;\n\t}\n");
 
+        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
+
+        Constructor constructor = Constructor.builder()
+                .params(additionalFunction.getParameters())
+                .bodyElement(printConstructorBody(additionalFunction))
+                .build();
 
         List<String> variables = new ArrayList<>();
         variables.add("Element[] elements;");
@@ -110,18 +121,18 @@ public class SolidityInstance {
         variables.add(printRoleList());
         variables.add(printElementsIdList());
 
-        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
         Contract sol = Contract.builder()
                 .pragmaVersion("^0.5.3")
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
                 .mappings(additionalType.getMappings())
+                .bodyString("address payable public owner;\n\n")
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
                 .structs(structs)
                 .variables(variables)
-                .bodyString(printConstructorBody(additionalFunction))
+                .constructor(constructor.toString())
                 .function(this.bpmnFunctions.toString())
                 .custom(String.join("\n", additionalFunction.getFunctions()))
                 .custom(printOtherFunctions())
@@ -135,7 +146,7 @@ public class SolidityInstance {
         StringBuilder sb = new StringBuilder();
 
 
-        sb.append("function init() internal {\n");
+        sb.append("function _init() internal {\n");
         sb.append("\t\tbool result = true;\n");
         sb.append("\t\tfor (uint i = 0; i < roleList.length; i++) {\n");
         sb.append("\t\t\tif (roles[roleList[i]] == 0x0000000000000000000000000000000000000000) {\n");
@@ -172,10 +183,10 @@ public class SolidityInstance {
                         .append(";\n"));
         if (additionalFunction.getFunctionCalls().size() > 0) {
             sb.append("\t\t//Additional functions\n");
-            sb.append("\t\t")
-                    .append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
+            sb.append("\t\t");
+            sb.append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
         }
-        sb.append("\t\t//enable the start process\n\t\tinit();\n");
+        sb.append("\t\t//enable the start process\n\t\t_init()");
         return sb.toString();
     }
 
