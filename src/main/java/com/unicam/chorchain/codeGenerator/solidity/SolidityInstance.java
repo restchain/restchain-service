@@ -112,7 +112,7 @@ public class SolidityInstance {
         modifiers.add(
                 "modifier checkOpt(string storage role){\n\t\trequire(msg.sender == optionalRoles[role]);\n\t\t_;\n\t}\n");
         modifiers.add(
-                "modifier Owner(string memory task){\n\t\trequire(bodyElements[position[task]].status == State.ENABLED);\n\t\t_;\n\t}\n");
+                "modifier Owner(string memory task){\n\t\trequire(elements[position[task]].status == State.ENABLED);\n\t\t_;\n\t}\n");
 
 
         Constructor constructor = Constructor.builder()

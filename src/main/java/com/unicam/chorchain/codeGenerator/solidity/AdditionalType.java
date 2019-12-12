@@ -40,27 +40,29 @@ public class AdditionalType {
     }
 
     public void init() {
-        ModelElementInstance typeStructs = extensionElements.getElements()
-                .stream()
-                .filter(a -> a.getElementType().getTypeName().equals("typeStruct"))
-                .findFirst()
-                .orElse(null);
+        if (extensionElements != null) {
+            ModelElementInstance typeStructs = extensionElements.getElements()
+                    .stream()
+                    .filter(a -> a.getElementType().getTypeName().equals("typeStruct"))
+                    .findFirst()
+                    .orElse(null);
 
 
-        if (typeStructs != null) {
-            camundaFormFields = typeStructs.getChildElementsByType(CamundaFormField.class);
+            if (typeStructs != null) {
+                camundaFormFields = typeStructs.getChildElementsByType(CamundaFormField.class);
 
-            camundaFormFields.forEach(a -> log.debug("ff-> {} , {}",
-                    a.getCamundaId(),
-                    a.getCamundaProperties()
-                            .getCamundaProperties()
-                            .stream()
-                            .map(s -> s.getAttributeValue("name").concat(" ").concat(s.getAttributeValue("type")))
-                            .collect(Collectors.joining())));
+                camundaFormFields.forEach(a -> log.debug("ff-> {} , {}",
+                        a.getCamundaId(),
+                        a.getCamundaProperties()
+                                .getCamundaProperties()
+                                .stream()
+                                .map(s -> s.getAttributeValue("name").concat(" ").concat(s.getAttributeValue("type")))
+                                .collect(Collectors.joining())));
 
-            structs = loadStructs();
-            mappings = loadMappings();
-            globals = loadGlobals();
+                structs = loadStructs();
+                mappings = loadMappings();
+                globals = loadGlobals();
+            }
         }
     }
 
