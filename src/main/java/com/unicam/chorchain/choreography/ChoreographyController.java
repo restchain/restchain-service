@@ -3,15 +3,14 @@ package com.unicam.chorchain.choreography;
 import com.unicam.chorchain.PagedResources;
 import com.unicam.chorchain.instance.InstanceService;
 import com.unicam.chorchain.storage.FileSystemStorageService;
-import com.unicam.chorchain.storage.StorageFileAlreadyExistsException;
-import com.unicam.chorchain.storage.StorageFileNotFoundException;
-import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
@@ -48,7 +47,12 @@ public class ChoreographyController {
         log.info("{}", uploadFile);
         uploadFile.setExtension(".bpmn");
         fileSystemStorageService.store(uploadFile);
-        choreographyService.create(uploadFile.getName(), uploadFile.getDescription(), uploadFile.getFilename());
+        log.debug("svg",uploadFile.getSvg());
+        choreographyService.create(uploadFile.getName(),
+                uploadFile.getDescription(),
+                uploadFile.getFilename(),
+                uploadFile.getSvg());
+
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -60,6 +64,11 @@ public class ChoreographyController {
     @GetMapping("{id}")
     public ChoreographyDTO read(@PathVariable("id") Long id) {
         return choreographyService.read(id);
+    }
+
+    @GetMapping("/xml/{id}")
+    public String getXml(@PathVariable("id") Long id) throws IOException {
+        return choreographyService.getXml(id);
     }
 
     @RequestMapping(value = "{id}", method = DELETE)

@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ public class ChoreographyService {
         return PagedResources.createResources(repository.findAll(pageable), mapper::toDTO);
     }
 
-    public ChoreographyDTO create(String name, String description, String filename) {
+    public ChoreographyDTO create(String name, String description, String filename, String svg) {
 
         Choreography choreography = new Choreography();
 
@@ -51,7 +53,9 @@ public class ChoreographyService {
         choreography.setDescription(description);
         choreography.setName(name);
         choreography.setFilename(filename);
-
+        if (svg != null) {
+            choreography.setSvg(svg);
+        }
         //Setting uploaded_by user
         User user = userRepository.findByAddress(userService.getLoggedUser().getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found!"));
@@ -86,6 +90,13 @@ public class ChoreographyService {
     public ChoreographyDTO read(@Valid Long id) {
         return mapper.toDTO(findChoreography(id));
     }
+
+    public String getXml(@Valid Long id) throws IOException {
+        Choreography choreography = findChoreography(id);
+        Path path = fileSystemStorageService.load(choreography.getFilename());
+        return new String(Files.readAllBytes(path));
+    }
+
 
     public Choreography findChoreography(Long id) {
         return repository.findById(id)
