@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.Participant;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +44,9 @@ public class ChoreographyService {
     private final ParticipantRepository participantRepository;
 
     public PagedResources<ChoreographyDTO> findAll(Pageable pageable) {
-        return PagedResources.createResources(repository.findAll(pageable), mapper::toDTO);
+        Pageable sortedByCreated =
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created").descending());
+        return PagedResources.createResources(repository.findAll(sortedByCreated), mapper::toDTO);
     }
 
     public ChoreographyDTO create(String name, String description, String filename, String svg) {
