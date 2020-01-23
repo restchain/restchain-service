@@ -72,7 +72,7 @@ public class Contract {
 //        }
 
         if (mappings != null) {
-            out.append("\t/* Mappings */\n");
+            out.append("\n\t/* Mappings */\n");
             mappings.forEach((s) -> out.append("\t").append(s).append("\n"));
             out.append("\n");
         }
@@ -99,7 +99,7 @@ public class Contract {
         }
 
         if (modifiers != null) {
-            out.append("\t/* Events */ \n");
+            out.append("\t/* Modifiers */ \n");
             modifiers.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 

@@ -6,6 +6,7 @@ import lombok.Singular;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Builder
 public class Struct {
@@ -24,7 +25,7 @@ public class Struct {
             variableMaps.forEach((type, name) -> out.append("\t\t").append(type).append(" ").append(name).append(";\n"));
         }
         if (variables != null) {
-            variables.forEach((var) -> out.append("\t").append(var.trim()).append(";\n"));
+            variables.stream().filter(s->s.trim().length()>0).forEach((var) ->out.append("\t\t").append(var.trim()).append(";\n"));
         }
         out.append("\t}\n");
         return out.toString();

@@ -77,7 +77,7 @@ public class Function {
             }
         }
         if (bodyStrings != null) {
-            bodyStrings.forEach(d -> out.append("\t\t").append(d).append("\n"));
+            bodyStrings.forEach(d -> out.append("\t\t").append(d == null ?"//empty":d).append("\n"));
         }
         if (enables != null) {
             enables.forEach(d -> out.append("\t\tenable(\"").append(d).append("\");\n"));

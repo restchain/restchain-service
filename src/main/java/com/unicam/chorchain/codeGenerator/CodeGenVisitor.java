@@ -12,10 +12,7 @@ import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
@@ -145,7 +142,8 @@ public class CodeGenVisitor implements Visitor {
             } else {
                 params.addAll(reqMessageAdapter.getParameters());
             }
-
+            //Add to gloabal
+            params.stream().filter(Objects::nonNull).forEach(p->instance.getStructVariables().add(p));
 
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
@@ -281,8 +279,8 @@ public class CodeGenVisitor implements Visitor {
                 .toString();
     }
 
-    // Function for gettingi all the parameters presents in function signature,
-    private static String getParameters(String messageName) {
+    // use to obtain the parameters present in the function's signature
+    private  String getParameters(String messageName) {
         String[] parsedMsgName = messageName.split("\\(");
         if (parsedMsgName.length > 1)
             return parsedMsgName[1].replace(")", "   ");
@@ -290,6 +288,8 @@ public class CodeGenVisitor implements Visitor {
         return "";
     }
 
+
+    //Add "name" to the Solidity global variables declaration
     private void addGlobal(String name) {
         String r = name.replace(")", "");
         String[] t = r.split("\\(");

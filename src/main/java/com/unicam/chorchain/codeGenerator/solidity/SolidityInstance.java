@@ -213,16 +213,18 @@ public class SolidityInstance {
             sb.append("[");
             sb.append(this.mandatoryParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
+            sb.append("\n");
         }
 
         if (this.optionalParticipants.size() > 0) {
+            sb.append("\t");
             sb.append("string [] ").append(Types.Global_OptionalList).append(" = ");
             sb.append("[");
             sb.append(this.optionalParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
-
+            sb.append("\n");
         }
-        sb.append("\n");
+
         return sb.toString();
     }
 
