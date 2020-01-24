@@ -9,5 +9,6 @@ public class SmartContractDTO {
     private String id;
     private String address;
     private LocalDateTime created;
+    private String name;
 //    private String password;
 }
