@@ -122,18 +122,19 @@ public class CodeGenVisitor implements Visitor {
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
 
+        /** ONE WAY **/
         if (node.getType() == ONEWAY) {
             boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
             if (!payableReq) {
-                addGlobal(node.getRequestMessage().getMessage().getName());
+                addParamToGlobalSolVariables(node.getRequestMessage().getMessage().getName());
             }
 
             Message reqMessage = node.getRequestMessage().getMessage();
+
             AdditionalFunction reqMessageAdapter = new AdditionalFunction(reqMessage);
 
-
             //TODO works on this, change the approach regarding how to populate the getParams..
-//            getParameters(node.getRequestMessage().getMessage().getName())
+            getParameters(node.getRequestMessage().getMessage().getName());
 
             List<String> params = new ArrayList<>(0);
             String tmp = getParameters(node.getRequestMessage().getMessage().getName());
@@ -142,8 +143,10 @@ public class CodeGenVisitor implements Visitor {
             } else {
                 params.addAll(reqMessageAdapter.getParameters());
             }
-            //Add to gloabal
-            params.stream().filter(Objects::nonNull).forEach(p->instance.getStructVariables().add(p));
+
+
+            //Add to global
+            params.forEach(p->instance.getStructVariables().add(p.trim()));
 
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
@@ -171,13 +174,15 @@ public class CodeGenVisitor implements Visitor {
 
         } else {
 
+            /** TWOWAY **/
+
             boolean payableResp = node.getResponseMessage().getMessage().getName().contains("payment");
             if (!payableResp) {
-                addGlobal(node.getResponseMessage().getMessage().getName());
+                addParamToGlobalSolVariables(node.getResponseMessage().getMessage().getName());
             }
             boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
             if (!payableReq) {
-                addGlobal(node.getRequestMessage().getMessage().getName());
+                addParamToGlobalSolVariables(node.getRequestMessage().getMessage().getName());
             }
 
             //Upper part - requestMessage
@@ -290,13 +295,13 @@ public class CodeGenVisitor implements Visitor {
 
 
     //Add "name" to the Solidity global variables declaration
-    private void addGlobal(String name) {
+    private void addParamToGlobalSolVariables(String name) {
         String r = name.replace(")", "");
         String[] t = r.split("\\(");
         if (t.length > 1) {
             String[] m = t[1].split(",");
             for (String param : m) {
-                instance.getStructVariables().add(param);
+                instance.getStructVariables().add(param.trim());
             }
         }
     }
