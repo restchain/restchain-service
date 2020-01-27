@@ -11,5 +11,6 @@ public class SmartContractFullDTO {
     private String abi;
     private String bin;
     private LocalDateTime created;
+    private String name;
 //    private String password;
 }
