@@ -8,5 +8,6 @@ import java.time.LocalDateTime;
 public class SmartContractShortDTO {
     private String id;
     private String address;
+    private String solidity;
 //    private String password;
 }

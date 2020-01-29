@@ -136,7 +136,8 @@ public class SmartContractService {
     }
 
 
-    public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
+    public SolidityInstanceUploaded generateSolidityCode(Instance instance, Path modelPath) {
+
         SolidityGenerator sg = new SolidityGenerator(instance);
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
 
@@ -168,7 +169,7 @@ public class SmartContractService {
             uploadFile.setData(code);
 
             fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
-            return uploadFile;
+            return new SolidityInstanceUploaded(uploadFile, sg.getSolidityInstance());
         } catch (Exception e) {
             tasks = null;
             e.printStackTrace();
@@ -227,8 +228,12 @@ public class SmartContractService {
 
             log.debug("Generating solidity file ...");
 
-            UploadFile solidityFile = generateSolidityCode(instance,
+            SolidityInstanceUploaded solidityInstanceUploaded = generateSolidityCode(instance,
                     fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
+
+            UploadFile solidityFile = solidityInstanceUploaded.uploadFile;
+            log.debug("ElementIds found ...{}", solidityInstanceUploaded.getSolidityInstance().getElementsId());
 
             log.debug("Compiling solidity file ...");
             compile(solidityFile.getFilename());
@@ -245,7 +250,12 @@ public class SmartContractService {
                     .getName()
                     .concat(".bin"))
                     .toFile());
-            SmartContract smartContract = new SmartContract(contractAddress, abi, bin, instance);
+            SmartContract smartContract = new SmartContract(contractAddress,
+                    abi,
+                    bin,
+                    instance,
+                    solidityInstanceUploaded.getSolidityInstance().getElementsId(),
+                    solidityFile.getData());
             repository.save(smartContract);
 
             return smartContract;

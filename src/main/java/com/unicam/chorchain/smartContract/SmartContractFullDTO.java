@@ -3,6 +3,7 @@ package com.unicam.chorchain.smartContract;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 public class SmartContractFullDTO {
@@ -12,5 +13,7 @@ public class SmartContractFullDTO {
     private String bin;
     private LocalDateTime created;
     private String name;
+    private Set<String> functionSignatures;
+    private String solidity;
 //    private String password;
 }

@@ -46,4 +46,8 @@ public class SolidityGenerator {
     public void setChoreography(ModelElementInstance choreography) {
         this.choreography=choreography;
     }
+
+    public SolidityInstance getSolidityInstance() {
+        return solidityInstance;
+    }
 }
