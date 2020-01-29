@@ -137,6 +137,7 @@ public class SolidityInstance {
                 .variable("address payable public owner;\n\n")
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
+                .event("event functionDone(string);\n")
                 .structs(structs)
                 .variables(variables)
                 .constructor(constructor.toString())
@@ -171,7 +172,9 @@ public class SolidityInstance {
         sb.append("\t\tif (result) {\n");
         sb.append("\t\t//Questo è lo start\n");
         sb.append("\t\t\t\tenable(\"").append(startPointId).append("\");\n");
-        sb.append("\t\t\t\t").append(startPointId.replace("-", "_")).append("();\n\t\t}\n\t}\n");
+        sb.append("\t\t\t\t").append(startPointId.replace("-", "_")).append("();\n");
+        sb.append("\t\t\t\temit functionDone(\"Contract creation\"); \n");
+        sb.append("\t\t}\n\t}\n");
         return sb.toString();
     }
 
@@ -230,7 +233,8 @@ public class SolidityInstance {
 
     private String printOtherFunctions() {
         StringBuilder sb = new StringBuilder();
-        sb.append("function subscribe_as_participant(string memory _role) public {\n");
+
+        sb.append("\tfunction subscribe_as_participant(string memory _role) public {\n");
         sb.append("\t\tif (optionalRoles[_role] == 0x0000000000000000000000000000000000000000) {\n");
         sb.append("\t\t\toptionalRoles[_role] = msg.sender;\n\t\t}\n\t}\n\n");
         sb.append("\tfunction() external payable {}\n\n");
@@ -240,7 +244,7 @@ public class SolidityInstance {
         sb.append(
                 "\tfunction disable(string memory _taskID) internal {elements[position[_taskID]].status = State.DISABLED;}\n\n");
         sb.append(
-                "\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;}\n\n");
+                "\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;\n\t\temit functionDone(_taskID);\n\t}\n");
         sb.append("\tfunction getCurrentState() public view returns (Element[] memory, StateMemory memory){\n");
         sb.append("\t\t// emit stateChanged(elements, currentMemory);\n");
         sb.append("\t\treturn (elements, currentMemory);\n\t}\n\n");
