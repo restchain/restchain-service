@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
 
+/*** Provide to populate the SolidityInstance with all the needed informations ***/
 @Slf4j
 public class CodeGenVisitor implements Visitor {
 
