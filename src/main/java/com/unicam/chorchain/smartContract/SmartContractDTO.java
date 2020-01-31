@@ -10,5 +10,6 @@ public class SmartContractDTO {
     private String address;
     private LocalDateTime created;
     private String name;
+    private Long xmlId;
 //    private String password;
 }

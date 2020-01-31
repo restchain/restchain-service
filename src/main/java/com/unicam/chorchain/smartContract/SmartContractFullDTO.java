@@ -15,5 +15,7 @@ public class SmartContractFullDTO {
     private String name;
     private Set<String> functionSignatures;
     private String solidity;
+    private Long xmlId;
+
 //    private String password;
 }
