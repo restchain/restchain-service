@@ -22,6 +22,7 @@ public class Function {
     private boolean transferTo;
     @Singular
     private List<String> enables;
+    private String disable;
     @Singular
     private List<String> parameters;
     @Singular
@@ -78,6 +79,9 @@ public class Function {
         }
         if (bodyStrings != null) {
             bodyStrings.forEach(d -> out.append("\t\t").append(d == null ?"//empty":d).append("\n"));
+        }
+        if (disable != null ) {
+            out.append("\t\tdisable(\"").append(disable).append("\");\n");
         }
         if (enables != null) {
             enables.forEach(d -> out.append("\t\tenable(\"").append(d).append("\");\n"));

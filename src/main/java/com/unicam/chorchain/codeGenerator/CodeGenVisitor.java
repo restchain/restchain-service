@@ -6,8 +6,11 @@ import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.codeGenerator.solidity.element.Function;
 import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
+import com.unicam.chorchain.model.Choreography;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.model.bpmn.impl.instance.EventBasedGatewayImpl;
+import org.camunda.bpm.model.bpmn.instance.EventBasedGateway;
 import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -67,7 +70,10 @@ public class CodeGenVisitor implements Visitor {
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
                 .name(processAsElementId(node.getId()))
-                .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
+                .enables(node.getOutgoing()
+                        .stream()
+                        .map((item) -> nextElementId(node.getModelInstance(), item))
+                        .collect(Collectors.toList()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -83,7 +89,7 @@ public class CodeGenVisitor implements Visitor {
             node.getOutgoing().stream().forEach(out -> {
                         ifConstructs.add(IfConstruct.builder()
                                 .condition(out.getName())
-                                .enableAndActiveTask(((SequenceFlowAdapter) out).getTargetRefId(), true)
+                                .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)), true)
                                 .build());
                     }
             );
@@ -107,10 +113,14 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitEventBasedGateway(EventBasedGatewayAdapter node) {
         log.debug("********EventBasedGateway *****");
+
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("EventBasedGateway(" + node.getName() + "): " + node.getOrigId())
-                .enables(node.getOutgoing().stream().map(BpmnModelAdapter::getId).collect(Collectors.toList()))
+                .enables(node.getOutgoing()
+                        .stream()
+                        .map((item) -> nextElementId(node.getModelInstance(), item))
+                        .collect(Collectors.toList()))
                 .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
@@ -122,6 +132,20 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ChoreographyTask *****");
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
+        Map<String,String> disabledMap = new HashMap<>();
+        //Try to understand if the incoming element is a EventGateway, if yes remembers wich sid needs to disable
+        if (previousElement(node.getModelInstance(),node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter){
+            List<String> gatewayOutgoing = previousElement(node.getModelInstance(),node.getIncoming().get(0)).getOutgoing()
+                    .stream()
+                    .map((item) -> nextElementId(node.getModelInstance(), item))
+                    .collect(Collectors.toList());
+            if (gatewayOutgoing.size() == 2){
+                disabledMap.put(gatewayOutgoing.get(0),gatewayOutgoing.get(1));
+                disabledMap.put(gatewayOutgoing.get(1),gatewayOutgoing.get(0));
+            }
+
+
+        }
 
         /** ONE WAY **/
         if (node.getType() == ONEWAY) {
@@ -147,7 +171,10 @@ public class CodeGenVisitor implements Visitor {
 
 
             //Add to global
-            params.forEach(p->instance.getStructVariables().add(p.trim()));
+            params.forEach(p -> instance.getStructVariables().add(p.trim()));
+
+
+
 
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
@@ -167,7 +194,9 @@ public class CodeGenVisitor implements Visitor {
                             .map(s -> s.concat(";"))
                             .collect(Collectors.toList()))
                     .transferTo(node.getRequestMessage().getMessage().getName().contains("payment"))
-                    .enableAndActiveTask(nextElement.getTargetRefId(), nextElement.isTargetGatewayOrNot())
+                    .disable(disabledMap.get(node.getRequestMessage().getMessage().getId()))
+                    .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
+                            nextElement.isTargetGatewayOrNot())
                     .build().toString());
             this.instance.addTxt("\n\n");
 
@@ -197,6 +226,7 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .disable(disabledMap.get(node.getRequestMessage().getMessage().getId()))
                     .enable(node.getResponseMessage().getMessage().getId())
                     .build().toString());
             this.instance.addTxt("\n\n");
@@ -212,7 +242,8 @@ public class CodeGenVisitor implements Visitor {
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .sourceId(node.getResponseMessage().getMessage().getId())
                     .varAssignments(getParamsList(node.getResponseMessage().getMessage().getName()))
-                    .enableAndActiveTask(nextElement.getTargetRefId(),
+                    .disable(disabledMap.get(node.getResponseMessage().getMessage().getId()))
+                    .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
                             nextElement.isTargetGatewayOrNot()).build().toString());
             this.instance.addTxt("\n\n");
 
@@ -239,6 +270,18 @@ public class CodeGenVisitor implements Visitor {
             return targetElement.getId();
         }
     }
+
+    //Returns the next elementId pointed by the passed sequenceFlow
+    private BpmnModelAdapter previousElement(ModelInstance instance, BpmnModelAdapter startNode) {
+        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) startNode;
+        ModelElementInstance sourceId = instance
+                .getModelElementById(sequenceFlow.getSourceId());
+        BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(sourceId);
+        //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
+        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
+        return  targetElement;
+    }
+
 
     // returns a List of all params name contained in the passed signature (msg)
     private Collection<String> getParamsList(String msg) {
@@ -286,7 +329,7 @@ public class CodeGenVisitor implements Visitor {
     }
 
     // use to obtain the parameters present in the function's signature
-    private  String getParameters(String messageName) {
+    private String getParameters(String messageName) {
         String[] parsedMsgName = messageName.split("\\(");
         if (parsedMsgName.length > 1)
             return parsedMsgName[1].replace(")", "   ");
