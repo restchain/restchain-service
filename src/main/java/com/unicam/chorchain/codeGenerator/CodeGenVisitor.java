@@ -179,6 +179,9 @@ public class CodeGenVisitor implements Visitor {
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
             instance.getStructVariables().addAll(signatureMethod.getParameters());
+            if (signatureMethod.getInterfaceMethod()){
+                instance.elabInterface(signatureMethod);
+            }
 
 
 

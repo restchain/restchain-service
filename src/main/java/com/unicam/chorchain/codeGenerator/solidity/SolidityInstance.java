@@ -1,19 +1,13 @@
 package com.unicam.chorchain.codeGenerator.solidity;
 
-import com.unicam.chorchain.codeGenerator.solidity.element.Constructor;
-import com.unicam.chorchain.codeGenerator.solidity.element.Contract;
-import com.unicam.chorchain.codeGenerator.solidity.element.Event;
-import com.unicam.chorchain.codeGenerator.solidity.element.Struct;
+import com.unicam.chorchain.codeGenerator.solidity.element.*;
 import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.Participant;
 import lombok.Getter;
 import lombok.Setter;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -38,6 +32,8 @@ public class SolidityInstance {
     @Setter
     private String startPointId; //If of the starting Point
     private Instance instance;
+    @Getter
+    private Map<String,Set<String>> interfaces;
 
     public void addTxt(String text) {
         this.bpmnFunctions.append(text);
@@ -49,6 +45,7 @@ public class SolidityInstance {
         this.elementsId = new HashSet<>();
         this.structVariables = new HashSet<>();
         this.bpmnFunctions = new StringBuilder();
+        this.interfaces = new HashMap<>();
         this.mandatoryParticipants = instance.getMandatoryParticipants()
                 .stream()
                 .filter(p -> p.getUser() != null)
@@ -147,7 +144,25 @@ public class SolidityInstance {
                 .custom(printFunctionInit(this.getStartPointId()))
                 .build();
 
-        return text.append(sol.toString()).toString();
+
+        //creates the interfaces parts
+        StringBuffer interfacesSol = new StringBuffer();
+        for (String name : interfaces.keySet()){
+            interfacesSol.append(Interface.builder().name(name).functions(interfaces.get(name)).build().toString());
+        }
+
+        StringBuffer stubImplSol = new StringBuffer();
+        for (String name : interfaces.keySet()){
+            interfacesSol.append(Stub.builder().name(name+"Impl").interfaceName(name).functions(interfaces.get(name)).build().toString());
+        }
+
+
+
+        String finalSol = sol.toString()+interfacesSol.toString()+stubImplSol.toString();
+
+
+
+        return text.append(finalSol).toString();
     }
 
     /***
@@ -269,5 +284,17 @@ public class SolidityInstance {
 
     public void addElementId(String id) {
         this.elementsId.add(id);
+    }
+
+    public void elabInterface(SignatureMethod signatureMethod) {
+        if(signatureMethod.getInterfaceMethod()){
+            if (interfaces.containsKey(signatureMethod.getInterfaceName())){
+                interfaces.get(signatureMethod.getInterfaceName()).add(signatureMethod.getSignature());
+            } else {
+                Set<String> toAdd = new HashSet<String>();
+                toAdd.add(signatureMethod.getSignature());
+                interfaces.put(signatureMethod.getInterfaceName(),toAdd);
+            }
+        }
     }
 }
