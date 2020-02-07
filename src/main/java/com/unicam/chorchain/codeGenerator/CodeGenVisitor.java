@@ -2,6 +2,7 @@ package com.unicam.chorchain.codeGenerator;
 
 import com.unicam.chorchain.codeGenerator.adapter.*;
 import com.unicam.chorchain.codeGenerator.solidity.AdditionalFunction;
+import com.unicam.chorchain.codeGenerator.solidity.SignatureMethod;
 import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.codeGenerator.solidity.element.Function;
@@ -149,6 +150,8 @@ public class CodeGenVisitor implements Visitor {
 
         /** ONE WAY **/
         if (node.getType() == ONEWAY) {
+
+
             boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
             if (!payableReq) {
                 addParamToGlobalSolVariables(node.getRequestMessage().getMessage().getName());
@@ -156,6 +159,8 @@ public class CodeGenVisitor implements Visitor {
 
             Message reqMessage = node.getRequestMessage().getMessage();
 
+
+            SignatureMethod signatureMethod = new SignatureMethod(reqMessage);
             AdditionalFunction reqMessageAdapter = new AdditionalFunction(reqMessage);
 
             //TODO works on this, change the approach regarding how to populate the getParams..
@@ -171,8 +176,9 @@ public class CodeGenVisitor implements Visitor {
 
 
             //Add to global
-            params.forEach(p -> instance.getStructVariables().add(p.trim()));
+            //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
+            instance.getStructVariables().addAll(signatureMethod.getParameters());
 
 
 
@@ -205,6 +211,8 @@ public class CodeGenVisitor implements Visitor {
         } else {
 
             /** TWOWAY **/
+
+
 
             boolean payableResp = node.getResponseMessage().getMessage().getName().contains("payment");
             if (!payableResp) {
