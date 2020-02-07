@@ -17,6 +17,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/***
+ *
+ * class that has the purpose of defining an additional solidity function allowing its construction. From the signature to the body.
+ */
+
 @Getter
 //@Setter
 @Slf4j
