@@ -69,7 +69,7 @@ public class SolidityInstance {
     public String build(ModelElementInstance choreography) {
 
 
-        AdditionalType additionalType = new AdditionalType(choreography);
+//        AdditionalType additionalType = new AdditionalType(choreography);
         AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
 
 
@@ -89,7 +89,7 @@ public class SolidityInstance {
         List<String> structs = new ArrayList<>();
         structs.add(structGlobal.toString());
         structs.add(structElement.toString());
-        structs.addAll(additionalType.getStructs());
+//        structs.addAll(additionalType.getStructs());
 
         List<String> maps = new ArrayList<>();
         maps.add("mapping(string => uint) position;");
@@ -124,7 +124,7 @@ public class SolidityInstance {
         variables.add("Element[] elements;");
         variables.add("StateMemory currentMemory;");
         variables.add("uint counter;");
-        variables.addAll(additionalType.getGlobals());
+//        variables.addAll(additionalType.getGlobals());
         variables.add(printRoleList());
         variables.add(printElementsIdList());
 
@@ -133,7 +133,7 @@ public class SolidityInstance {
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
-                .mappings(additionalType.getMappings())
+//                .mappings(additionalType.getMappings())
                 .variable("address payable public owner;\n\n")
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
@@ -142,7 +142,7 @@ public class SolidityInstance {
                 .variables(variables)
                 .constructor(constructor.toString())
                 .function(this.bpmnFunctions.toString())
-                .custom(String.join("\n", additionalFunction.getFunctions()))
+//                .custom(String.join("\n", additionalFunction.getFunctions()))
                 .custom(printOtherFunctions())
                 .custom(printFunctionInit(this.getStartPointId()))
                 .build();
