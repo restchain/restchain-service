@@ -39,9 +39,17 @@ public class CodeGenVisitor implements Visitor {
             this.instance.setStartPointId(node.getId());
         }
         log.debug("********StartEvent *****");
+
+        boolean isInsideSubChoreography = node.getDomElement()
+                .getParentElement()
+                .getLocalName()
+                .equals("subChoregraphy");
+
         this.instance.addTxt(Function
                 .builder()
-                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
+                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId() + " " + node.getDomElement()
+                        .getParentElement()
+                        .getLocalName())
                 .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
@@ -51,7 +59,7 @@ public class CodeGenVisitor implements Visitor {
 
     @Override
     public void visitEndEvent(EndEventAdapter node) {
-        log.debug("********EndEvent *****");
+        log.debug("********EndEvent ***** ");
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
