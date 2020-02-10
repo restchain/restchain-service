@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FileUtil;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
