@@ -8,6 +8,7 @@ import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.FlowElement;
 import org.camunda.bpm.model.bpmn.instance.Gateway;
 import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.ArrayList;
@@ -51,6 +52,11 @@ public class SequenceFlowAdapter implements BpmnModelAdapter {
     public String getName() {
         return value.getAttributeValue("name");
 //        return value.getName() != null ? value.getName().replace("\n", " ") : "";
+    }
+
+    @Override
+    public DomElement getDomElement() {
+        return value.getDomElement();
     }
 
     @Override

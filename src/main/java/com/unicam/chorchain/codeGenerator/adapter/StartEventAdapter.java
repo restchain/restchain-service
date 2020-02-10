@@ -6,12 +6,14 @@ import com.unicam.chorchain.codeGenerator.Visitor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.instance.DomElement;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class StartEventAdapter implements BpmnModelAdapter, Visitable {
+
 
     private final StartEvent value;
 
@@ -33,6 +35,11 @@ public class StartEventAdapter implements BpmnModelAdapter, Visitable {
     @Override
     public String getName() {
         return value.getName() != null ? value.getName().replace("\n", " ") : "";
+    }
+
+    @Override
+    public DomElement getDomElement() {
+        return value.getDomElement();
     }
 
     @Override

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.instance.DomElement;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,11 @@ public class EndEventAdapter implements BpmnModelAdapter, Visitable {
     @Override
     public String getName() {
         return value.getName() != null ? value.getName().replace("\n", " ") : "";
+    }
+
+    @Override
+    public DomElement getDomElement() {
+        return value.getDomElement();
     }
 
     @Override
