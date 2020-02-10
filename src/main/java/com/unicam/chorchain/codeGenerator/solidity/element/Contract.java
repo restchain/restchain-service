@@ -1,4 +1,4 @@
-package com.unicam.chorchain.codeGenerator.solidity;
+package com.unicam.chorchain.codeGenerator.solidity.element;
 
 import lombok.Builder;
 import lombok.Singular;
@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 @Builder
 @Slf4j
@@ -14,10 +15,12 @@ public class Contract {
     private String pragmaVersion;
     @NotEmpty
     private String fileName;
+    @NotEmpty
+    private String constructor;
     //    @NotEmpty
 //    private String constructor;
-    @NotEmpty
-    private String constructorBody;
+    @Singular
+    private Collection<String> bodyStrings;
 //    @Singular
 //    private Collection<String> customTextStrings;
 
@@ -53,13 +56,13 @@ public class Contract {
         out.append("contract ").append(fileName).append("{\n");
         out.append("\n\n");
 
-
-        if (constructorBody != null) {
+        if (constructor != null){
             out.append("\t/* constructor */ \n");
-            out.append("\tconstructor() public {\n");
-            out.append("\t").append(constructorBody).append("\n");
-            out.append("\t}\n");
-            out.append("\n");
+            out.append(constructor);
+        }
+
+        if (bodyStrings != null) {
+            out.append("\t").append(String.join("\n", bodyStrings));
         }
 //
 //        if (customTextStrings != null) {
@@ -69,7 +72,7 @@ public class Contract {
 //        }
 
         if (mappings != null) {
-            out.append("\t/* Mappings */\n");
+            out.append("\n\t/* Mappings */\n");
             mappings.forEach((s) -> out.append("\t").append(s).append("\n"));
             out.append("\n");
         }
@@ -96,7 +99,7 @@ public class Contract {
         }
 
         if (modifiers != null) {
-            out.append("\t/* Events */ \n");
+            out.append("\t/* Modifiers */ \n");
             modifiers.forEach((s) -> out.append("\t").append(s).append("\n"));
         }
 

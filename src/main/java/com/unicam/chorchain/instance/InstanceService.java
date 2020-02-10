@@ -133,7 +133,7 @@ public class InstanceService {
 
         log.debug("Generating solidity file ...");
         UploadFile solidityFile = smartContractService.generateSolidityCode(instance,
-                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+                fileSystemStorageService.load(instance.getChoreography().getFilename())).getUploadFile();
 
 //        SmartContract cObj = smartContractService.createSolidity(instance,
 //                fileSystemStorageService.load(instance.getChoreography().getFilename()));

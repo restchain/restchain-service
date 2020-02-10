@@ -36,7 +36,7 @@ contract resttt {
     StateMemory currentMemory;
     string[] elementsID = ["sid-0EC70E7E-A42A-4C9E-B120-16B25BDACE7A", "sid-00e1b46c-e485-4551-a17b-6f0c3f21ec2c", "sid-C240C6E9-F55F-46A5-B1F6-5FC4A0F30B04", "sid-624ca53e-cc27-4a74-97be-055cb19cae54", "sid-72ee2908-7c6b-4b9e-a80b-4734a6b2cb0b", "sid-E2CFD2E8-7869-4F28-AC83-296ED8FA7D6E", "sid-94C810EF-69BE-4D67-91B8-4A34DF4D1940", "sid-abba267c-92e3-4944-a98a-d317e035c861", "sid-e385b492-6b2b-475b-a8dd-8fc09513393b", "sid-b9828a39-b70d-4470-b5d2-61cda9b2bc64", "sid-0663CB4E-D3BF-4E12-8D81-D68E9318355F", "sid-859C73C7-F0DD-45ED-AA88-E0DEA0340C91", "sid-2F272EDB-9940-467E-AADC-2B485679AF43", "sid-06caa7c5-fba5-4524-8d4d-2f24b1d51468", "sid-CCD2A372-D382-426E-B823-05F778D4EA44", "sid-094362A8-CC68-4CB6-AC98-74DCF1163997", "sid-80A4BF32-23C1-4585-A70C-26A40D63DA7F", "sid-E761CE7E-ED53-413A-A3C8-3D6569A80525"];
     string[] roleList = ["Seller"];
-ƒs
+
     constructor() public{
         //struct instantiation
         for (uint i = 0; i < elementsID.length; i ++) {

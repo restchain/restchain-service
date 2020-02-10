@@ -35,10 +35,12 @@ public class Choreography {
 
 
 	@OneToMany(mappedBy = "choreography",cascade = CascadeType.ALL) //Direttamente agganciata
-	//TODO - aggiungi set(0)
 	private Set<Instance> instances = new HashSet<>(0);
 
 	@OneToMany(mappedBy = "choreography",cascade = CascadeType.ALL)
 	private Set<Participant> participants = new HashSet<>(0);
+
+	@Lob
+	private String svg;
 
 }
