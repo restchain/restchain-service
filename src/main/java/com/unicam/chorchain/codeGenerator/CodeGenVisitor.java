@@ -213,6 +213,11 @@ public class CodeGenVisitor implements Visitor {
         }
     }
 
+    @Override
+    public void visitSubChoreographyTask(SubChoreographyTaskAdapter subChoreographyTaskAdapter) {
+
+    }
+
     // Performs a - replacing in _
     private String processAsElementId(String id) {
         this.instance.getElementsId().add(id);

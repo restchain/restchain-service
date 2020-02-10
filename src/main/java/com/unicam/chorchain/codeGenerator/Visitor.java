@@ -11,4 +11,5 @@ public interface Visitor {
     void visitExclusiveGateway(ExclusiveGatewayAdapter node);
     void visitEventBasedGateway(EventBasedGatewayAdapter node);
     void visitChoreographyTask(ChoreographyTaskAdapter node);
+    void visitSubChoreographyTask(SubChoreographyTaskAdapter subChoreographyTaskAdapter);
 }

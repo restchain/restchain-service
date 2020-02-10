@@ -7,6 +7,7 @@ import org.camunda.bpm.model.bpmn.impl.instance.EventBasedGatewayImpl;
 import org.camunda.bpm.model.bpmn.impl.instance.ExclusiveGatewayImpl;
 import org.camunda.bpm.model.bpmn.impl.instance.ParallelGatewayImpl;
 import org.camunda.bpm.model.bpmn.instance.*;
+import org.camunda.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 //Singleton
@@ -29,6 +30,9 @@ public class BpmnModelFactory {
         } else if (ExclusiveGatewayImpl.class.equals(value.getClass())) {
             return new ExclusiveGatewayAdapter((ExclusiveGateway) value);
         } else {
+            if (((ModelElementInstanceImpl) value).getElementType().getTypeName().equals("subChoreography")) {
+                return new SubChoreographyTaskAdapter(value);
+            }
             return new ChoreographyTaskAdapter(value);
         }
     }
