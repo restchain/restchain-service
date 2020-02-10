@@ -7,11 +7,8 @@ import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.codeGenerator.solidity.element.Function;
 import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
-import com.unicam.chorchain.model.Choreography;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.model.bpmn.impl.instance.EventBasedGatewayImpl;
-import org.camunda.bpm.model.bpmn.instance.EventBasedGateway;
 import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -133,16 +130,17 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ChoreographyTask *****");
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
-        Map<String,String> disabledMap = new HashMap<>();
+        Map<String, String> disabledMap = new HashMap<>();
         //Try to understand if the incoming element is a EventGateway, if yes remembers wich sid needs to be disabled
-        if (previousElement(node.getModelInstance(),node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter){
-            List<String> gatewayOutgoing = previousElement(node.getModelInstance(),node.getIncoming().get(0)).getOutgoing()
+        if (previousElement(node.getModelInstance(), node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter) {
+            List<String> gatewayOutgoing = previousElement(node.getModelInstance(),
+                    node.getIncoming().get(0)).getOutgoing()
                     .stream()
                     .map((item) -> nextElementId(node.getModelInstance(), item))
                     .collect(Collectors.toList());
-            if (gatewayOutgoing.size() == 2){
-                disabledMap.put(gatewayOutgoing.get(0),gatewayOutgoing.get(1));
-                disabledMap.put(gatewayOutgoing.get(1),gatewayOutgoing.get(0));
+            if (gatewayOutgoing.size() == 2) {
+                disabledMap.put(gatewayOutgoing.get(0), gatewayOutgoing.get(1));
+                disabledMap.put(gatewayOutgoing.get(1), gatewayOutgoing.get(0));
             }
 
 
@@ -179,10 +177,9 @@ public class CodeGenVisitor implements Visitor {
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
             instance.getStructVariables().addAll(signatureMethod.getParameters());
-            if (signatureMethod.getInterfaceMethod()){
+            if (signatureMethod.getInterfaceMethod()) {
                 instance.elabInterface(signatureMethod);
             }
-
 
 
             this.instance.addTxt(Function.builder()
@@ -214,7 +211,6 @@ public class CodeGenVisitor implements Visitor {
         } else {
 
             /** TWOWAY **/
-
 
 
             boolean payableResp = node.getResponseMessage().getMessage().getName().contains("payment");
@@ -262,7 +258,20 @@ public class CodeGenVisitor implements Visitor {
     }
 
     @Override
-    public void visitSubChoreographyTask(SubChoreographyTaskAdapter subChoreographyTaskAdapter) {
+    public void visitSubChoreographyTask(SubChoreographyTaskAdapter node) {
+        log.debug("********SubChoreographyTask *****");
+
+//        this.instance.addTxt(Function
+//                .builder()
+//                .functionComment("SubChoreography(" + node.getName() + "): " + node.getOrigId())
+//                .enables(node.getOutgoing()
+//                        .stream()
+//                        .map((item) -> nextElementId(node.getModelInstance(), item))
+//                        .collect(Collectors.toList()))
+//                .name(processAsElementId(node.getId()))
+//                .sourceId(node.getId())
+//                .visibility(Types.visibility.PRIVATE)
+//                .build().toString());
 
     }
 
@@ -280,7 +289,11 @@ public class CodeGenVisitor implements Visitor {
         BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
         //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
         //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        if (targetElement instanceof ChoreographyTaskAdapter) {
+
+
+        if (targetElement instanceof SubChoreographyTaskAdapter) {
+            return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
+        } else if (targetElement instanceof ChoreographyTaskAdapter) {
             return ((ChoreographyTaskAdapter) targetElement).getRequestMessage().getMessage().getId();
         } else {
             return targetElement.getId();
@@ -295,7 +308,7 @@ public class CodeGenVisitor implements Visitor {
         BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(sourceId);
         //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
         //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        return  targetElement;
+        return targetElement;
     }
 
 

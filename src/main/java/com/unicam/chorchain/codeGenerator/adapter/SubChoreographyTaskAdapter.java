@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.MessageFlow;
 import org.camunda.bpm.model.bpmn.instance.Participant;
 import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
+import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -33,13 +34,17 @@ public class SubChoreographyTaskAdapter implements BpmnModelAdapter {
     @Getter
     private ChoreographyTaskAdapter.TaskType type;
     private ModelInstance modelInstance;
+    @Getter
+    private SequenceFlow startEvent;
+    @Getter
+    private SequenceFlow endEvent;
 
     public enum TaskType {
         ONEWAY, TWOWAY
     }
 
     public SubChoreographyTaskAdapter(ModelElementInstance value) {
-        log.debug(value.getClass().getSimpleName()+" - SubChoreographyTask");
+        log.debug(value.getClass().getSimpleName() + " - SubChoreographyTask");
         this.value = value;
         this.modelInstance = value.getModelInstance();
         this.incoming = new ArrayList<>();
@@ -92,14 +97,29 @@ public class SubChoreographyTaskAdapter implements BpmnModelAdapter {
                     }
 
                     break;
+                case "startEvent":
+
+                    SequenceFlow start = value.getModelInstance()
+                            .getModelElementById(childElement.getTextContent());
+
+
+
+                    this.startEvent = start;
+
+                case "endEvent":
+
+                    SequenceFlow end = value.getModelInstance()
+                            .getModelElementById(childElement.getTextContent());
+                    this.endEvent = end;
+
+                    break;
                 case "extensionElements":
                     break;
-                default:
-                    throw new IllegalArgumentException("Invalid element in the xml: " + type);
+//                default:
+//                    throw new IllegalArgumentException("Invalid element in the xml: " + type);
 
             }
         }
-
 
 
         if (responseMessage != null) {
@@ -122,15 +142,15 @@ public class SubChoreographyTaskAdapter implements BpmnModelAdapter {
 
     @Override
     public String getName() {
-        return this.name.replace("\n"," ");
+        return this.name.replace("\n", " ");
     }
 
-    public Participant getParticipantRef(){
-        return  this.participantRef;
+    public Participant getParticipantRef() {
+        return this.participantRef;
     }
 
-    public Participant getInitialParticipant(){
-        return  this.initialParticipant;
+    public Participant getInitialParticipant() {
+        return this.initialParticipant;
     }
 
     @Override
