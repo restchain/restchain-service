@@ -15,6 +15,7 @@ public class ChoreographyDTO {
     private String description;
     private LocalDateTime uploaded;
     private String  uploadedBy;
+    private String  svg;
     private List<ParticipantDTO> participants;
 //    private int participantSize;
     private List<InstanceDTO> instances;

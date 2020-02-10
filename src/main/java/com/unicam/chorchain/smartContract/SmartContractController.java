@@ -1,31 +1,38 @@
 package com.unicam.chorchain.smartContract;
 
-import com.unicam.chorchain.instance.InstanceService;
+import com.unicam.chorchain.instance.InstanceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.util.Set;
 
-@RequiredArgsConstructor
+@RequestMapping("/contract")
+@RestController
 @Slf4j
-@RequestMapping("/smart_contract")
+@RequiredArgsConstructor
 public class SmartContractController {
 
-//    private final InstanceService instanceService;
-//
-//    @PostMapping("/deploy")
-//    public ResponseEntity<?> instanceDeploy(@RequestBody Long id) throws SmartContractDeployException, IOException {
-//        service.create(instanceService.findInstanceById(id));
-//        return ResponseEntity.status(HttpStatus.CREATED).build();
-//    }
+    private final SmartContractService service;
+
+    @GetMapping
+    public Set<SmartContractDTO> listAllSmartContract(Pageable pageable) {
+        return service.getMySmartContracts();
+    }
+
+    @GetMapping("/i")
+    public Set<InstanceDTO> listAllInstancesWithSmartContract(Pageable pageable) {
+        return service.getInstancesWithSmartContract();
+    }
+
+    @GetMapping("{id}")
+    public SmartContractFullDTO read(@PathVariable("id") Long id) {
+        return service.read(id);
+    }
 //
 //    @ExceptionHandler(SmartContractCompilationException.class)
 //    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {

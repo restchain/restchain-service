@@ -1,24 +1,28 @@
 package com.unicam.chorchain.codeGenerator.solidity;
 
+import com.unicam.chorchain.codeGenerator.solidity.element.*;
 import com.unicam.chorchain.model.Instance;
+import com.unicam.chorchain.model.Participant;
 import lombok.Getter;
 import lombok.Setter;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
-/** Contains all the information related to the solidity file **/
+/**
+ * Contains all the information related to the solidity file.
+ * It is working as bridge between the SpringBoot Model by the Instance and the Solidity file to be built.
+ * Collects all the needed information and then provides the solidity building by the built method.
+ **/
 public class SolidityInstance {
     @Getter
     private List<String> mandatoryParticipants;//List of mandatory Participants
     @Getter
     private List<String> optionalParticipants;//List of optional Participants
     @Getter
-    private List<String> structVariables;//List of solidity variables;
+    private Set<String> structVariables;//List of solidity variables;
     @Getter
     private Set<String> elementsId; //List of used bpmn components that compose functions
     @Getter
@@ -28,6 +32,8 @@ public class SolidityInstance {
     @Setter
     private String startPointId; //If of the starting Point
     private Instance instance;
+    @Getter
+    private Map<String,Set<String>> interfaces;
 
     public void addTxt(String text) {
         this.bpmnFunctions.append(text);
@@ -37,8 +43,9 @@ public class SolidityInstance {
         this.instance = instance;
         this.text = new StringBuilder();
         this.elementsId = new HashSet<>();
-        this.structVariables = new ArrayList<>();
+        this.structVariables = new HashSet<>();
         this.bpmnFunctions = new StringBuilder();
+        this.interfaces = new HashMap<>();
         this.mandatoryParticipants = instance.getMandatoryParticipants()
                 .stream()
                 .filter(p -> p.getUser() != null)
@@ -46,13 +53,24 @@ public class SolidityInstance {
                 .collect(Collectors.toList());
 
         this.optionalParticipants = instance.getChoreography().getParticipants().stream().filter((p) ->
-                !mandatoryParticipants.contains(p.getName())).map(p -> p.getName()).collect(Collectors.toList());
+                !mandatoryParticipants.contains(p.getName())).map(Participant::getName).collect(Collectors.toList());
     }
 
-    public String build() {
+
+    /***
+     * Provides the solidity generation.
+     * @param choreography - Corresponds to the choreography element (bpmn:Choreography) and it is use for retrieves all
+     *                     the custom information addressed by this element from the BPMN model such as Types and Constructor
+     * @return
+     */
+    public String build(ModelElementInstance choreography) {
+
+
+//        AdditionalType additionalType = new AdditionalType(choreography);
+        AdditionalFunction additionalFunction = new AdditionalFunction(choreography);
+
 
         //*** starts here ***/
-
         Struct structGlobal = Struct.builder()
                 .variableMap(Types.string, "ID")
                 .variableMap("State", "status")
@@ -68,6 +86,7 @@ public class SolidityInstance {
         List<String> structs = new ArrayList<>();
         structs.add(structGlobal.toString());
         structs.add(structElement.toString());
+//        structs.addAll(additionalType.getStructs());
 
         List<String> maps = new ArrayList<>();
         maps.add("mapping(string => uint) position;");
@@ -86,44 +105,78 @@ public class SolidityInstance {
 
         List<String> modifiers = new ArrayList<>();
         modifiers.add(
-                "modifier checkMand(string storage role){\n\trequire(msg.sender == roles[role]);\n\t_;\n}\n");
+                "modifier checkMand(string storage role){\n\t\trequire(msg.sender == roles[role]);\n\t\t_;\n\t}\n");
         modifiers.add(
-                "modifier checkOpt(string storage role){\n\trequire(msg.sender == optionalRoles[role]);\n\t_;\n}\n");
+                "modifier checkOpt(string storage role){\n\t\trequire(msg.sender == optionalRoles[role]);\n\t\t_;\n\t}\n");
         modifiers.add(
-                "modifier Owner(string memory task){\n\trequire(elements[position[task]].status == State.ENABLED);\n\t_;\n}\n");
+                "modifier Owner(string memory task){\n\t\trequire(elements[position[task]].status == State.ENABLED);\n\t\t_;\n\t}\n");
 
+
+        Constructor constructor = Constructor.builder()
+                .params(additionalFunction.getParameters())
+                .bodyElement(printConstructorBody(additionalFunction))
+                .build();
 
         List<String> variables = new ArrayList<>();
         variables.add("Element[] elements;");
         variables.add("StateMemory currentMemory;");
         variables.add("uint counter;");
+//        variables.addAll(additionalType.getGlobals());
         variables.add(printRoleList());
         variables.add(printElementsIdList());
-
 
         Contract sol = Contract.builder()
                 .pragmaVersion("^0.5.3")
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
+//                .mappings(additionalType.getMappings())
+                .variable("address payable public owner;\n\n")
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
+                .event("event functionDone(string);\n")
                 .structs(structs)
                 .variables(variables)
-                .constructorBody(printConstructorBody())
+                .constructor(constructor.toString())
                 .function(this.bpmnFunctions.toString())
+//                .custom(String.join("\n", additionalFunction.getFunctions()))
                 .custom(printOtherFunctions())
                 .custom(printFunctionInit(this.getStartPointId()))
                 .build();
 
-        return text.append(sol.toString()).toString();
+
+        //creates the interfaces parts
+        StringBuffer interfacesSol = new StringBuffer();
+        for (String name : interfaces.keySet()){
+            interfacesSol.append(Interface.builder().name(name).functions(interfaces.get(name)).build().toString());
+        }
+
+        StringBuffer stubImplSol = new StringBuffer();
+        for (String name : interfaces.keySet()){
+            interfacesSol.append(Stub.builder().name(name+"Impl").interfaceName(name).functions(interfaces.get(name)).build().toString());
+        }
+
+
+
+        String finalSol = sol.toString()+interfacesSol.toString()+stubImplSol.toString();
+
+
+
+        return text.append(finalSol).toString();
     }
 
+    /***
+     * Print the function Init included as internal function on the Solidity constructor.
+     * From the solidity point of view this function tell which is the starting point of the sequence flow of the
+     * functions following the BPMN model.
+     * @param startPointId - Bpmn Nname of the start point element that will be pointed and calls by the _init() function
+     * @return String representing generated code
+     */
     private String printFunctionInit(String startPointId) {
         StringBuilder sb = new StringBuilder();
 
 
-        sb.append("function init() internal {\n");
+        sb.append("function _init() internal {\n");
         sb.append("\t\tbool result = true;\n");
         sb.append("\t\tfor (uint i = 0; i < roleList.length; i++) {\n");
         sb.append("\t\t\tif (roles[roleList[i]] == 0x0000000000000000000000000000000000000000) {\n");
@@ -134,18 +187,20 @@ public class SolidityInstance {
         sb.append("\t\tif (result) {\n");
         sb.append("\t\t//Questo è lo start\n");
         sb.append("\t\t\t\tenable(\"").append(startPointId).append("\");\n");
-        sb.append("\t\t\t\t").append(startPointId.replace("-", "_")).append("();\n\t\t}\n\t}\n");
+        sb.append("\t\t\t\t").append(startPointId.replace("-", "_")).append("();\n");
+        sb.append("\t\t\t\temit functionDone(\"Contract creation\"); \n");
+        sb.append("\t\t}\n\t}\n");
         return sb.toString();
     }
 
 
-    private String printConstructorBody() {
+    private String printConstructorBody(AdditionalFunction additionalFunction) {
         StringBuilder sb = new StringBuilder();
         sb.append("\tfor (uint i = 0; i < elementsID.length; i ++) {\n");
         sb.append("\t\t\telements.push(Element(elementsID[i], State.DISABLED));\n");
         sb.append("\t\t\tposition[elementsID[i]]=i;\n\t\t}\n");
         sb.append("\t\t//roles definition\n\t\t//mettere address utenti in base ai ruoli\n");
-        instance.getMandatoryParticipants().forEach((p) ->
+        this.instance.getMandatoryParticipants().forEach((p) ->
                 sb.append("\t\troles[\"")
                         .append(p.getParticipant().getName())
                         .append("\"] = ")
@@ -158,7 +213,12 @@ public class SolidityInstance {
                         .append("\"] = ")
                         .append("0x0000000000000000000000000000000000000000")
                         .append(";\n"));
-        sb.append("\t\t//enable the start process\n\t\tinit();\n");
+        if (additionalFunction.getFunctionCalls().size() > 0) {
+            sb.append("\t\t//Additional functions\n");
+            sb.append("\t\t");
+            sb.append(String.join("\n", String.join(";\n", additionalFunction.getFunctionCalls())).concat(";\n"));
+        }
+        sb.append("\t\t//enable the start process\n\t\t_init()");
         return sb.toString();
     }
 
@@ -166,29 +226,30 @@ public class SolidityInstance {
     private String printRoleList() {
         StringBuffer sb = new StringBuffer();
 
-        if (mandatoryParticipants.size() > 0) {
+        if (this.mandatoryParticipants.size() > 0) {
             sb.append("string [] ").append(Types.Global_RoleList).append(" = ");
             sb.append("[");
-            mandatoryParticipants.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append(this.mandatoryParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
+            sb.append("\n");
         }
 
-        if (optionalParticipants.size() > 0) {
+        if (this.optionalParticipants.size() > 0) {
+            sb.append("\t");
             sb.append("string [] ").append(Types.Global_OptionalList).append(" = ");
             sb.append("[");
-            optionalParticipants.forEach(r -> sb.append("\"").append(r).append("\","));
-            sb.deleteCharAt(sb.length() - 1); //remove last comma
+            sb.append(this.optionalParticipants.stream().map(e -> "\"" + e + "\"").collect(Collectors.joining(",")));
             sb.append("];");
-
+            sb.append("\n");
         }
-        sb.append("\n");
+
         return sb.toString();
     }
 
     private String printOtherFunctions() {
         StringBuilder sb = new StringBuilder();
-        sb.append("function subscribe_as_participant(string memory _role) public {\n");
+
+        sb.append("\tfunction subscribe_as_participant(string memory _role) public {\n");
         sb.append("\t\tif (optionalRoles[_role] == 0x0000000000000000000000000000000000000000) {\n");
         sb.append("\t\t\toptionalRoles[_role] = msg.sender;\n\t\t}\n\t}\n\n");
         sb.append("\tfunction() external payable {}\n\n");
@@ -198,7 +259,7 @@ public class SolidityInstance {
         sb.append(
                 "\tfunction disable(string memory _taskID) internal {elements[position[_taskID]].status = State.DISABLED;}\n\n");
         sb.append(
-                "\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;}\n\n");
+                "\tfunction done(string memory _taskID) internal {elements[position[_taskID]].status = State.DONE;\n\t\temit functionDone(_taskID);\n\t}\n");
         sb.append("\tfunction getCurrentState() public view returns (Element[] memory, StateMemory memory){\n");
         sb.append("\t\t// emit stateChanged(elements, currentMemory);\n");
         sb.append("\t\treturn (elements, currentMemory);\n\t}\n\n");
@@ -207,12 +268,33 @@ public class SolidityInstance {
         return sb.toString();
     }
 
+    /***
+     * Provides the elementsID list included on the solidity file.
+     * From the solidity point of view the ElementsID contains all the Ids (BPMN ids) of the BPMN elements involved on
+     * the sequence flow and that need to be calls.
+     * @return String representing generated code
+     */
     private String printElementsIdList() {
         StringBuilder sb = new StringBuilder();
-        sb.append("string [] elementsID = [\n");
-        elementsId.forEach(e -> sb.append("\t\"").append(e).append("\","));
-        sb.deleteCharAt(sb.length() - 1); //remove last comma
-        sb.append("];\n");
+        sb.append("string [] elementsID = [\n\t");
+        sb.append(this.elementsId.stream().map(e -> "\t\"" + e + "\"").collect(Collectors.joining(",")));
+        sb.append("\n\t];\n");
         return sb.toString();
+    }
+
+    public void addElementId(String id) {
+        this.elementsId.add(id);
+    }
+
+    public void elabInterface(SignatureMethod signatureMethod) {
+        if(signatureMethod.getInterfaceMethod()){
+            if (interfaces.containsKey(signatureMethod.getInterfaceName())){
+                interfaces.get(signatureMethod.getInterfaceName()).add(signatureMethod.getSignature());
+            } else {
+                Set<String> toAdd = new HashSet<String>();
+                toAdd.add(signatureMethod.getSignature());
+                interfaces.put(signatureMethod.getInterfaceName(),toAdd);
+            }
+        }
     }
 }

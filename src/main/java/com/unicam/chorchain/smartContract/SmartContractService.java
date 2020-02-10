@@ -3,10 +3,13 @@ package com.unicam.chorchain.smartContract;
 import com.unicam.chorchain.choreography.UploadFile;
 import com.unicam.chorchain.codeGenerator.Factories;
 import com.unicam.chorchain.codeGenerator.SolidityGenerator;
+import com.unicam.chorchain.instance.InstanceDTO;
+import com.unicam.chorchain.instance.InstanceMapper;
 import com.unicam.chorchain.model.*;
 import com.unicam.chorchain.storage.FileSystemStorageService;
 import com.unicam.chorchain.storage.FileSystemStorageSolidityService;
 import com.unicam.chorchain.translator.ChoreographyBpmn;
+import com.unicam.chorchain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FileUtil;
@@ -14,8 +17,11 @@ import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import org.camunda.bpm.model.xml.instance.DomElement;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.*;
 import org.web3j.codegen.SolidityFunctionWrapperGenerator;
@@ -34,6 +40,8 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -48,9 +56,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
+@Slf4j
 public class SmartContractService {
 
     @Value("${solidity.dir}")
@@ -69,7 +78,10 @@ public class SmartContractService {
 
     private final FileSystemStorageSolidityService fileSystemStorageSolidityService;
     private final FileSystemStorageService fileSystemStorageService;
+    private final UserService userService;
     private final SmartContractRepository repository;
+    private final SmartContractMapper mapper;
+    private final InstanceMapper instanceMapper;
 
     private List<String> tasks;
     private String CONTRACT_ADDRESS = "";
@@ -85,9 +97,66 @@ public class SmartContractService {
         adm = Admin.build(new HttpService(blcokChainUrl));
     }
 
-    public UploadFile generateSolidityCode(Instance instance, Path modelPath) {
+
+    public Set<SmartContractDTO> getMySmartContracts() {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<SmartContractDTO> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(Instance::getSmartContract)
+                .map(mapper::toDTO)
+                .collect(Collectors.toSet());
+
+        return sc;
+    }
+
+    public Set<InstanceDTO> getInstancesWithSmartContract() {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<InstanceDTO> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(instanceMapper::toInstanceDTO)
+                .collect(Collectors.toSet());
+
+        return sc;
+    }
+
+
+    public SmartContractFullDTO read(@Valid Long id) {
+        return mapper.toFullDTO(findSmartContractById(id));
+    }
+
+    public SmartContract findSmartContractById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("SmartContract " + id + " was not found in the database",
+                        id)));
+    }
+
+
+    public SolidityInstanceUploaded generateSolidityCode(Instance instance, Path modelPath) {
+
         SolidityGenerator sg = new SolidityGenerator(instance);
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
+
+        //Business logic to retrieve the choreography id of the bpmn:choreography element
+        Optional<DomElement> choreographyDom = modelInstance.getDocument()
+                .getRootElement()
+                .getChildElements()
+                .stream()
+                .filter(e -> e.getLocalName().equals("choreography"))
+                .findFirst();
+
+        if (choreographyDom.isPresent()) {
+            ModelElementInstance choreography = modelInstance.getModelElementById(choreographyDom.get()
+                    .getAttribute("id"));
+            sg.setChoreography(choreography);
+        }
+
+
         //implement a business logic that will match the exact starting orders of loading
         modelInstance.getModelElementsByType(StartEvent.class)
                 .forEach(e -> sg.traverse(Factories.bpmnModelFactory.create(e)));
@@ -101,7 +170,7 @@ public class SmartContractService {
             uploadFile.setData(code);
 
             fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
-            return uploadFile;
+            return new SolidityInstanceUploaded(uploadFile, sg.getSolidityInstance());
         } catch (Exception e) {
             tasks = null;
             e.printStackTrace();
@@ -160,8 +229,12 @@ public class SmartContractService {
 
             log.debug("Generating solidity file ...");
 
-            UploadFile solidityFile = generateSolidityCode(instance,
+            SolidityInstanceUploaded solidityInstanceUploaded = generateSolidityCode(instance,
                     fileSystemStorageService.load(instance.getChoreography().getFilename()));
+
+
+            UploadFile solidityFile = solidityInstanceUploaded.uploadFile;
+            log.debug("ElementIds found ...{}", solidityInstanceUploaded.getSolidityInstance().getElementsId());
 
             log.debug("Compiling solidity file ...");
             compile(solidityFile.getFilename());
@@ -178,7 +251,12 @@ public class SmartContractService {
                     .getName()
                     .concat(".bin"))
                     .toFile());
-            SmartContract smartContract = new SmartContract(contractAddress, abi, bin, instance);
+            SmartContract smartContract = new SmartContract(contractAddress,
+                    abi,
+                    bin,
+                    instance,
+                    solidityInstanceUploaded.getSolidityInstance().getElementsId(),
+                    solidityFile.getData());
             repository.save(smartContract);
 
             return smartContract;
@@ -186,7 +264,7 @@ public class SmartContractService {
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new SmartContractDeployException(e.getMessage(),e.getCause());
+            throw new SmartContractDeployException(e.getMessage(), e.getCause());
         }
     }
 
