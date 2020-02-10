@@ -2,7 +2,6 @@ package com.unicam.chorchain.codeGenerator.adapter;
 
 import com.unicam.chorchain.codeGenerator.Factories;
 import com.unicam.chorchain.codeGenerator.Visitor;
-import com.unicam.chorchain.translator.ChoreographyTask;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.MessageFlow;
@@ -20,7 +19,7 @@ import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.TWOWAY;
 
 @Slf4j
-public class ChoreographyTaskAdapter implements BpmnModelAdapter {
+public class SubChoreographyTaskAdapter implements BpmnModelAdapter {
 
     private final ModelElementInstance value;
 
@@ -32,15 +31,15 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
     private Participant initialParticipant;
     private String id, name;
     @Getter
-    private TaskType type;
+    private ChoreographyTaskAdapter.TaskType type;
     private ModelInstance modelInstance;
 
     public enum TaskType {
         ONEWAY, TWOWAY
     }
 
-    public ChoreographyTaskAdapter(ModelElementInstance value) {
-        log.debug(value.getClass().getSimpleName()+" - ChoreographyTask");
+    public SubChoreographyTaskAdapter(ModelElementInstance value) {
+        log.debug(value.getClass().getSimpleName()+" - SubChoreographyTask");
         this.value = value;
         this.modelInstance = value.getModelInstance();
         this.incoming = new ArrayList<>();
@@ -127,7 +126,7 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
     }
 
     public Participant getParticipantRef(){
-       return  this.participantRef;
+        return  this.participantRef;
     }
 
     public Participant getInitialParticipant(){
@@ -158,7 +157,7 @@ public class ChoreographyTaskAdapter implements BpmnModelAdapter {
 
     @Override
     public void accept(Visitor visitor) {
-        visitor.visitChoreographyTask(this);
+        visitor.visitSubChoreographyTask(this);
     }
 
 }
