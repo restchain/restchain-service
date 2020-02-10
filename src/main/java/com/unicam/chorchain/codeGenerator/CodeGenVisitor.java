@@ -134,7 +134,7 @@ public class CodeGenVisitor implements Visitor {
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
         Map<String,String> disabledMap = new HashMap<>();
-        //Try to understand if the incoming element is a EventGateway, if yes remembers wich sid needs to disable
+        //Try to understand if the incoming element is a EventGateway, if yes remembers wich sid needs to be disabled
         if (previousElement(node.getModelInstance(),node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter){
             List<String> gatewayOutgoing = previousElement(node.getModelInstance(),node.getIncoming().get(0)).getOutgoing()
                     .stream()
