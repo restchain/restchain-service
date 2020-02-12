@@ -185,6 +185,7 @@ public class CodeGenVisitor implements Visitor {
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
             instance.getStructVariables().addAll(signatureMethod.getParameters());
+            instance.getStructVariables().addAll(signatureMethod.getReturns());
             if (signatureMethod.getInterfaceMethod()) {
                 instance.elabInterface(signatureMethod);
             }
@@ -198,11 +199,13 @@ public class CodeGenVisitor implements Visitor {
                     .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
-                    .parameters(params)
+                    .parameters(signatureMethod.getParameters())
+                    .parameters(signatureMethod.getReturns())
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(node.getRequestMessage().getMessage().getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
-                    .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .varAssignments(signatureMethod.getParameters())
+                    .bodyString(signatureMethod.getCalls(Types.GlobaStateMemory_varName))
                     .bodyStrings(reqMessageAdapter.getFunctionCalls()
                             .stream()
                             .map(s -> s.concat(";"))

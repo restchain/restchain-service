@@ -10,6 +10,7 @@ import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //https://forum.camunda.org/t/how-to-read-custom-elements-in-delegates/975/3
 
@@ -23,6 +24,7 @@ public class SignatureMethod {
     private List<String> returns = new ArrayList<String>(0);
     private Boolean interfaceMethod;
     private String interfaceName;
+    private String interfaceImplName;
     private String name;
 
 
@@ -34,6 +36,7 @@ public class SignatureMethod {
                 .findFirst()
                 .orElse(null);
         init();
+        interfaceImplName = interfaceName+"Impl";
     }
 
     private void init() {
@@ -99,4 +102,22 @@ public class SignatureMethod {
         }
         return result;
     }
+
+    public String getCalls(String prefix){
+        StringBuilder sb = new StringBuilder();
+        if (returns.size() > 0) {
+            sb.append("(").append(returns.stream().map(s->prefix+"."+lastWord(s)).collect(Collectors.joining(","))).append(") = " );
+        }
+
+        sb.append(interfaceName.toLowerCase()).append(".").append(name).append("(").append(
+                parameters.stream().map(this::lastWord).collect(Collectors.joining(","))
+        ).append(");");
+        return  sb.toString();
+    }
+
+    private String lastWord(String s){
+        return s.substring (s.lastIndexOf (' '), s.length()).trim();
+    }
+
+
 }

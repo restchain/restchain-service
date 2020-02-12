@@ -68,12 +68,13 @@ public class Function {
             out.append("\t\t").append("to.transfer(msg.value);\n");
         } else {
             if (varAssignments != null) {
+
                 varAssignments.forEach(d -> out.append("\t\t")
                         .append(globalVariabilePrefix)
                         .append(".")
-                        .append(d)
+                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
                         .append(" = ")
-                        .append(d)
+                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
                         .append(";\n"));
             }
         }
