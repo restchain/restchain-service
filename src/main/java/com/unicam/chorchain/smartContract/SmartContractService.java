@@ -185,7 +185,7 @@ public class SmartContractService {
             log.debug("Solidity file: " + solPath);
             String destinationPath = projectPath + File.separator;
             log.debug("destination path " + destinationPath);
-            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "-o", destinationPath};
+            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "--optimize","-o", destinationPath};
 
             Runtime rt = Runtime.getRuntime();
 //            try {
