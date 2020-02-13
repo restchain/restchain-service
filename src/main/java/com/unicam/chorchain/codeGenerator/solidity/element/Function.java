@@ -42,11 +42,13 @@ public class Function {
         out.append("\tfunction ").append(name);
         out.append("(");
         if (parameters != null) {
+//            out.append(parameters.stream()
+//                    .map(d -> d.trim()
+//                            .replace("string", "string memory")
+//                            .replace("bytes32[]", "bytes32[] memory"))
+//                    .collect(Collectors.joining(", ")));
             out.append(parameters.stream()
-                    .map(d -> d.trim()
-                            .replace("string", "string memory")
-                            .replace("bytes32[]", "bytes32[] memory"))
-                    .collect(Collectors.joining(", ")));
+                    .map(String::trim).collect(Collectors.joining(", ")));
         }
         out.append(") ").append(visibility);
         if (payable) {
