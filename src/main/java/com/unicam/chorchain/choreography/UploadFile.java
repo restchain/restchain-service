@@ -11,8 +11,15 @@ public class UploadFile {
     private String extension;
     private boolean overwrite;
 
-    public String getFilename(){
+    public String getFilename() {
         return this.name.concat(this.extension);
+
+    }
+
+    public UploadFile(String data, String name, String extension) {
+        this.data = data;
+        this.name = name;
+        this.extension = extension;
     }
 }
 

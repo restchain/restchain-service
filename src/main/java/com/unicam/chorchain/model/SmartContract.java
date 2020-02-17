@@ -1,5 +1,6 @@
 package com.unicam.chorchain.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -28,6 +29,12 @@ public class SmartContract {
 
     @CreatedDate
     private LocalDateTime created;
+
+    @OneToMany(mappedBy = "stubInstance",cascade = CascadeType.ALL)
+    private Set<SmartContract> smartContractImpl = new HashSet<>(0);
+
+    @ManyToOne
+    private SmartContract stubInstance;
 
     //TODO capire - tutti i nome gli oggetti BPMN proccessati - BPMNObjectNames
     @ElementCollection

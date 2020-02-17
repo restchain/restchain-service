@@ -3,15 +3,12 @@ package com.unicam.chorchain.instance;
 import com.unicam.chorchain.model.Instance;
 import com.unicam.chorchain.model.SmartContract;
 import com.unicam.chorchain.smartContract.SmartContractAlreadyExistsException;
-import com.unicam.chorchain.smartContract.SmartContractDeployException;
 import com.unicam.chorchain.smartContract.SmartContractService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.xml.ws.Service;
 
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 
@@ -69,7 +66,7 @@ public class InstanceController {
         if (instance.getSmartContract() != null) {
             throw new SmartContractAlreadyExistsException("SmartContract already exists for instance: " + instance.getId());
         }
-        SmartContract smartContract = smartContractService.create(instance);
+        SmartContract smartContract = smartContractService.createFromBpmn(instance);
         instance.setSmartContract(smartContract);
         repo.save(instance);
         return ResponseEntity.status(HttpStatus.CREATED).build();

@@ -4,10 +4,7 @@ import com.unicam.chorchain.instance.InstanceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -19,7 +16,12 @@ public class SmartContractController {
 
     private final SmartContractService service;
 
-    @GetMapping
+    @PostMapping({"/createSCImplementation"})
+    public SmartContractFullDTO create(@RequestBody InstanceImplRequest instanceImplRequest) {
+        return service.createCompileDeployImpl(instanceImplRequest);
+    }
+
+    @GetMapping({"/list"})
     public Set<SmartContractDTO> listAllSmartContract(Pageable pageable) {
         return service.getMySmartContracts();
     }
@@ -33,6 +35,12 @@ public class SmartContractController {
     public SmartContractFullDTO read(@PathVariable("id") Long id) {
         return service.read(id);
     }
+
+
+
+
+
+
 //
 //    @ExceptionHandler(SmartContractCompilationException.class)
 //    public ResponseEntity<?> smartContractCompilationException(SmartContractCompilationException exc) {

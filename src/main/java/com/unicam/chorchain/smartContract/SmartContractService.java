@@ -107,7 +107,6 @@ public class SmartContractService {
                 .map(Instance::getSmartContract)
                 .map(mapper::toDTO)
                 .collect(Collectors.toSet());
-
         return sc;
     }
 
@@ -133,6 +132,53 @@ public class SmartContractService {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("SmartContract " + id + " was not found in the database",
                         id)));
+    }
+
+
+    public SmartContractFullDTO createCompileDeployImpl(InstanceImplRequest instanceImplRequest) {
+        log.debug("instanceImplRequest {}", instanceImplRequest);
+        SmartContract smartContract = findSmartContractById(instanceImplRequest.getSmartContractId());
+        UploadFile solidityFile = new UploadFile(instanceImplRequest.getData(),
+                smartContract.getInstance()
+                        .getChoreography()
+                        .getName(),
+                ".sol");
+
+        fileSystemStorageSolidityService.storeSolidity(solidityFile, projectPath);
+
+        log.debug("Compiling solidity file ...");
+        compile(solidityFile.getFilename());
+        try {
+            deploy(solidityFile.getFilename());
+
+            log.debug("Deploying on the blockchain ...");
+            String contractAddress = deploy(solidityFile.getName());
+
+            log.debug("Storing the SmartContract.....");
+            String abi = FileUtil.readAsString(fileSystemStorageSolidityService.load(smartContract.getInstance()
+                    .getChoreography()
+                    .getName()
+                    .concat(".abi"))
+                    .toFile());
+            String bin = FileUtil.readAsString(fileSystemStorageSolidityService.load(smartContract.getInstance()
+                    .getChoreography()
+                    .getName()
+                    .concat(".bin"))
+                    .toFile());
+            SmartContract smartContractImpl = new SmartContract(contractAddress,
+                    abi,
+                    bin,
+                    smartContract.getInstance(),
+                    smartContract.getFunctionSignatures(),
+                    solidityFile.getData());
+            smartContractImpl.setStubInstance(smartContract);
+            return mapper.toFullDTO(repository.save(smartContractImpl));
+        } catch (SmartContractConnectExceptionException | SmartContractCompilationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SmartContractDeployException(e.getMessage(), e.getCause());
+        }
     }
 
 
@@ -163,10 +209,7 @@ public class SmartContractService {
 
         //save the generated code to a file
         try {
-            UploadFile uploadFile = new UploadFile();
-            uploadFile.setName(instance.getChoreography().getName());
-            uploadFile.setExtension(".sol");
-            uploadFile.setData(code);
+            UploadFile uploadFile = new UploadFile(code, instance.getChoreography().getName(), ".sol");
 
             fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
             return new SolidityInstanceUploaded(uploadFile, sg.getSolidityInstance());
@@ -177,14 +220,17 @@ public class SmartContractService {
         return null;
     }
 
-
+    /***
+     * Compiles a solidity  file
+     * @param fileName - used to retrieve the real file from the filesystem
+     */
     public void compile(String fileName) {
         try {
             String solPath = projectPath + File.separator + fileName;
             log.debug("Solidity file: " + solPath);
             String destinationPath = projectPath + File.separator;
             log.debug("destination path " + destinationPath);
-            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "-o", destinationPath};
+            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "--optimize","-o", destinationPath};
 
             Runtime rt = Runtime.getRuntime();
 //            try {
@@ -223,7 +269,7 @@ public class SmartContractService {
         }
     }
 
-    public SmartContract create(Instance instance) {
+    public SmartContract createFromBpmn(Instance instance) {
         try {
 
             log.debug("Generating solidity file ...");
@@ -503,10 +549,7 @@ public class SmartContractService {
                     setStringOptionalParticipants,
                     setStringMandatoryParticipants);
 
-            UploadFile uploadFile = new UploadFile();
-            uploadFile.setName(choreography.getName());
-            uploadFile.setExtension(".sol");
-            uploadFile.setData(choreographyBpmn.choreographyFile);
+            UploadFile uploadFile = new UploadFile(choreographyBpmn.choreographyFile, choreography.getName(), ".sol");
 
 
             fileSystemStorageSolidityService.storeSolidity(uploadFile, projectPath);
@@ -729,5 +772,6 @@ public class SmartContractService {
         //System.out.println(transactionReceiptFinal.getLogsBloom());
 
     }
+
 
 }
