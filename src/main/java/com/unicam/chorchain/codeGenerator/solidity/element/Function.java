@@ -42,11 +42,13 @@ public class Function {
         out.append("\tfunction ").append(name);
         out.append("(");
         if (parameters != null) {
+//            out.append(parameters.stream()
+//                    .map(d -> d.trim()
+//                            .replace("string", "string memory")
+//                            .replace("bytes32[]", "bytes32[] memory"))
+//                    .collect(Collectors.joining(", ")));
             out.append(parameters.stream()
-                    .map(d -> d.trim()
-                            .replace("string", "string memory")
-                            .replace("bytes32[]", "bytes32[] memory"))
-                    .collect(Collectors.joining(", ")));
+                    .map(String::trim).collect(Collectors.joining(", ")));
         }
         out.append(") ").append(visibility);
         if (payable) {
@@ -68,12 +70,13 @@ public class Function {
             out.append("\t\t").append("to.transfer(msg.value);\n");
         } else {
             if (varAssignments != null) {
+
                 varAssignments.forEach(d -> out.append("\t\t")
                         .append(globalVariabilePrefix)
                         .append(".")
-                        .append(d)
+                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
                         .append(" = ")
-                        .append(d)
+                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
                         .append(";\n"));
             }
         }

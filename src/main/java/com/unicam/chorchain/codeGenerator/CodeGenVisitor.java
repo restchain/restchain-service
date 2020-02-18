@@ -7,11 +7,8 @@ import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
 import com.unicam.chorchain.codeGenerator.solidity.element.Function;
 import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
-import com.unicam.chorchain.model.Choreography;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.model.bpmn.impl.instance.EventBasedGatewayImpl;
-import org.camunda.bpm.model.bpmn.instance.EventBasedGateway;
 import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -42,9 +39,17 @@ public class CodeGenVisitor implements Visitor {
             this.instance.setStartPointId(node.getId());
         }
         log.debug("********StartEvent *****");
+
+        boolean isInsideSubChoreography = node.getDomElement()
+                .getParentElement()
+                .getLocalName()
+                .equals("subChoregraphy");
+
         this.instance.addTxt(Function
                 .builder()
-                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId())
+                .functionComment("StarEvent(" + node.getName() + ") " + node.getOrigId() + " " + node.getDomElement()
+                        .getParentElement()
+                        .getLocalName())
                 .name(processAsElementId(node.getId()))
                 .sourceId(node.getId())
                 .enable(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)))
@@ -54,7 +59,7 @@ public class CodeGenVisitor implements Visitor {
 
     @Override
     public void visitEndEvent(EndEventAdapter node) {
-        log.debug("********EndEvent *****");
+        log.debug("********EndEvent ***** ");
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("EndEvent(" + node.getName() + "): " + node.getOrigId())
@@ -133,77 +138,83 @@ public class CodeGenVisitor implements Visitor {
         log.debug("********ChoreographyTask *****");
         SequenceFlowAdapter nextElement = (SequenceFlowAdapter) node.getOutgoing().get(0);
 
-        Map<String,String> disabledMap = new HashMap<>();
+        Map<String, String> disabledMap = new HashMap<>();
         //Try to understand if the incoming element is a EventGateway, if yes remembers wich sid needs to be disabled
-        if (previousElement(node.getModelInstance(),node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter){
-            List<String> gatewayOutgoing = previousElement(node.getModelInstance(),node.getIncoming().get(0)).getOutgoing()
+        if (previousElement(node.getModelInstance(), node.getIncoming().get(0)) instanceof EventBasedGatewayAdapter) {
+            List<String> gatewayOutgoing = previousElement(node.getModelInstance(),
+                    node.getIncoming().get(0)).getOutgoing()
                     .stream()
                     .map((item) -> nextElementId(node.getModelInstance(), item))
                     .collect(Collectors.toList());
-            if (gatewayOutgoing.size() == 2){
-                disabledMap.put(gatewayOutgoing.get(0),gatewayOutgoing.get(1));
-                disabledMap.put(gatewayOutgoing.get(1),gatewayOutgoing.get(0));
+            if (gatewayOutgoing.size() == 2) {
+                disabledMap.put(gatewayOutgoing.get(0), gatewayOutgoing.get(1));
+                disabledMap.put(gatewayOutgoing.get(1), gatewayOutgoing.get(0));
             }
 
 
         }
 
+        Message reqMessage = node.getRequestMessage().getMessage();
+        SignatureMethod reqMessageSignature = new SignatureMethod(reqMessage);
+        AdditionalFunction reqMessageAdapter = new AdditionalFunction(reqMessage);
+
+        instance.getStructVariables().addAll(reqMessageSignature.getParameters());
+        instance.getStructVariables().addAll(reqMessageSignature.getReturns());
+
+        if (reqMessageSignature.getInterfaceMethod()) {
+            instance.elabInterface(reqMessageSignature);
+        }
+
+
         /** ONE WAY **/
         if (node.getType() == ONEWAY) {
 
 
-            boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
-            if (!payableReq) {
-                addParamToGlobalSolVariables(node.getRequestMessage().getMessage().getName());
-            }
 
-            Message reqMessage = node.getRequestMessage().getMessage();
+            boolean payableReq = reqMessage.getName().contains("payment");
+//            if (!payableReq) {
+//                addParamToGlobalSolVariables(reqMessage.getName());
+//            }
 
 
-            SignatureMethod signatureMethod = new SignatureMethod(reqMessage);
-            AdditionalFunction reqMessageAdapter = new AdditionalFunction(reqMessage);
 
             //TODO works on this, change the approach regarding how to populate the getParams..
-            getParameters(node.getRequestMessage().getMessage().getName());
+            getParameters(reqMessage.getName());
 
-            List<String> params = new ArrayList<>(0);
-            String tmp = getParameters(node.getRequestMessage().getMessage().getName());
-            if (!tmp.equals("")) {
-                params.add(tmp);
-            } else {
-                params.addAll(reqMessageAdapter.getParameters());
-            }
+//            List<String> params = new ArrayList<>(0);
+//            String tmp = getParameters(reqMessage.getName());
+//            if (!tmp.equals("")) {
+//                params.add(tmp);
+//            } else {
+//                params.addAll(reqMessageAdapter.getParameters());
+//            }
 
 
             //Add to global
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
-            instance.getStructVariables().addAll(signatureMethod.getParameters());
-            if (signatureMethod.getInterfaceMethod()){
-                instance.elabInterface(signatureMethod);
-            }
+
 
 
 
             this.instance.addTxt(Function.builder()
-                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + node
-                            .getRequestMessage()
-                            .getMessage()
-                            .getName())
-                    .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + reqMessage.getName())
+                    .name(processAsElementId(reqMessage.getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
-                    .parameters(params)
+                    .parameters(reqMessageSignature.getParameters())
+                    .parameters(reqMessageSignature.getReturns())
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
-                    .sourceId(node.getRequestMessage().getMessage().getId())
+                    .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
-                    .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
+                    .varAssignments(reqMessageSignature.getParameters())
+                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
                     .bodyStrings(reqMessageAdapter.getFunctionCalls()
                             .stream()
                             .map(s -> s.concat(";"))
                             .collect(Collectors.toList()))
-                    .transferTo(node.getRequestMessage().getMessage().getName().contains("payment"))
-                    .disable(disabledMap.get(node.getRequestMessage().getMessage().getId()))
+                    .transferTo(reqMessage.getName().contains("payment"))
+                    .disable(disabledMap.get(reqMessage.getId()))
                     .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
                             nextElement.isTargetGatewayOrNot())
                     .build().toString());
@@ -215,50 +226,82 @@ public class CodeGenVisitor implements Visitor {
 
             /** TWOWAY **/
 
+            Message respMessage = node.getResponseMessage().getMessage();
+            SignatureMethod respMessageSignature = new SignatureMethod(respMessage);
+            AdditionalFunction respMessageAdapter = new AdditionalFunction(respMessage);
+
+            instance.getStructVariables().addAll(respMessageSignature.getParameters());
+            instance.getStructVariables().addAll(respMessageSignature.getReturns());
+
+            if (reqMessageSignature.getInterfaceMethod()) {
+                instance.elabInterface(respMessageSignature);
+            }
 
 
             boolean payableResp = node.getResponseMessage().getMessage().getName().contains("payment");
             if (!payableResp) {
-                addParamToGlobalSolVariables(node.getResponseMessage().getMessage().getName());
+//                addParamToGlobalSolVariables(respMessage.getName());
             }
-            boolean payableReq = node.getRequestMessage().getMessage().getName().contains("payment");
+            boolean payableReq = reqMessage.getName().contains("payment");
             if (!payableReq) {
-                addParamToGlobalSolVariables(node.getRequestMessage().getMessage().getName());
+//                addParamToGlobalSolVariables(reqMessage.getName());
             }
 
             //Upper part - requestMessage
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
-                    .name(processAsElementId(node.getRequestMessage().getMessage().getId()))
+                    .name(processAsElementId(reqMessage.getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
-                    .parameter(getParameters(node.getRequestMessage().getMessage().getName()))
+                    .parameters(reqMessageSignature.getParameters())
+                    .parameters(reqMessageSignature.getReturns())
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
-                    .sourceId(node.getRequestMessage().getMessage().getId())
+                    .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
-                    .varAssignments(getParamsList(node.getRequestMessage().getMessage().getName()))
-                    .disable(disabledMap.get(node.getRequestMessage().getMessage().getId()))
-                    .enable(node.getResponseMessage().getMessage().getId())
+                    .varAssignments(reqMessageSignature.getParameters())
+                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+                    .disable(disabledMap.get(reqMessage.getId()))
+                    .enable(respMessage.getId())
                     .build().toString());
             this.instance.addTxt("\n\n");
 
             //lower part - requestMessage
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
-                    .name(processAsElementId(node.getResponseMessage().getMessage().getId()))
-                    .parameter(getParameters(node.getResponseMessage().getMessage().getName()))
+                    .name(processAsElementId(respMessage.getId()))
+                    .parameters(respMessageSignature.getParameters())
+                    .parameters(respMessageSignature.getReturns())
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableResp)
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
-                    .sourceId(node.getResponseMessage().getMessage().getId())
-                    .varAssignments(getParamsList(node.getResponseMessage().getMessage().getName()))
-                    .disable(disabledMap.get(node.getResponseMessage().getMessage().getId()))
+                    .varAssignments(respMessageSignature.getParameters())
+                    .bodyString(respMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+                    .sourceId(respMessage.getId())
+                    .disable(disabledMap.get(respMessage.getId()))
                     .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
                             nextElement.isTargetGatewayOrNot()).build().toString());
             this.instance.addTxt("\n\n");
 
         }
+    }
+
+    @Override
+    public void visitSubChoreographyTask(SubChoreographyTaskAdapter node) {
+        log.debug("********SubChoreographyTask *****");
+
+//        this.instance.addTxt(Function
+//                .builder()
+//                .functionComment("SubChoreography(" + node.getName() + "): " + node.getOrigId())
+//                .enables(node.getOutgoing()
+//                        .stream()
+//                        .map((item) -> nextElementId(node.getModelInstance(), item))
+//                        .collect(Collectors.toList()))
+//                .name(processAsElementId(node.getId()))
+//                .sourceId(node.getId())
+//                .visibility(Types.visibility.PRIVATE)
+//                .build().toString());
+
     }
 
     // Performs a - replacing in _
@@ -275,7 +318,11 @@ public class CodeGenVisitor implements Visitor {
         BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
         //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
         //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        if (targetElement instanceof ChoreographyTaskAdapter) {
+
+
+        if (targetElement instanceof SubChoreographyTaskAdapter) {
+            return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
+        } else if (targetElement instanceof ChoreographyTaskAdapter) {
             return ((ChoreographyTaskAdapter) targetElement).getRequestMessage().getMessage().getId();
         } else {
             return targetElement.getId();
@@ -290,7 +337,7 @@ public class CodeGenVisitor implements Visitor {
         BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(sourceId);
         //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
         //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        return  targetElement;
+        return targetElement;
     }
 
 

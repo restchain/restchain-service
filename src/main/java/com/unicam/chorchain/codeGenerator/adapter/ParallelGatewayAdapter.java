@@ -6,6 +6,7 @@ import com.unicam.chorchain.codeGenerator.Visitor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.ParallelGateway;
 import org.camunda.bpm.model.xml.ModelInstance;
+import org.camunda.bpm.model.xml.instance.DomElement;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +34,11 @@ public class ParallelGatewayAdapter implements BpmnModelAdapter, Visitable {
     @Override
     public String getName() {
         return value.getName() != null ? value.getName().replace("\n", " ") : "";
+    }
+
+    @Override
+    public DomElement getDomElement() {
+        return value.getDomElement();
     }
 
     @Override

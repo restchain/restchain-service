@@ -124,6 +124,7 @@ public class SolidityInstance {
 //        variables.addAll(additionalType.getGlobals());
         variables.add(printRoleList());
         variables.add(printElementsIdList());
+        variables.addAll(interfaces.keySet().stream().map(s -> s+"Impl "+s.toLowerCase()+"= new "+s+"Impl();\n\n").collect(Collectors.toSet()));
 
         Contract sol = Contract.builder()
                 .pragmaVersion("^0.5.3")
