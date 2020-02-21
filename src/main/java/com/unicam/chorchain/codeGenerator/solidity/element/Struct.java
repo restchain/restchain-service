@@ -25,7 +25,8 @@ public class Struct {
             variableMaps.forEach((type, name) -> out.append("\t\t").append(type).append(" ").append(name).append(";\n"));
         }
         if (variables != null) {
-            variables.stream().filter(s->s.trim().length()>0).forEach((var) ->out.append("\t\t").append(var.replace("memory","").trim()).append(";\n"));
+            //put only one spece if there are more
+            variables.stream().filter(s->s.trim().length()>0).forEach((var) ->out.append("\t\t").append(var.replaceAll("\\s+", " ").replace("memory","").trim()).append(";\n"));
         }
         out.append("\t}\n");
         return out.toString();
