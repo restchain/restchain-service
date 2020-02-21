@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FileUtil;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
-import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 import org.camunda.bpm.model.xml.instance.DomElement;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
@@ -139,11 +138,17 @@ public class SmartContractService {
     public SmartContractFullDTO createCompileDeployImpl(InstanceImplRequest instanceImplRequest) {
         log.debug("instanceImplRequest {}", instanceImplRequest);
         SmartContract smartContract = findSmartContractById(instanceImplRequest.getSmartContractId());
-        UploadFile solidityFile = new UploadFile(instanceImplRequest.getData(),
+
+        String solidityDataImpl = instanceImplRequest.getData().replaceFirst("contract "+ smartContract.getInstance()
+                .getChoreography()
+                .getName(), "contract " + instanceImplRequest.getName());
+
+        UploadFile solidityFile = new UploadFile(solidityDataImpl,
                 smartContract.getInstance()
                         .getChoreography()
                         .getName(),
                 ".sol");
+
 
         fileSystemStorageSolidityService.storeSolidity(solidityFile, projectPath);
 
@@ -231,7 +236,7 @@ public class SmartContractService {
             log.debug("Solidity file: " + solPath);
             String destinationPath = projectPath + File.separator;
             log.debug("destination path " + destinationPath);
-            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "--optimize","-o", destinationPath};
+            String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "--optimize", "-o", destinationPath};
 
             Runtime rt = Runtime.getRuntime();
 //            try {
