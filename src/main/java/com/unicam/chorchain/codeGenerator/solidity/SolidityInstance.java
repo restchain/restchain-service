@@ -117,7 +117,7 @@ public class SolidityInstance {
                 .bodyElement(printConstructorBody(additionalFunction))
                 .build();
 
-        List<String> variables = new ArrayList<>();
+        Set<String> variables = new HashSet<>();
         variables.add("Element[] elements;");
         variables.add("StateMemory currentMemory;");
         variables.add("uint counter;");
