@@ -22,6 +22,8 @@ public class Function {
     private boolean transferTo;
     @Singular
     private List<String> enables;
+    @Singular
+    private List<String> calls;
     private String disable;
     @Singular
     private List<String> parameters;
@@ -74,20 +76,24 @@ public class Function {
                 varAssignments.forEach(d -> out.append("\t\t")
                         .append(globalVariabilePrefix)
                         .append(".")
-                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
+                        .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
                         .append(" = ")
-                        .append(d.substring (d.lastIndexOf (' '), d.length()).trim())
+                        .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
                         .append(";\n"));
             }
         }
         if (bodyStrings != null) {
-            bodyStrings.forEach(d -> out.append("\t\t").append(d == null ?"//empty":d).append("\n"));
+            bodyStrings.forEach(d -> out.append("\t\t").append(d == null ? "//empty" : d).append("\n"));
         }
-        if (disable != null ) {
+        if (disable != null) {
             out.append("\t\tdisable(\"").append(disable).append("\");\n");
         }
         if (enables != null) {
             enables.forEach(d -> out.append("\t\tenable(\"").append(d).append("\");\n"));
+        }
+
+        if (calls != null) {
+            calls.forEach(d -> out.append("\t\t").append(d.replace("-", "_")).append("();").append("\n"));
         }
         if (enableAndActiveTasks != null) {
             enableAndActiveTasks.forEach(

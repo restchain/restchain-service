@@ -25,6 +25,7 @@ public class SignatureMethod {
     private String interfaceName;
     private String interfaceImplName;
     private String name;
+    private final String namespace = "http://chorchain.com/schema/bpmn/cc";
 
 
     public SignatureMethod(ModelElementInstance message) {
@@ -39,11 +40,10 @@ public class SignatureMethod {
     }
 
     private void init() {
-        String namespace = "http://chorchain.com/schema/bpmn/cc";
-
-        ModelElementInstance attachedSignature =
-                extensionElements
-                        .getUniqueChildElementByNameNs(namespace, "signature");
+        if (extensionElements != null) {
+            ModelElementInstance attachedSignature =
+                    extensionElements
+                            .getUniqueChildElementByNameNs(namespace, "signature");
 
 //        List<DomElement> childElements =
 //                attachedSignature
@@ -53,43 +53,43 @@ public class SignatureMethod {
 //
 //        for (DomElement childElement : childElements) {
 
-        if (attachedSignature.getAttributeValue("paramsName") != null) {
-            String[] pNames = attachedSignature.getAttributeValue("paramsName").split(",");
-            String[] pTypes = attachedSignature.getAttributeValue("paramsType").split(",");
-            //Params
-            int index = 0;
-            for (String t : pTypes) {
-                parameters.add(t.concat(" ").concat(pNames[index]));
-                index++;
-            }
-        }
-
-        if (attachedSignature.getAttributeValue("returnsName") != null) {
-            String[] rNames = attachedSignature.getAttributeValue("returnsName").split(",");
-            String[] rTypes = attachedSignature.getAttributeValue("returnsType").split(",");
-
-            int index = 0;
-            for (String t : rTypes) {
-                returns.add(t.concat(" ").concat(rNames[index]));
-                index++;
+            if (attachedSignature.getAttributeValue("paramsName") != null) {
+                String[] pNames = attachedSignature.getAttributeValue("paramsName").split(",");
+                String[] pTypes = attachedSignature.getAttributeValue("paramsType").split(",");
+                //Params
+                int index = 0;
+                for (String t : pTypes) {
+                    parameters.add(t.trim().concat(" ").concat(pNames[index].trim()));
+                    index++;
+                }
             }
 
-        }
+            if (attachedSignature.getAttributeValue("returnsName") != null) {
+                String[] rNames = attachedSignature.getAttributeValue("returnsName").split(",");
+                String[] rTypes = attachedSignature.getAttributeValue("returnsType").split(",");
 
-        //Returns
+                int index = 0;
+                for (String t : rTypes) {
+                    returns.add(t.trim().concat(" ").concat(rNames[index].trim()));
+                    index++;
+                }
+
+            }
+
+            //Returns
 
 
-        //Interface attributes
-        if (attachedSignature.getAttributeValue("interfaceMethod") != null) {
-            interfaceMethod = Boolean.valueOf(attachedSignature.getAttributeValue("interfaceMethod"));
-            interfaceName = attachedSignature.getAttributeValue("interfaceName");
-        }
+            //Interface attributes
+            if (attachedSignature.getAttributeValue("interfaceMethod") != null) {
+                interfaceMethod = Boolean.valueOf(attachedSignature.getAttributeValue("interfaceMethod"));
+                interfaceName = attachedSignature.getAttributeValue("interfaceName");
+            }
 
-        if (attachedSignature.getAttributeValue("name") != null) {
-            name = attachedSignature.getAttributeValue("name");
+            if (attachedSignature.getAttributeValue("name") != null) {
+                name = attachedSignature.getAttributeValue("name");
+            }
         }
     }
-
 
     public String getSignature() {
 //        function getSummary() public returns (bytes32[] memory  domains, address[] memory bidder, uint[] memory bids);
