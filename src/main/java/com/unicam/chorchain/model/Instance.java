@@ -32,9 +32,6 @@ public class Instance {
     @ManyToOne(optional = false)
     private User createdBy;
 
-    @OneToMany(mappedBy = "instance",cascade = CascadeType.ALL)
-    private Set<InstanceImpl> instanceImplSet = new HashSet<>(0);
-
     @OneToOne
     private SmartContract smartContract;
 
