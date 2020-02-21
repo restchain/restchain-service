@@ -72,14 +72,24 @@ public class CodeGenVisitor implements Visitor {
     @Override
     public void visitParallelGateway(ParallelGatewayAdapter node) {
         log.debug("********ParallelGateway *****");
+        List<String> listCalls = new ArrayList<>();
+        List<String> enables = new ArrayList<>();
+        node.getOutgoing()
+                .forEach((item) -> {
+                    BpmnModelAdapter element = nextElement(node.getModelInstance(), item);
+                    String nextId=nextElementId(node.getModelInstance(), item);
+                    if(!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")){
+                        listCalls.add(nextId);
+                    }
+                    enables.add(nextId);
+                });
+
         this.instance.addTxt(Function
                 .builder()
                 .functionComment("ParallelGateway(" + node.getName() + "): " + node.getOrigId())
                 .name(processAsElementId(node.getId()))
-                .enables(node.getOutgoing()
-                        .stream()
-                        .map((item) -> nextElementId(node.getModelInstance(), item))
-                        .collect(Collectors.toList()))
+                .enables(enables)
+                .calls(listCalls)
                 .sourceId(node.getId())
                 .visibility(Types.visibility.PRIVATE)
                 .build().toString());
@@ -92,11 +102,21 @@ public class CodeGenVisitor implements Visitor {
         Collection<String> toEnable = new ArrayList<>(0);
 
         if (node.getDirection().equals("Diverging")) {
-            node.getOutgoing().stream().forEach(out -> {
-                        ifConstructs.add(IfConstruct.builder()
-                                .condition(out.getName())
-                                .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)), true)
-                                .build());
+            node.getOutgoing().forEach(out -> {
+
+                        BpmnModelAdapter element = nextElement(node.getModelInstance(), node.getOutgoing().get(0));
+
+                        if(element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")){
+                            ifConstructs.add(IfConstruct.builder()
+                                    .condition(out.getName())
+                                    .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)), false)
+                                    .build());
+                        } else {
+                            ifConstructs.add(IfConstruct.builder()
+                                    .condition(out.getName())
+                                    .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)), true)
+                                    .build());
+                        }
                     }
             );
         }
@@ -170,12 +190,10 @@ public class CodeGenVisitor implements Visitor {
         if (node.getType() == ONEWAY) {
 
 
-
             boolean payableReq = reqMessage.getName().contains("payment");
 //            if (!payableReq) {
 //                addParamToGlobalSolVariables(reqMessage.getName());
 //            }
-
 
 
             //TODO works on this, change the approach regarding how to populate the getParams..
@@ -194,25 +212,23 @@ public class CodeGenVisitor implements Visitor {
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
 
-
-
-
             this.instance.addTxt(Function.builder()
-                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + reqMessage.getName())
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + reqMessage
+                            .getName())
                     .name(processAsElementId(reqMessage.getId()))
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
                     .parameters(reqMessageSignature.getParameters())
-                    .parameters(reqMessageSignature.getReturns())
+//                    .parameters(reqMessageSignature.getReturns())
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
                     .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
-                    .bodyStrings(reqMessageAdapter.getFunctionCalls()
-                            .stream()
-                            .map(s -> s.concat(";"))
-                            .collect(Collectors.toList()))
+//                    .bodyStrings(reqMessageAdapter.getFunctionCalls()
+//                            .stream()
+//                            .map(s -> s.concat(";"))
+//                            .collect(Collectors.toList()))
                     .transferTo(reqMessage.getName().contains("payment"))
                     .disable(disabledMap.get(reqMessage.getId()))
                     .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
@@ -254,7 +270,7 @@ public class CodeGenVisitor implements Visitor {
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableReq)
                     .parameters(reqMessageSignature.getParameters())
-                    .parameters(reqMessageSignature.getReturns())
+//                    .parameters(reqMessageSignature.getReturns())
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
@@ -270,7 +286,7 @@ public class CodeGenVisitor implements Visitor {
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(processAsElementId(respMessage.getId()))
                     .parameters(respMessageSignature.getParameters())
-                    .parameters(respMessageSignature.getReturns())
+//                    .parameters(respMessageSignature.getReturns())
                     .visibility(Types.visibility.PUBLIC)
                     .payable(payableResp)
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
@@ -312,13 +328,7 @@ public class CodeGenVisitor implements Visitor {
 
     //Returns the next elementId pointed by the passed sequenceFlow
     private String nextElementId(ModelInstance instance, BpmnModelAdapter startNode) {
-        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) startNode;
-        ModelElementInstance targetElementId = instance
-                .getModelElementById(sequenceFlow.getTargetRefId());
-        BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
-        //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
-        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-
+        BpmnModelAdapter targetElement =nextElement(instance,startNode);
 
         if (targetElement instanceof SubChoreographyTaskAdapter) {
             return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
@@ -327,6 +337,17 @@ public class CodeGenVisitor implements Visitor {
         } else {
             return targetElement.getId();
         }
+    }
+
+    //Returns the next elementId pointed by the passed sequenceFlow
+    private BpmnModelAdapter nextElement(ModelInstance instance, BpmnModelAdapter startNode) {
+        SequenceFlowAdapter sequenceFlow = (SequenceFlowAdapter) startNode;
+        ModelElementInstance targetElementId = instance
+                .getModelElementById(sequenceFlow.getTargetRefId());
+        BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
+        //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
+        //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
+        return  targetElement;
     }
 
     //Returns the next elementId pointed by the passed sequenceFlow
