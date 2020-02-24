@@ -24,6 +24,9 @@ public class SmartContract {
 
     private String address;
 
+    @Column(unique=true)
+    private String name;
+
     @OneToOne(mappedBy = "smartContract")
     private Instance instance;
 
