@@ -26,6 +26,17 @@ public class SmartContractController {
         return service.getMySmartContracts();
     }
 
+    @GetMapping({"/listImpl"})
+    public Set<SmartContractImplDTO> listAllSmartContractImpl(Pageable pageable) {
+        return service.getMySmartContractImpls();
+    }
+
+    @GetMapping({"/listImpl/{id}"})
+    public Set<SmartContractDTO> listAllSmartContractImplBySmartContractId(@PathVariable("id") Long id,Pageable pageable) {
+        return service.getMySmartContractImplsBySmartContractId(id);
+    }
+
+
     @GetMapping("/i")
     public Set<InstanceDTO> listAllInstancesWithSmartContract(Pageable pageable) {
         return service.getInstancesWithSmartContract();

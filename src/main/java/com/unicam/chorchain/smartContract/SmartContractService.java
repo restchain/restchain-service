@@ -110,6 +110,37 @@ public class SmartContractService {
         return sc;
     }
 
+    public Set<SmartContractImplDTO> getMySmartContractImpls() {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<SmartContractImplDTO> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(Instance::getSmartContract)
+                .map(SmartContract::getSmartContractImpl)
+                .flatMap(x -> x.stream())
+                .map(mapper::toImplDTO)
+                .collect(Collectors.toSet());
+        return sc;
+    }
+
+    public Set<SmartContractDTO> getMySmartContractImplsBySmartContractId(Long smartContractId) {
+        Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
+                .getUsername())
+                .getParticipantsAssociated();
+        Set<SmartContractDTO> sc = instances.stream()
+                .filter(i -> i.getInstance().getSmartContract().getId().equals(smartContractId) && i.getInstance()
+                        .getSmartContract() != null)
+                .map(InstanceParticipantUser::getInstance)
+                .map(Instance::getSmartContract)
+                .map(SmartContract::getSmartContractImpl)
+                .flatMap(x -> x.stream())
+                .map(mapper::toDTO)
+                .collect(Collectors.toSet());
+        return sc;
+    }
+
     public Set<InstanceDTO> getInstancesWithSmartContract() {
         Set<InstanceParticipantUser> instances = userService.findUserByAddress(userService.getLoggedUser()
                 .getUsername())
@@ -139,14 +170,23 @@ public class SmartContractService {
         log.debug("instanceImplRequest {}", instanceImplRequest);
         SmartContract smartContract = findSmartContractById(instanceImplRequest.getSmartContractId());
 
-        String solidityDataImpl = instanceImplRequest.getData().replaceFirst("contract "+ smartContract.getInstance()
+        //Contract name rename
+        String solidityDataImpl = instanceImplRequest.getData().replaceFirst("contract " + smartContract.getInstance()
                 .getChoreography()
                 .getName(), "contract " + instanceImplRequest.getName());
 
+
+        Set<String> interfacesToReplace = new HashSet<String>();
+
+        //Replace the whole interfaceImpls name founded
+        for(String inter : smartContract.getInterfaces()){
+            String newInterfaceImplName = inter.concat(instanceImplRequest.getName() + "Impl");
+            interfacesToReplace.add(newInterfaceImplName);
+            solidityDataImpl = solidityDataImpl.replace(inter.concat("Impl"), newInterfaceImplName);
+        }
+
         UploadFile solidityFile = new UploadFile(solidityDataImpl,
-                smartContract.getInstance()
-                        .getChoreography()
-                        .getName(),
+                instanceImplRequest.getName(),
                 ".sol");
 
 
@@ -171,13 +211,17 @@ public class SmartContractService {
                     .getName()
                     .concat(".bin"))
                     .toFile());
+
             SmartContract smartContractImpl = new SmartContract(contractAddress,
                     abi,
                     bin,
                     smartContract.getInstance(),
                     smartContract.getFunctionSignatures(),
                     solidityFile.getData());
+
+            smartContractImpl.setName(instanceImplRequest.getName());
             smartContractImpl.setStubInstance(smartContract);
+
             return mapper.toFullDTO(repository.save(smartContractImpl));
         } catch (SmartContractConnectExceptionException | SmartContractCompilationException e) {
             throw e;
@@ -308,6 +352,7 @@ public class SmartContractService {
                     instance,
                     solidityInstanceUploaded.getSolidityInstance().getElementsId(),
                     solidityFile.getData());
+            smartContract.setInterfaces(solidityInstanceUploaded.solidityInstance.getInterfaces().keySet());
             repository.save(smartContract);
 
             return smartContract;

@@ -4,16 +4,14 @@ import com.unicam.chorchain.model.SmartContract;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
-public class SmartContractShortDTO {
+public class SmartContractImplDTO {
     private String id;
     private String address;
     private LocalDateTime created;
-    private String solidity;
+    private String instanceName;
     private String name;
-    private Set<SmartContractShortDTO> smartContractImpl;
-    private Set<String> interfaces;
+    private Long xmlId;
 //    private String password;
 }

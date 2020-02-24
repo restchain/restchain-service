@@ -43,6 +43,9 @@ public class SmartContract {
     @ElementCollection
     private Set<String> functionSignatures = new HashSet<>();
 
+    @ElementCollection
+    private Set<String> interfaces = new HashSet<>();
+
     @Lob
     private String abi;  //il contenuto abi
     @Lob
