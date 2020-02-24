@@ -6,9 +6,7 @@ import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaFormField;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 //https://forum.camunda.org/t/how-to-read-custom-elements-in-delegates/975/3
@@ -58,21 +56,40 @@ public class SignatureMethod {
                 String[] pTypes = attachedSignature.getAttributeValue("paramsType").split(",");
                 //Params
                 int index = 0;
+
+                Map<String, String> unorderedParams = new HashMap<>();
+
+
                 for (String t : pTypes) {
-                    parameters.add(t.trim().concat(" ").concat(pNames[index].trim()));
+//                    parameters.add(t.trim().concat(" ").concat(pNames[index].trim()));
+                    unorderedParams.put(pNames[index].trim(), t.trim());
                     index++;
                 }
+
+                unorderedParams.entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEachOrdered(x -> parameters.add(x.getValue().concat(" ").concat(x.getKey())));
+
+
             }
 
             if (attachedSignature.getAttributeValue("returnsName") != null) {
                 String[] rNames = attachedSignature.getAttributeValue("returnsName").split(",");
                 String[] rTypes = attachedSignature.getAttributeValue("returnsType").split(",");
+                Map<String, String> unorderedReturns = new HashMap<>();
 
                 int index = 0;
                 for (String t : rTypes) {
-                    returns.add(t.trim().concat(" ").concat(rNames[index].trim()));
+//                    returns.add(t.trim().concat(" ").concat(rNames[index].trim()));
+                    unorderedReturns.put(rNames[index].trim(), t.trim());
                     index++;
                 }
+
+                unorderedReturns.entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEachOrdered(x -> returns.add(x.getValue().concat(" ").concat(x.getKey())));
 
             }
 
@@ -120,4 +137,7 @@ public class SignatureMethod {
     }
 
 
+
 }
+
+
