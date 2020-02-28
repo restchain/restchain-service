@@ -256,7 +256,6 @@ contract rev1{
 	}
 
 
-
 	//EndEvent(): EndEvent_1b14i9a
 	function EndEvent_1b14i9a() private {
 		require(elements[position["EndEvent_1b14i9a"]].status == State.ENABLED);
@@ -333,7 +332,7 @@ contract rev1{
 
 
 	/* Custom */
-		function subscribe_as_participant(string memory _role) public {
+	function subscribe_as_participant(string memory _role) public {
 		if (optionalRoles[_role] == 0x0000000000000000000000000000000000000000) {
 			optionalRoles[_role] = msg.sender;
 		}
@@ -404,8 +403,8 @@ contract IRegistryImpl is IRegistry{
     
     Registry r = new Registry();
 
-	function joinP1( address jAddrP1 ) public {
-          r.addParticipant(jAddrP1);
+	function joinP1()  returns (address JAddrP1){
+          r.addParticipant(msg.sender);
 
 	}
 
@@ -417,7 +416,7 @@ contract IRegistryImpl is IRegistry{
 
 	function checkAuctionOverP2(  ) public  returns (bool isOver2){
 
-		//stub generated -- insert here your code 
+        return r.checkAuctionIsOver(); 
 
 	}
 
@@ -427,33 +426,32 @@ contract IRegistryImpl is IRegistry{
 
 	}
 
-	function joinP2( address jAddrP2 ) public {
-
-          r.addParticipant(jAddrP2);
+	function joinP2( ) public  returns (address JAddrP2){
+	        
+          r.addParticipant(msg.sender);
 
 	}
 
 	function checkAuctionOverP1(  ) public  returns (bool isOver1){
 
-		//stub generated -- insert here your code 
+		return r.checkAuctionIsOver(); 
 
 	}
 
 	function showSummary(  ) public  returns (uint[] memory amounts,bytes32[] memory itemsList,address[] memory participants){
 
-		//stub generated -- insert here your code 
+		return r.getSummary();
 
 	}
 
 	function close(  ) public {
 
-		//stub generated -- insert here your code 
 
 	}
 
 	function showBids2(  ) public  returns (uint[] memory amounts,bytes32[] memory itemList,address[] memory participants){
 
-		//stub generated -- insert here your code 
+		return r.getSummary();//stub generated -- insert here your code 
 
 	}
 
@@ -471,7 +469,7 @@ contract IRegistryImpl is IRegistry{
 
 	function showBids1(  ) public  returns (uint[] memory amounts,bytes32[] memory itemList,address[] memory participants){
 
-		//stub generated -- insert here your code 
+		return r.getSummary();
 
 	}
 
