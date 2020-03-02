@@ -26,7 +26,10 @@ public class Struct {
         }
         if (variables != null) {
             //put only one spece if there are more
-            variables.stream().filter(s->s.trim().length()>0).forEach((var) ->out.append("\t\t").append(var.replaceAll("\\s+", " ").replace("memory","").trim()).append(";\n"));
+            variables.stream()
+                    .filter(s->s.trim().length()>0)
+                    .filter(s->!s.contains("address msg.sender"))
+                    .forEach((var) ->out.append("\t\t").append(var.replaceAll("\\s+", " ").replace("memory","").trim()).append(";\n"));
         }
         out.append("\t}\n");
         return out.toString();

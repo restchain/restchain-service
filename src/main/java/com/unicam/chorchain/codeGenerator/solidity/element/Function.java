@@ -45,11 +45,7 @@ public class Function {
         out.append("(");
         if (parameters != null) {
 //            out.append(parameters.stream()
-//                    .map(d -> d.trim()
-//                            .replace("string", "string memory")
-//                            .replace("bytes32[]", "bytes32[] memory"))
-//                    .collect(Collectors.joining(", ")));
-            out.append(parameters.stream()
+            out.append(parameters.stream().filter((p -> !p.contains("address msg.sender")))
                     .map(String::trim).collect(Collectors.joining(", ")));
         }
         out.append(") ").append(visibility);
@@ -73,13 +69,15 @@ public class Function {
         } else {
             if (varAssignments != null) {
 
-                varAssignments.forEach(d -> out.append("\t\t")
-                        .append(globalVariabilePrefix)
-                        .append(".")
-                        .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
-                        .append(" = ")
-                        .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
-                        .append(";\n"));
+                varAssignments.stream()
+                        .filter(p -> !p.contains("address msg.sender"))
+                        .forEach(d -> out.append("\t\t")
+                                .append(globalVariabilePrefix)
+                                .append(".")
+                                .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
+                                .append(" = ")
+                                .append(d.substring(d.lastIndexOf(' '), d.length()).trim())
+                                .append(";\n"));
             }
         }
         if (bodyStrings != null) {

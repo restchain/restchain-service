@@ -18,6 +18,8 @@ public class SignatureMethod {
     private ExtensionElements extensionElements;
     private Collection<CamundaFormField> camundaFormFields;
     private List<String> parameters = new ArrayList<String>(0);
+    private List<String> fixedMsgSenderParams = new ArrayList<String>(0); //Parameters with reviewed msg.sender
+
     private List<String> returns = new ArrayList<String>(0);
     private Boolean interfaceMethod;
     private String interfaceName;
@@ -105,12 +107,19 @@ public class SignatureMethod {
             if (attachedSignature.getAttributeValue("name") != null) {
                 name = attachedSignature.getAttributeValue("name");
             }
+
+
         }
+        fixedMsgSenderParams = parameters.stream()
+                .map(p -> p.replace("msg.sender", name + "MsgSnd"))
+                .collect(Collectors.toList());
     }
 
+    /*** Retrives the signature method**/
     public String getSignature() {
-//        function getSummary() public returns (bytes32[] memory  domains, address[] memory bidder, uint[] memory bids);
-        String result = name + "( " + String.join(",", parameters) + " ) public ";
+
+
+        String result = name + "( " + String.join(",", fixedMsgSenderParams) + " ) public ";
 
         if (returns.size() > 0) {
             result = result + " returns (" + String.join(",", returns) + ")";
@@ -135,7 +144,6 @@ public class SignatureMethod {
     private String lastWord(String s) {
         return s.substring(s.lastIndexOf(' '), s.length()).trim();
     }
-
 
 
 }

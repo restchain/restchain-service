@@ -146,12 +146,13 @@ public class SolidityInstance {
                 .build();
 
 
-        //creates the interfaces parts
+        //creates the interfaces declaration
         StringBuffer interfacesSol = new StringBuffer();
         for (String name : interfaces.keySet()){
             interfacesSol.append(Interface.builder().name(name).functions(interfaces.get(name)).build().toString());
         }
 
+        //Creates the Implementations declaration deriving from the Interface just above (interfaceSol)
         StringBuffer stubImplSol = new StringBuffer();
         for (String name : interfaces.keySet()){
             interfacesSol.append(Stub.builder().name(name+"Impl").interfaceName(name).functions(interfaces.get(name)).build().toString());
@@ -287,6 +288,10 @@ public class SolidityInstance {
         this.elementsId.add(id);
     }
 
+    /***
+     * Provides to create the interface  methods
+     * @param signatureMethod
+     */
     public void elabInterface(SignatureMethod signatureMethod) {
         if(signatureMethod.getInterfaceMethod()){
             if (interfaces.containsKey(signatureMethod.getInterfaceName())){
