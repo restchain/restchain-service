@@ -16,6 +16,9 @@ public class UploadFile {
 
     }
 
+    public UploadFile(){
+        super();
+    }
     public UploadFile(String data, String name, String extension) {
         this.data = data;
         this.name = name;
