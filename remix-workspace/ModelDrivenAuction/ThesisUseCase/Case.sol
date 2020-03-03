@@ -400,11 +400,11 @@ import "./Registry.sol";
 
 /*InterfaceImpl generation, provides function stubs*/
 contract IRegistryImpl is IRegistry{
-    
+
     Registry r = new Registry();
 
-	function joinP1()  returns (address JAddrP1){
-          r.addParticipant(msg.sender);
+	function joinP1(address add1) public returns (address JAddrP1){
+          return r.addParticipant(add1);
 
 	}
 
@@ -416,7 +416,7 @@ contract IRegistryImpl is IRegistry{
 
 	function checkAuctionOverP2(  ) public  returns (bool isOver2){
 
-        return r.checkAuctionIsOver(); 
+        return r.checkAuctionIsOver();
 
 	}
 
@@ -426,15 +426,15 @@ contract IRegistryImpl is IRegistry{
 
 	}
 
-	function joinP2( ) public  returns (address JAddrP2){
-	        
-          r.addParticipant(msg.sender);
+	function joinP2(address add2 ) public  returns (address JAddrP2){
+
+          return r.addParticipant(add2);
 
 	}
 
 	function checkAuctionOverP1(  ) public  returns (bool isOver1){
 
-		return r.checkAuctionIsOver(); 
+		return r.checkAuctionIsOver();
 
 	}
 
@@ -451,7 +451,7 @@ contract IRegistryImpl is IRegistry{
 
 	function showBids2(  ) public  returns (uint[] memory amounts,bytes32[] memory itemList,address[] memory participants){
 
-		return r.getSummary();//stub generated -- insert here your code 
+		return r.getSummary();//stub generated -- insert here your code
 
 	}
 
