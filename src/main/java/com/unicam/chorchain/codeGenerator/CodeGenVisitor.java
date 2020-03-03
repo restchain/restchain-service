@@ -78,33 +78,45 @@ public class CodeGenVisitor implements Visitor {
         List<String> enables = new ArrayList<>();
 
         //IS a join, incoming flows converging
-        if(node.getOutgoing().size() == 1 &&  node.getIncoming().size() == 2 ) {
+        if (node.getOutgoing().size() == 1 && node.getIncoming().size() == 2) {
             int lastCounter = 0;
             StringBuilder descr = new StringBuilder();
+            descr.append("if( ");
+
             for (BpmnModelAdapter incoming : node.getIncoming()) {
                 lastCounter++;
                 ModelElementInstance prevElement = node.getModelInstance()
                         .getModelElementById(incoming.getDomElement().getAttribute("sourceRef"));
-                BpmnModelAdapter element = nextElement(node.getModelInstance(), incoming);
-                String nextId=nextElementId(node.getModelInstance(), incoming);
+                BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(prevElement);
+//                String nextId=nextElementId(node.getModelInstance(), targetElement.);
 
-                descr.append( "elements[position[\"" + nextId+ "\"]].status==State.DONE ");
+                descr.append("elements[position[\"" + targetElement.getId() + "\"]].status==State.DONE ");
 
                 if (lastCounter == node.getIncoming().size()) {
-                    descr.append( "");
+                    descr.append("");
                 } else {
                     descr.append("&& ");
                 }
 
             }
-            listCalls.add( descr.toString());
-        } else if(node.getOutgoing().size() == 2 &&  node.getIncoming().size() == 1 )  {//IS a parallel, outgoing flows diverging
+            descr.append(") { \n");
+            for (BpmnModelAdapter outgoing : node.getOutgoing()) {
+//                ModelElementInstance next = node.getModelInstance()
+//                        .getModelElementById(outgoing.getDomElement().getAttribute("targetRef"));
+//                BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(next);
+
+                descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(),outgoing) + "\"); \n");
+                descr.append("\t\t} \n");
+            }
+            listCalls.add(descr.toString());
+        } else if (node.getOutgoing().size() == 2 && node.getIncoming()
+                .size() == 1) {//IS a parallel, outgoing flows diverging
             node.getOutgoing()
                     .forEach((item) -> {
                         BpmnModelAdapter element = nextElement(node.getModelInstance(), item);
-                        String nextId=nextElementId(node.getModelInstance(), item);
-                        if(!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")){
-                            listCalls.add(nextId);
+                        String nextId = nextElementId(node.getModelInstance(), item);
+                        if (!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")) {
+                            listCalls.add(nextId+"();");
                         }
                         enables.add(nextId);
                     });
@@ -133,7 +145,7 @@ public class CodeGenVisitor implements Visitor {
 
                         BpmnModelAdapter element = nextElement(node.getModelInstance(), out);
 
-                        if(element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")){
+                        if (element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")) {
                             ifConstructs.add(IfConstruct.builder()
                                     .condition(out.getName())
                                     .enableAndActiveTask(nextElementId(node.getModelInstance(), out), false)
@@ -355,7 +367,7 @@ public class CodeGenVisitor implements Visitor {
 
     //Returns the next elementId pointed by the passed sequenceFlow
     private String nextElementId(ModelInstance instance, BpmnModelAdapter startNode) {
-        BpmnModelAdapter targetElement =nextElement(instance,startNode);
+        BpmnModelAdapter targetElement = nextElement(instance, startNode);
 
         if (targetElement instanceof SubChoreographyTaskAdapter) {
             return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
@@ -374,7 +386,7 @@ public class CodeGenVisitor implements Visitor {
         BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(targetElementId);
         //Se il targetElement è di tipo  ChoreographyTaskAdapter allora prendi l'id  del messaggio di Request
         //altrimenti in tutti gli altri casi prendi l'id dell'elemento stesso;
-        return  targetElement;
+        return targetElement;
     }
 
     //Returns the next elementId pointed by the passed sequenceFlow
