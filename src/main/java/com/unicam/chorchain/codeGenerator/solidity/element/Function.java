@@ -91,7 +91,7 @@ public class Function {
         }
 
         if (calls != null) {
-            calls.forEach(d -> out.append("\t\t").append(d.replace("-", "_")).append("();").append("\n"));
+            calls.forEach(d -> out.append("\t\t").append(d.replace("-", "_")).append("\n"));
         }
         if (enableAndActiveTasks != null) {
             enableAndActiveTasks.forEach(
