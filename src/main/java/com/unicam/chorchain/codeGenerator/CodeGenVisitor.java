@@ -10,8 +10,6 @@ import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.model.bpmn.instance.Message;
-import org.camunda.bpm.model.bpmn.instance.ParallelGateway;
-import org.camunda.bpm.model.bpmn.instance.SequenceFlow;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
@@ -100,23 +98,27 @@ public class CodeGenVisitor implements Visitor {
 
             }
             descr.append(") { \n");
+
+            //Choosing otugoing element to enable
             for (BpmnModelAdapter outgoing : node.getOutgoing()) {
 //                ModelElementInstance next = node.getModelInstance()
 //                        .getModelElementById(outgoing.getDomElement().getAttribute("targetRef"));
 //                BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(next);
 
-                descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(),outgoing) + "\"); \n");
+                descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(), outgoing) + "\"); \n");
                 descr.append("\t\t} \n");
             }
             listCalls.add(descr.toString());
+
+            //IS a parallel, outgoing flows diverging
         } else if (node.getOutgoing().size() == 2 && node.getIncoming()
-                .size() == 1) {//IS a parallel, outgoing flows diverging
+                .size() == 1) {
             node.getOutgoing()
                     .forEach((item) -> {
                         BpmnModelAdapter element = nextElement(node.getModelInstance(), item);
                         String nextId = nextElementId(node.getModelInstance(), item);
                         if (!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")) {
-                            listCalls.add(nextId+"();");
+                            listCalls.add(nextId + "();");
                         }
                         enables.add(nextId);
                     });
@@ -373,6 +375,8 @@ public class CodeGenVisitor implements Visitor {
             return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
         } else if (targetElement instanceof ChoreographyTaskAdapter) {
             return ((ChoreographyTaskAdapter) targetElement).getRequestMessage().getMessage().getId();
+        } else if (targetElement instanceof ExclusiveGatewayAdapter && targetElement.getOutgoing().size() == 1) {
+                return nextElementId(targetElement.getModelInstance(),targetElement.getOutgoing().get(0));
         } else {
             return targetElement.getId();
         }
