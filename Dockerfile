@@ -10,11 +10,11 @@ RUN apk --update add tzdata bash
 
 USER $APP_USER
 
-COPY target/chorchain-service.jar $HOME 
+COPY target/chorchain-service-0.0.1-SNAPSHOT.jar $HOME 
 
 WORKDIR $HOME 
 
 EXPOSE 8080
 
 
-CMD ["java", "-Djava.security.egd=file:/dev/./urandom","-jar", "chorchain-service.jar"]
+CMD ["java", "-Djava.security.egd=file:/dev/./urandom","-jar", "chorchain-service-0.0.1-SNAPSHOT.jar"]
