@@ -77,6 +77,7 @@ public class CodeGenVisitor implements Visitor {
 
         //IS a join, incoming flows converging
         if (node.getOutgoing().size() == 1 && node.getIncoming().size() == 2) {
+
             int lastCounter = 0;
             StringBuilder descr = new StringBuilder();
             descr.append("if( ");
@@ -105,9 +106,19 @@ public class CodeGenVisitor implements Visitor {
 //                        .getModelElementById(outgoing.getDomElement().getAttribute("targetRef"));
 //                BpmnModelAdapter targetElement = Factories.bpmnModelFactory.create(next);
 
+
+//                descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(), outgoing) + "\"); \n");
+//                descr.append("\t\t} \n");
+
+                BpmnModelAdapter element = nextElement(node.getModelInstance(), outgoing);
+                String nextId = nextElementId(node.getModelInstance(), outgoing);
                 descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(), outgoing) + "\"); \n");
-                descr.append("\t\t} \n");
+                if (!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")) {
+                    descr.append("\t\t\t"+nextId + "();");
+                }
+//                enables.add(nextId);
             }
+            descr.append("\t\t} \n");
             listCalls.add(descr.toString());
 
             //IS a parallel, outgoing flows diverging
@@ -375,8 +386,8 @@ public class CodeGenVisitor implements Visitor {
             return ((SubChoreographyTaskAdapter) targetElement).getStartEvent().getSource().getId();
         } else if (targetElement instanceof ChoreographyTaskAdapter) {
             return ((ChoreographyTaskAdapter) targetElement).getRequestMessage().getMessage().getId();
-        } else if (targetElement instanceof ExclusiveGatewayAdapter && targetElement.getOutgoing().size() == 1) {
-                return nextElementId(targetElement.getModelInstance(),targetElement.getOutgoing().get(0));
+//        } else if (targetElement instanceof ExclusiveGatewayAdapter && targetElement.getOutgoing().size() == 1) {
+//                return nextElementId(targetElement.getModelInstance(),targetElement.getOutgoing().get(0));
         } else {
             return targetElement.getId();
         }
