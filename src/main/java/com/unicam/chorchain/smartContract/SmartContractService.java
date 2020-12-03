@@ -280,6 +280,8 @@ public class SmartContractService {
             log.debug("Solidity file: " + solPath);
             String destinationPath = projectPath + File.separator;
             log.debug("destination path " + destinationPath);
+            // equivalent to:
+            // solc path --bin --abi --overwrite --optimize -o output
             String[] comm = {"solc", solPath, "--bin", "--abi", "--overwrite", "--optimize", "-o", destinationPath};
 
             Runtime rt = Runtime.getRuntime();
@@ -539,8 +541,8 @@ public class SmartContractService {
                 log.error(transactionResponse.getError().getData());
                 log.error(transactionResponse.getError().getMessage());
             }
-            String transactionHash = transactionResponse.getTransactionHash();
-            log.info("TxHash: " + transactionHash);
+//            String transactionHash = transactionResponse.getTransactionHash();
+//            log.info("TxHash: " + transactionHash);
 
             EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionResponse.getTransactionHash())
                     .send();
