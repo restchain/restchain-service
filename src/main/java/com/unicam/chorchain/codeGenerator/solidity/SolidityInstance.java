@@ -127,7 +127,7 @@ public class SolidityInstance {
         variables.addAll(interfaces.keySet().stream().map(s -> s+"Impl "+s.toLowerCase()+"= new "+s+"Impl();\n\n").collect(Collectors.toSet()));
 
         Contract sol = Contract.builder()
-                .pragmaVersion("^0.5.3")
+                .pragmaVersion("^0.5.17")
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)
