@@ -5,16 +5,19 @@ import com.unicam.chorchain.codeGenerator.solidity.AdditionalFunction;
 import com.unicam.chorchain.codeGenerator.solidity.SignatureMethod;
 import com.unicam.chorchain.codeGenerator.solidity.SolidityInstance;
 import com.unicam.chorchain.codeGenerator.solidity.Types;
+import com.unicam.chorchain.codeGenerator.solidity.element.CallbackFunction;
 import com.unicam.chorchain.codeGenerator.solidity.element.Function;
 import com.unicam.chorchain.codeGenerator.solidity.element.IfConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.camunda.bpm.model.bpmn.instance.Message;
 import org.camunda.bpm.model.xml.ModelInstance;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.unicam.chorchain.codeGenerator.adapter.ChoreographyTaskAdapter.TaskType.ONEWAY;
 
@@ -114,7 +117,7 @@ public class CodeGenVisitor implements Visitor {
                 String nextId = nextElementId(node.getModelInstance(), outgoing);
                 descr.append("\t\t\tenable(\"" + nextElementId(node.getModelInstance(), outgoing) + "\"); \n");
                 if (!element.getClass().getSimpleName().equals("ChoreographyTaskAdapter")) {
-                    descr.append("\t\t\t"+nextId + "();");
+                    descr.append("\t\t\t" + nextId + "();");
                 }
 //                enables.add(nextId);
             }
@@ -263,6 +266,7 @@ public class CodeGenVisitor implements Visitor {
             //Add to global
             //params.forEach(p -> instance.getStructVariables().add(p.trim()));
 
+            CallbackFunction callbackFunction = new CallbackFunction(reqMessage.getId(),reqMessage.getName());
 
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - " + reqMessage
@@ -276,19 +280,58 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
-                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+//                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+                    .bodyString(reqMessageSignature.getRestCall("aa", callbackFunction.getId(),"oneway"))
+//                    .bodyString(
+//                            "emit callRESTMethod( \"" + nextElementId(node.getModelInstance(),
+//                                    node.getOutgoing()
+//                                            .get(0)) + "\",\"_RESTCallback\","+ reqMessageAdapter.getParameters().stream().map(s -> s.concat(","))
+//                                    +");")
 //                    .bodyStrings(reqMessageAdapter.getFunctionCalls()
 //                            .stream()
 //                            .map(s -> s.concat(";"))
 //                            .collect(Collectors.toList()))
                     .transferTo(reqMessage.getName().contains("payment"))
                     .disable(disabledMap.get(reqMessage.getId()))
-                    .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
-                            nextElement.isTargetGatewayOrNot())
+                    .enable(callbackFunction.getId())
+//                    .enableAndActiveTask(
+//                            nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
+//                            nextElement.isTargetGatewayOrNot())
                     .build().toString());
             this.instance.addTxt("\n\n");
 
             this.instance.addTxt(reqMessageAdapter.getFunctions().stream().collect(Collectors.joining("\n")));
+
+
+
+            // REST CallBack
+            this.instance.addTxt(Function.builder()
+                    .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType() + " - "+callbackFunction.getName())
+                    .name(processAsElementId(callbackFunction.getId()))
+                    .visibility(Types.visibility.PUBLIC)
+                    .payable(payableReq)
+                    .parameters(reqMessageSignature.getReturns())
+//                    .parameters(reqMessageSignature.getReturns())
+                    .modifier(getParticipantModifier(node.getInitialParticipant().getName()))
+                    .sourceId(callbackFunction.getId())
+                    .globalVariabilePrefix(Types.GlobaStateMemory_varName)
+                    .varAssignments(reqMessageSignature.getReturns())
+//                    .bodyString(
+//                            "emit callRESTMethod( \"" + nextElementId(node.getModelInstance(),
+//                                    node.getOutgoing()
+//                                            .get(0)) + "\",\"_RESTCallback\","+ reqMessageAdapter.getParameters().stream().map(s -> s.concat(","))
+//                                    +");")
+//                    .bodyStrings(reqMessageAdapter.getFunctionCalls()
+//                            .stream()
+//                            .map(s -> s.concat(";"))
+//                            .collect(Collectors.toList()))
+                    .transferTo(reqMessage.getName().contains("payment"))
+                    .disable(disabledMap.get(reqMessage.getId()))
+                    .enableAndActiveTask(
+                            nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
+                            nextElement.isTargetGatewayOrNot())
+                    .build().toString());
+            this.instance.addTxt("\n\n");
 
         } else {
 
@@ -327,13 +370,13 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
-                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+                    .bodyString(reqMessageSignature.getRestCall("aa", respMessage.getId(),"twoway"))
                     .disable(disabledMap.get(reqMessage.getId()))
                     .enable(respMessage.getId())
                     .build().toString());
             this.instance.addTxt("\n\n");
 
-            //lower part - requestMessage
+            //lower part - responseMessage
             this.instance.addTxt(Function.builder()
                     .functionComment("Task(" + node.getName() + "): " + node.getId() + " - TYPE: " + node.getType())
                     .name(processAsElementId(respMessage.getId()))
@@ -344,7 +387,7 @@ public class CodeGenVisitor implements Visitor {
                     .modifier(getParticipantModifier(node.getParticipantRef().getName()))
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(respMessageSignature.getParameters())
-                    .bodyString(respMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+//                    .bodyString(respMessageSignature.getCalls(Types.GlobaStateMemory_varName))
                     .sourceId(respMessage.getId())
                     .disable(disabledMap.get(respMessage.getId()))
                     .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),

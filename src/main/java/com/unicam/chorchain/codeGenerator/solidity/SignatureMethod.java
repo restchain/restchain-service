@@ -135,9 +135,24 @@ public class SignatureMethod {
                     .append(") = ");
         }
 
-        sb.append(interfaceName.toLowerCase()).append(".").append(name).append("(").append(
+        sb
+//                .append(interfaceName.toLowerCase())
+                .append(".").append(name).append("(").append(
                 parameters.stream().map(this::lastWord).collect(Collectors.joining(","))
         ).append(");");
+        return sb.toString();
+    }
+
+
+    public String getRestCall(String id, String callback, String type) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("emit callRESTMethod(")
+                .append(!id.isEmpty() ? "\"" + id + "\"," : "")
+                .append("\"").append(callback).append("\",")
+                .append(parameters.stream().map(this::lastWord).sorted().collect(Collectors.joining(",")))
+                .append(",\"").append(type).append("\"")
+                .append(");");
         return sb.toString();
     }
 

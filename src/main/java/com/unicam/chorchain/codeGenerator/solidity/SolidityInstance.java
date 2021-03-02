@@ -136,6 +136,8 @@ public class SolidityInstance {
                 .modifiers(modifiers)
                 .event("event stateChanged(uint);\n")
                 .event("event functionDone(string);\n")
+                // event invokeREST(nextElementId,callback,RestAPI,param1)
+                .event("event callRESTMethod(string id,string callbackFn ,string restApiUri,string fnType);\n")
                 .structs(structs)
                 .variables(variables)
                 .constructor(constructor.toString())
@@ -267,6 +269,10 @@ public class SolidityInstance {
         sb.append("\t\treturn (elements, currentMemory);\n\t}\n\n");
         sb.append("\tfunction compareStrings(string memory a, string memory b) internal pure returns (bool) {\n");
         sb.append("\t\treturn keccak256(abi.encode(a)) == keccak256(abi.encode(b));\n\t}\n");
+////        sb.append("\tfunction _RESTCallback(string memory id, string memory returnValue) public {\n");
+//        sb.append("\t\t(currentMemory.resultString) = returnValue; \n");
+//        sb.append("\t\tenable(\"EndEvent_1qz0n9q\"); EndEvent_1qz0n9q();}\n\n");
+
         return sb.toString();
     }
 

@@ -10,34 +10,36 @@ import java.util.stream.Collectors;
 
 @Builder
 public class Function {
-    private String functionComment;
-    private String name;
-    private String visibility;  // ci va o un enum o una classe
-    private String sourceId;
-    private String target;
-    private String modifier;
+    private final String functionComment;
+    private final String name;
+    private final String visibility;  // ci va o un enum o una classe
+    private final String sourceId;
+    private final String target;
+    private final String modifier;
     @Singular
-    private List<String> bodyStrings;
-    private boolean payable;
-    private boolean transferTo;
+    private final List<String> bodyStrings;
+    private final boolean payable;
+    private final boolean transferTo;
     @Singular
-    private List<String> enables;
+    private final List<String> enables;
     @Singular
-    private List<String> calls;
-    private String disable;
+    private final List<String> calls;
+    private final String disable;
     @Singular
-    private List<String> parameters;
+    private final List<String> parameters;
     @Singular
-    private List<String> varAssignments;
+    private final List<String> varAssignments;
     @Singular
-    private List<IfConstruct> ifConstructs;
+    private final List<IfConstruct> ifConstructs;
     @Singular
-    private Map<String, Boolean> enableAndActiveTasks;
-    private String globalVariabilePrefix;
-    private boolean internal;
+    private final Map<String, Boolean> enableAndActiveTasks;
+    private final String globalVariabilePrefix;
+    private final boolean internal;
 
     public String toString() {
         StringBuffer out = new StringBuffer();
+
+        // Add a comment
         if (functionComment != null) {
             out.append("\t//").append(functionComment).append("\n");
         }
@@ -93,6 +95,8 @@ public class Function {
         if (calls != null) {
             calls.forEach(d -> out.append("\t\t").append(d.replace("-", "_")).append("\n"));
         }
+
+        // spiegazione !!!!!  K -> prossimo elementID , V
         if (enableAndActiveTasks != null) {
             enableAndActiveTasks.forEach(
                     (k, v) -> {
