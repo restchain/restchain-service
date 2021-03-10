@@ -36,9 +36,9 @@ public class SolidityGenerator {
     }
 
     //Uses visitors to start building the solidity file
-    public String build() {
+    public String build(String pragmaSolidityVersion) {
         bpmnTree.forEach(v -> v.accept(new CodeGenVisitor(solidityInstance)));
-        String code = solidityInstance.build(choreography);
+        String code = solidityInstance.build(choreography,pragmaSolidityVersion);
         log.debug("solidity :\n\n{}\n", code);
         return code;
     }

@@ -63,6 +63,8 @@ public class SmartContractService {
 
     @Value("${solidity.dir}")
     private String projectPath;
+    @Value("${solidity.pragma.solidity-version}")
+    private String pragmaSolidityVersion;
     @Value("${solidity.account.admin}")
     private String adminAccount;
     @Value("${solidity.password.admin}")
@@ -232,7 +234,7 @@ public class SmartContractService {
     }
 
 
-    public SolidityInstanceUploaded generateSolidityCode(Instance instance, Path modelPath) {
+    public SolidityInstanceUploaded generateSolidityCode(Instance instance, Path modelPath,String pragmaSolidityVersion) {
 
         SolidityGenerator sg = new SolidityGenerator(instance);
         BpmnModelInstance modelInstance = Bpmn.readModelFromFile(modelPath.toFile());
@@ -255,7 +257,7 @@ public class SmartContractService {
         //implement a business logic that will match the exact starting orders of loading
         modelInstance.getModelElementsByType(StartEvent.class)
                 .forEach(e -> sg.traverse(Factories.bpmnModelFactory.create(e)));
-        String code = sg.build();
+        String code = sg.build(pragmaSolidityVersion);
 
         //save the generated code to a file
         try {
@@ -327,7 +329,7 @@ public class SmartContractService {
             log.debug("Generating solidity file ...");
 
             SolidityInstanceUploaded solidityInstanceUploaded = generateSolidityCode(instance,
-                    fileSystemStorageService.load(instance.getChoreography().getFilename()));
+                    fileSystemStorageService.load(instance.getChoreography().getFilename()),pragmaSolidityVersion);
 
 
             UploadFile solidityFile = solidityInstanceUploaded.uploadFile;

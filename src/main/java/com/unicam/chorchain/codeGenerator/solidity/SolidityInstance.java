@@ -63,7 +63,7 @@ public class SolidityInstance {
      *                     the custom information addressed by this element from the BPMN model such as Types and Constructor
      * @return
      */
-    public String build(ModelElementInstance choreography) {
+    public String build(ModelElementInstance choreography,String pragmaSolidityVersion) {
 
 
 //        AdditionalType additionalType = new AdditionalType(choreography);
@@ -127,7 +127,7 @@ public class SolidityInstance {
         variables.addAll(interfaces.keySet().stream().map(s -> s+"Impl "+s.toLowerCase()+"= new "+s+"Impl();\n\n").collect(Collectors.toSet()));
 
         Contract sol = Contract.builder()
-                .pragmaVersion("^0.5.17")
+                .pragmaVersion(pragmaSolidityVersion)
                 .fileName(instance.getChoreography().getName())
                 .enumElement("enum State {DISABLED, ENABLED, DONE} State s;\n")
                 .mappings(maps)

@@ -127,30 +127,30 @@ public class InstanceService {
         instanceSubscription(req);
     }
 
-    public void deploy(InstanceDeployRequest instanceDeployRequest) throws SmartContractCompilationException {
-
-        Instance instance = findInstanceById(instanceDeployRequest.getId());
-
-        log.debug("Generating solidity file ...");
-        UploadFile solidityFile = smartContractService.generateSolidityCode(instance,
-                fileSystemStorageService.load(instance.getChoreography().getFilename())).getUploadFile();
-
-//        SmartContract cObj = smartContractService.createSolidity(instance,
-//                fileSystemStorageService.load(instance.getChoreography().getFilename()));
-        log.debug("Compiling solidity file ...");
-        smartContractService.compile(solidityFile.getFilename());
-//        log.debug("Deploying solidity file ...");
-//        String cAddress = null;
-//        try {
-//            cAddress = smartContractService.deploy(instance.getChoreography().getName());
-//        } catch (Exception e) {
-//            log.error(e.toString());
-//        }
-
-//        log.debug("Deployed solidity {}", cAddress);
-
-
-    }
+//    public void deploy(InstanceDeployRequest instanceDeployRequest) throws SmartContractCompilationException {
+//
+//        Instance instance = findInstanceById(instanceDeployRequest.getId());
+//
+//        log.debug("Generating solidity file ...");
+//        UploadFile solidityFile = smartContractService.generateSolidityCode(instance,
+//                fileSystemStorageService.load(instance.getChoreography().getFilename()),).getUploadFile();
+//
+////        SmartContract cObj = smartContractService.createSolidity(instance,
+////                fileSystemStorageService.load(instance.getChoreography().getFilename()));
+//        log.debug("Compiling solidity file ...");
+//        smartContractService.compile(solidityFile.getFilename());
+////        log.debug("Deploying solidity file ...");
+////        String cAddress = null;
+////        try {
+////            cAddress = smartContractService.deploy(instance.getChoreography().getName());
+////        } catch (Exception e) {
+////            log.error(e.toString());
+////        }
+//
+////        log.debug("Deployed solidity {}", cAddress);
+//
+//
+//    }
 
     public void save(Instance instance) {
         repository.save(instance);

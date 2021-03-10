@@ -1,3 +1,26 @@
+# Configurazione
+## Ganache
+E' una blockchain di sviluppo che viene installata in locale e serve a simulare il comportamento della blockchain. E' completamente configurabile.
+ 
+Installare globalmente ``ganache-cli`` :
+```
+yarn global add ganache-cli
+```
+
+ 
+# Avvio 
+## Avvio di Ganache
+Il servizio API necessità di una blockchain, nella fase di sviluppo e demo, tipicamente, se non diversamente specificato nel file di configurazione si impiega la blockchain di sviluppo ``ganache``.
+
+Per avviare tale blockchain è stato predisposto all'interno del progetto un file eseguibile che si occupa di configurare ed eseguire la nostra istanza locale di ganache.
+
+Per l'avvio dell'istanza locale di ganache sarà sufficiente lanciare il comando:
+
+```
+$ ./ganache-chorchain.sh
+```
+
+## Avvio servizio API
 Per far partire il progetto è sufficiente lanciare:
 
 ```
@@ -15,8 +38,24 @@ Secondo le impostazioni presenti nel file di configurazione (src/main/resoruces/
 
 Per testare gli endpoint in fase di sviluppo si consiglia l'utilizzo di ``httpie`` https://httpie.org qui abbreviato ad http.
 
+> NOTA: Verificare che la versione del pacchetto `solidity` installato in locale corrisponda alla versione utilizzata all'interno del `servizio` e quindi quella che praticamente viene scritta nello smarta contract alla prima riga
+>
+>```
+>pragma solidity ^0.5.17;
+>```
+>
+>Se le due versioni non coincidono il sistema genera un errore
+>``` 
+>Error: Source file requires different compiler version (current compiler is 0.8.0+commit.c7dfd78e.Darwin.appleclang) - note that nightly builds are considered to be strictly less than the released version
+>```
+>
+>Nel caso di MAC per installare ed usare la versione `solidity 5` (`solc`) nella versione `0.5.17`, installare `solidity tramite `brew` e il pacchetto` `solidity@5` tramite il comando:
+>```
+>brew install solidity@5
+>brew link solidity@5
+>```
 
-## WIKI
+# WIKI
 
 Istruzioni per creare un utente su mysql;
 
