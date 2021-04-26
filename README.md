@@ -89,6 +89,9 @@ http --session a POST :8085/model description="aaa" data=@bpmn/OnlinePurchase.bp
 http --session a :8085/model/1
 http --session a POST :8085/instance modelId=1 mandatoryParticipants:='["1","2"]' visibleAt:='["null"]'
 
+
+
+
 ## Endpoints
 
 Per utilizzare alcuni gli endpoint presenti è necessario eseguire prima il *login* perchè prottetti da permessi di sicurezza. Il login se fatto da linea di comando va fatto con il parametro `--form` con associata un sessione (`--session nome_sessione`) richiamabile successivamente per garantire la connessione.

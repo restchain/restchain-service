@@ -11,4 +11,3 @@ public class BlockchainTransaction {
     private Long value;
     private Boolean accepted = false;
 }
-
