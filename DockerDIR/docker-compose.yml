@@ -1,0 +1,37 @@
+version: '3.2'
+
+
+services:
+
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    environment:
+      TZ: Europe/Rome
+      MYSQL_ROOT_PASSWORD: chorchainpw
+      MYSQL_DATABASE: chorchain
+      MYSQL_USER: chorchain
+      MYSQL_PASSWORD: chorchainpw
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - ./mysql:/var/lib/mysql
+  #    restart: always
+
+  dev-blockchain:
+    image: trufflesuite/ganache-cli:v6.1.6
+    ports:
+      - 8545:8545
+    command: ["-h=0.0.0.0","--mnemonic='include poem goose genuine baby flat mom token drama harsh sadness fit'","--db ganache-db","-l 9000000000","-d 100000000","--allowUnlimitedContractSize"]
+
+#    command: ["-d 100000000 --allowUnlimitedContractSize --db ganache-db --port 8545 -l 9000000000 --accounts 10 --mnemonic='include poem goose genuine baby flat mom token drama harsh sadness fit' --networkId 5777 -h=0.0.0.0"]
+
+  backend:
+    image: chorchain-service
+    hostname: backend
+    environment:
+      TZ: Europe/Rome
+      spring.datasource.platform: mysql
+      spring.jpa.hibernate.ddl-auto: create
+      spring.datasource.url: jdbc:mysql://mysql/chorchain?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      spring.datasource.username: chorchain
+      spring.datasource.password: chorchainpw
