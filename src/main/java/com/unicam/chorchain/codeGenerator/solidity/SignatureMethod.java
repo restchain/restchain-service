@@ -148,7 +148,7 @@ public class SignatureMethod {
         StringBuilder sb = new StringBuilder();
 
         sb.append("emit callRESTMethod(")
-                .append(!id.isEmpty() ? "\"" + id + "\"," : "")
+                .append(!id.isEmpty() ? "" + id + "," : "")
                 .append("\"").append(callback).append("\",")
                 .append(parameters.stream().map(this::lastWord).sorted().collect(Collectors.joining(",")))
                 .append(",\"").append(type).append("\"")

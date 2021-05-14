@@ -281,7 +281,7 @@ public class CodeGenVisitor implements Visitor {
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
 //                    .bodyString(reqMessageSignature.getCalls(Types.GlobaStateMemory_varName))
-                    .bodyString(reqMessageSignature.getRestCall("aa", callbackFunction.getId(),"oneway"))
+                    .bodyString(reqMessageSignature.getRestCall(getParticipantRoleList(node.getInitialParticipant().getName()), callbackFunction.getId(),"oneway"))
 //                    .bodyString(
 //                            "emit callRESTMethod( \"" + nextElementId(node.getModelInstance(),
 //                                    node.getOutgoing()
@@ -316,6 +316,7 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(callbackFunction.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getReturns())
+                    .bodyString("emit calledREST();")
 //                    .bodyString(
 //                            "emit callRESTMethod( \"" + nextElementId(node.getModelInstance(),
 //                                    node.getOutgoing()
@@ -370,7 +371,7 @@ public class CodeGenVisitor implements Visitor {
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
-                    .bodyString(reqMessageSignature.getRestCall("aa", respMessage.getId(),"twoway"))
+                    .bodyString(reqMessageSignature.getRestCall(getParticipantRoleList(node.getParticipantRef().getName()), respMessage.getId(),"twoway"))
                     .disable(disabledMap.get(reqMessage.getId()))
                     .enable(respMessage.getId())
                     .build().toString());
@@ -388,6 +389,7 @@ public class CodeGenVisitor implements Visitor {
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(respMessageSignature.getParameters())
 //                    .bodyString(respMessageSignature.getCalls(Types.GlobaStateMemory_varName))
+                    .bodyString("emit calledREST();")
                     .sourceId(respMessage.getId())
                     .disable(disabledMap.get(respMessage.getId()))
                     .enableAndActiveTask(nextElementId(node.getModelInstance(), node.getOutgoing().get(0)),
@@ -525,4 +527,16 @@ public class CodeGenVisitor implements Visitor {
             }
         }
     }
+
+    // returns a modifier function call depending of the participant role
+    private String getParticipantRoleList(String participantName) {
+        //If participantFromRole is contained in tha Mandatory list is Mandatory else is Optional
+        if (this.instance.getMandatoryParticipants().contains(participantName)) {
+            return "roles[roleList["+instance.getMandatoryParticipants().indexOf(participantName)+"]]";
+        } else {
+            return "roles[roleList["+instance.getOptionalParticipants().indexOf(participantName)+"]]";
+
+        }
+    }
+
 }
