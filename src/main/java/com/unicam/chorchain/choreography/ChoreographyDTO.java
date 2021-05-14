@@ -1,7 +1,6 @@
 package com.unicam.chorchain.choreography;
 
 import com.unicam.chorchain.instance.InstanceDTO;
-import com.unicam.chorchain.model.Participant;
 import com.unicam.chorchain.participant.ParticipantDTO;
 import lombok.Data;
 

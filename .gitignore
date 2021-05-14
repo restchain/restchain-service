@@ -39,3 +39,5 @@ build/
 upload-dir/
 solidity-dir/
 application.properties
+/DockerDIR/database/
+/ganache-db/
