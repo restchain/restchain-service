@@ -366,7 +366,7 @@ public class CodeGenVisitor implements Visitor {
                     .payable(payableReq)
                     .parameters(reqMessageSignature.getParameters())
 //                    .parameters(reqMessageSignature.getReturns())
-                    .modifier(getParticipantModifier(node.getParticipantRef().getName()))
+                    .modifier(getParticipantModifier(node.getInitialParticipant().getName()))
                     .sourceId(reqMessage.getId())
                     .globalVariabilePrefix(Types.GlobaStateMemory_varName)
                     .varAssignments(reqMessageSignature.getParameters())
