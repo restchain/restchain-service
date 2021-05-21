@@ -25,7 +25,7 @@ public class SignatureMethod {
     private String interfaceName;
     private String interfaceImplName;
     private String name;
-    private final String namespace = "http://chorchain.com/schema/bpmn/cc";
+    private final String namespace = "http://restchain.com/schema/bpmn/cc";
 
 
     public SignatureMethod(ModelElementInstance message) {
