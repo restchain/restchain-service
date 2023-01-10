@@ -65,9 +65,9 @@ public class SmartContractService {
     private String projectPath;
     @Value("${solidity.pragma.solidity-version}")
     private String pragmaSolidityVersion;
-    @Value("${solidity.account.admin}")
+    @Value("${solidity.admin.account}")
     private String adminAccount;
-    @Value("${solidity.password.admin}")
+    @Value("${solidity.admin.password}")
     private String passAdminAccount;
     @Value("${solidity.node.url}")
     private String blcokChainUrl;
@@ -76,6 +76,10 @@ public class SmartContractService {
     @Value("${solidity.gas.price}")
     private long gasPrice;
 
+    @Value("${solidity.node.chainId}")
+    private long chainId;
+    @Value("${solidity.admin.keyfile}")
+    private String adminKeyFile;
 
     private final FileSystemStorageSolidityService fileSystemStorageSolidityService;
     private final FileSystemStorageService fileSystemStorageService;
@@ -95,8 +99,9 @@ public class SmartContractService {
     @PostConstruct
     public void init() {
         web3j = Web3j.build(new HttpService(blcokChainUrl));
-        adm = Admin.build(new HttpService(blcokChainUrl));
     }
+
+
 
 
     public Set<SmartContractDTO> getMySmartContracts() {
@@ -513,9 +518,6 @@ public class SmartContractService {
 
     public String deploy(String name) throws Exception {
         try {
-            //Unlocking administration account
-            adm.personalUnlockAccount(adminAccount, passAdminAccount).send();
-
             EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
                     adminAccount, DefaultBlockParameterName.LATEST).sendAsync().get();
             BigInteger nonce = ethGetTransactionCount.getTransactionCount();
@@ -528,16 +530,23 @@ public class SmartContractService {
                     name,
                     ".bin"))));
 
-            Transaction transaction = Transaction.createContractTransaction(
-                    adminAccount,
+            RawTransaction transaction = RawTransaction.createContractTransaction(
                     nonce,
                     GAS_PRICE,
                     GAS_LIMIT,
                     BigInteger.ZERO,
                     "0x" + compiledSCCode);
 
+            Credentials credentials = getCredentialFromPrivateKey(adminKeyFile);
+
+            byte[] signedMessage = TransactionEncoder.signMessage(transaction,chainId,  credentials);
+            String hexValue = Numeric.toHexString(signedMessage);
+            EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(hexValue).send();
+
+
+
             //send sync
-            EthSendTransaction transactionResponse = web3j.ethSendTransaction(transaction).send();
+//            EthSendTransaction transactionResponse = web3j.ethSendTransaction(transaction).send();
 
             if (transactionResponse.hasError()) {
                 log.error(transactionResponse.getError().getData());
@@ -546,21 +555,33 @@ public class SmartContractService {
 //            String transactionHash = transactionResponse.getTransactionHash();
 //            log.info("TxHash: " + transactionHash);
 
-            EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionResponse.getTransactionHash())
-                    .send();
-            if (receipt.getTransactionReceipt().isPresent()) {
-                TransactionReceipt r = receipt.getTransactionReceipt().get();
-                String contractAddress = r.getContractAddress();
-                log.info("Contract address: {}", contractAddress);
-                log.info("Tx receipt: from={}, to={}, gas={}, cumulativeGas={}",
-                        r.getFrom(),
-                        r.getTo(),
-                        r.getGasUsed().intValue(),
-                        r.getCumulativeGasUsed().intValue());
-                return contractAddress;
-            }
+            EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionResponse.getTransactionHash()).send();
 
-            return null;
+            for (int i = 0; i < 222220; i++) {
+                if (!receipt.getTransactionReceipt().isPresent()) {
+                    //Thread.sleep(5000);
+                    receipt = web3j.ethGetTransactionReceipt(transactionResponse.getTransactionHash()).send();
+                } else {
+                    break;
+                }
+            }
+            TransactionReceipt transactionReceiptFinal = receipt.getTransactionReceipt().get();
+
+            return transactionReceiptFinal.getContractAddress();
+
+//            if (receipt.getTransactionReceipt().isPresent()) {
+//                TransactionReceipt r = receipt.getTransactionReceipt().get();
+//                String contractAddress = r.getContractAddress();
+//                log.info("Contract address: {}", contractAddress);
+//                log.info("Tx receipt: from={}, to={}, gas={}, cumulativeGas={}",
+//                        r.getFrom(),
+//                        r.getTo(),
+//                        r.getGasUsed().intValue(),
+//                        r.getCumulativeGasUsed().intValue());
+//                return contractAddress;
+//            }
+//
+//            return null;
         } catch (ConnectException e) {
             throw new SmartContractConnectExceptionException("Impossible to reach the block chain node - " + e.getMessage());
         } catch (Exception e) {
