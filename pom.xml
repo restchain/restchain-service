@@ -24,6 +24,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>jcenter.bintray.com</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -136,6 +140,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+
 
         <dependency>
             <groupId>com.github.ipfs</groupId>
