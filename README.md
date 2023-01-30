@@ -165,6 +165,10 @@ Permette di ottenere le info utente tramite address
  
  
  
+## Ipfs Cli 
+Using a localhost IPFS installation it is important to allow the web-app access to the running IPFS daemon.
+Skipping this step will introduce CORS problems.
+Will be enough configure properly and execute the script ``cors-confgi-ipfs.sh`` and restart the daemon.
 
 
  
