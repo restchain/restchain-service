@@ -2,10 +2,22 @@ version: '3'
 
 services:
 
-  mysql-development:
-    image: mysql:8.0.17
-    environment:
-      MYSQL_ROOT_PASSWORD: chorchain
-      MYSQL_DATABASE: chorchain
+#  mysql-development:
+#    image: mysql:8.0.17
+#    environment:
+#      MYSQL_ROOT_PASSWORD: chorchain
+#      MYSQL_DATABASE: chorchain
+#    ports:
+#      - "3308:3306"
+#
+
+  ipfs-node-1:
+    container_name: ipfs-node-1
+    image: ipfs-service:local
     ports:
-      - "3308:3306"
+      - 4001:4001 # ipfs swarm - expose if needed/wanted
+      - 5001:5001 # ipfs api - expose if needed/wanted
+      - 8080:8080 # ipfs gateway - expose if needed/wanted
+    volumes:
+      - ./data/ipfs:/data/ipfs
+      - ./data/ipfs-staging:/staging
